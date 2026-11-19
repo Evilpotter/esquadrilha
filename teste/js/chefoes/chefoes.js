@@ -12,13 +12,18 @@ function enter(b, dt) { if (b.in) return false; if (b.y < b.ty) { b.y += 90 * dt
 // sobe e desce em volta de b.ty (começa suave a partir da entrada)
 function bob(b, dt, D) { b.bt = (b.bt || 0) + dt; b.y = b.ty + Math.sin(b.bt * D.balancoVel) * D.balanco; }
 function rage(b) { return b.hp < b.maxHp / 2 || b.rage2; }
-function ring(x, y, n, spd, r, off) { const o = off === undefined ? Math.random() : off; for (let k = 0; k < n; k++) eShoot(x, y, (k + o) / n * TAU, spd, r || 6); }
-function aimed(b, n, spread, spd, r) {
+function ring(x, y, n, spd, r, off, d) { const o = off === undefined ? Math.random() : off; for (let k = 0; k < n; k++) eShoot(x, y, (k + o) / n * TAU, spd, r || 6, d); }
+function aimed(b, n, spread, spd, r, d) {
   const p = nearestPlayer(b); if (!p) return;
   const a = Math.atan2(p.y - b.y, p.x - b.x);
-  for (let k = 0; k < n; k++) eShoot(b.x, b.y + 20, a + (k - (n - 1) / 2) * spread, spd, r);
+  for (let k = 0; k < n; k++) eShoot(b.x, b.y + 20, a + (k - (n - 1) / 2) * spread, spd, r, d);
 }
-function aimFrom(b, x, y, spd, r) { const p = nearestPlayer(b); if (p) eShoot(x, y, Math.atan2(p.y - y, p.x - x), spd, r); }
+// tiros dos chefões: mesmo jeito dos inimigos, mas com o dano de chefão (BOSS_DMG.tiro)
+const bDmg = () => BOSS_DMG.tiro * eDmg();
+const bShoot = (x, y, a, spd, r) => eShoot(x, y, a, spd, r, bDmg());
+const bRing = (x, y, n, spd, r, off) => ring(x, y, n, spd, r, off, bDmg());
+const bAimed = (b, n, spread, spd, r) => aimed(b, n, spread, spd, r, bDmg());
+function aimFrom(b, x, y, spd, r) { const p = nearestPlayer(b); if (p) bShoot(x, y, Math.atan2(p.y - y, p.x - x), spd, r); }
 // raio vertical; vx ≠ 0 = raio que varre para o lado depois do aviso
 function beam(x, y0, w, warn, life, vx) { S.hazards.push({ x, y0, w, warn, life, max: warn, vx: vx || 0 }); }
 // conta o tempo de um ataque; devolve true quando dispara (o primeiro espera "primeiro" ou o próprio intervalo)
@@ -37,15 +42,15 @@ const BOSSES = {
       const sp = ebs() * D.velTiro;
       if (b.espT > 0) {                       // espiral: gira atirando por alguns segundos
         b.espT -= dt; b.espA = (b.espA || 0) + dt * D.espiralGiro;
-        if (timer(b, 'espC', dt, D.espiralCadencia, 0)) { const n = fury(b, D.espiralBracos); for (let k = 0; k < n; k++) eShoot(b.x, b.y, b.espA + k / n * TAU, ebs() * D.espiralVel, 5); }
+        if (timer(b, 'espC', dt, D.espiralCadencia, 0)) { const n = fury(b, D.espiralBracos); for (let k = 0; k < n; k++) bShoot(b.x, b.y, b.espA + k / n * TAU, ebs() * D.espiralVel, 5); }
       }
       b.patT -= dt;
       if (b.patT > 0) return;
       b.patT = fury(b, D.intervalo);
       const pat = (b.pat = (b.pat || 0) + 1) % 4;
-      if (pat === 0) ring(b.x, b.y, D.anel + S.phase * D.anelPorFase, sp, D.anelRaio);
-      else if (pat === 1) { const n = fury(b, D.rajadaTiros); for (let w = 0; w < fury(b, D.rajadas); w++) setTimeoutFx(w * D.rajadaPausa, () => { if (!b.dead) aimed(b, n, D.rajadaAbertura, sp * D.rajadaVel); }); }
-      else if (pat === 2) { const n = fury(b, D.leque); for (let k = 0; k < n; k++) eShoot(b.x, b.y + 30, Math.PI / 2 + (k - (n - 1) / 2) * D.lequeAbertura, sp, D.lequeRaio); }
+      if (pat === 0) bRing(b.x, b.y, D.anel + S.phase * D.anelPorFase, sp, D.anelRaio);
+      else if (pat === 1) { const n = fury(b, D.rajadaTiros); for (let w = 0; w < fury(b, D.rajadas); w++) setTimeoutFx(w * D.rajadaPausa, () => { if (!b.dead) bAimed(b, n, D.rajadaAbertura, sp * D.rajadaVel); }); }
+      else if (pat === 2) { const n = fury(b, D.leque); for (let k = 0; k < n; k++) bShoot(b.x, b.y + 30, Math.PI / 2 + (k - (n - 1) / 2) * D.lequeAbertura, sp, D.lequeRaio); }
       else { b.espT = D.espiralDura; b.espC = 0; b.patT += D.espiralDura; }
     },
     draw(b) { drawBoss(b); },
@@ -62,7 +67,7 @@ const BOSSES = {
         const type = rage(b) && b.wave % 2 ? D.escoltaFuria : D.escolta;
         for (const s of [-1, 1]) for (let k = 0; k < fury(b, D.escoltaPorLado); k++) addEnemy(type, b.x + s * (70 + k * 20), b.y + 20, { stopY: rnd(150, 300) });
       }
-      if (timer(b, 'ringT', dt, fury(b, D.anelIntervalo))) ring(b.x, b.y, D.anel + S.phase * D.anelPorFase, ebs() * D.anelVel, D.anelRaio);
+      if (timer(b, 'ringT', dt, fury(b, D.anelIntervalo))) bRing(b.x, b.y, D.anel + S.phase * D.anelPorFase, ebs() * D.anelVel, D.anelRaio);
       if (timer(b, 'gunT', dt, fury(b, D.canhaoIntervalo))) for (const s of [-1, 1]) aimFrom(b, b.x + s * D.canhaoDist, b.y, ebs() * D.canhaoVel, D.canhaoRaio);
       if (timer(b, 'misT', dt, fury(b, D.misselIntervalo), 3)) {
         const n = fury(b, D.misseis);
@@ -103,7 +108,7 @@ const BOSSES = {
         const dx = (p ? p.x : b.x) - b.x, dir = Math.abs(dx) < 20 ? lado() : Math.sign(dx);
         beam(b.x, b.y + 40, D.varreduraLargura, D.varreduraAviso, D.varreduraDura, dir * D.varreduraVel);
       }
-      if (timer(b, 'shotT', dt, fury(b, D.tiroIntervalo))) aimed(b, fury(b, D.tiros), D.tiroAbertura, ebs() * D.tiroVel, D.tiroRaio);
+      if (timer(b, 'shotT', dt, fury(b, D.tiroIntervalo))) bAimed(b, fury(b, D.tiros), D.tiroAbertura, ebs() * D.tiroVel, D.tiroRaio);
     },
     draw(b) {
       const f = b.flash > 0;
@@ -125,14 +130,14 @@ const BOSSES = {
       const dir = Math.floor(b.cyc / D.ciclo) % 2 ? -1 : 1, on = b.cyc % D.ciclo < D.atirando;
       b.spin = (b.spin || 0) + dt * fury(b, D.giro) * dir;
       if (!on) {                               // parou de girar: solta pulsos em anel
-        if (!b.pulsed) { b.pulsed = true; for (let k = 0; k < fury(b, D.pulsos); k++) setTimeoutFx(k * .35, () => { if (!b.dead) ring(b.x, b.y, D.pulso + S.phase * D.pulsoPorFase, ebs() * D.pulsoVel, D.pulsoRaio); }); }
+        if (!b.pulsed) { b.pulsed = true; for (let k = 0; k < fury(b, D.pulsos); k++) setTimeoutFx(k * .35, () => { if (!b.dead) bRing(b.x, b.y, D.pulso + S.phase * D.pulsoPorFase, ebs() * D.pulsoVel, D.pulsoRaio); }); }
         return;
       }
       b.pulsed = false;
       if (timer(b, 'shotT', dt, fury(b, D.cadencia), 0)) {
         const arms = fury(b, D.bracos), anti = fury(b, D.contraBracos);
-        for (let k = 0; k < arms; k++) eShoot(b.x, b.y, b.spin + k / arms * TAU, ebs() * D.velTiro, D.tiroRaio);
-        for (let k = 0; k < anti; k++) eShoot(b.x, b.y, -b.spin * 1.3 + k / anti * TAU, ebs() * D.velTiro, D.tiroRaio);
+        for (let k = 0; k < arms; k++) bShoot(b.x, b.y, b.spin + k / arms * TAU, ebs() * D.velTiro, D.tiroRaio);
+        for (let k = 0; k < anti; k++) bShoot(b.x, b.y, -b.spin * 1.3 + k / anti * TAU, ebs() * D.velTiro, D.tiroRaio);
       }
     },
     draw(b) {
@@ -154,21 +159,21 @@ const BOSSES = {
         patrol(b, dt, D.vel);
         b.patT -= dt;
         if (b.patT <= 0) { b.mode = 'warn'; b.wt = fury(b, D.aviso); b.left = fury(b, D.investidas); }
-        if (timer(b, 'shotT', dt, fury(b, D.tiroIntervalo))) aimed(b, D.tiros, D.tiroAbertura, ebs());
+        if (timer(b, 'shotT', dt, fury(b, D.tiroIntervalo))) bAimed(b, D.tiros, D.tiroAbertura, ebs());
       } else if (b.mode === 'warn') {
         b.wt -= dt; const p = nearestPlayer(b); if (p) { b.tx = p.x; b.ty2 = p.y; }
         if (b.wt <= 0) { const a = Math.atan2((b.ty2 || H) - b.y, (b.tx || b.x) - b.x), v = fury(b, D.investida); b.vx = Math.cos(a) * v; b.vy = Math.sin(a) * v; b.mode = 'charge'; b.left--; }
       } else if (b.mode === 'charge') {
         b.x += b.vx * dt; b.y += b.vy * dt;
-        if (timer(b, 'dropT', dt, D.rastroCadencia, 0)) { const a = Math.atan2(b.vy, b.vx); eShoot(b.x, b.y, a + Math.PI / 2, ebs() * D.rastroVel, D.rastroRaio); eShoot(b.x, b.y, a - Math.PI / 2, ebs() * D.rastroVel, D.rastroRaio); }
+        if (timer(b, 'dropT', dt, D.rastroCadencia, 0)) { const a = Math.atan2(b.vy, b.vx); bShoot(b.x, b.y, a + Math.PI / 2, ebs() * D.rastroVel, D.rastroRaio); bShoot(b.x, b.y, a - Math.PI / 2, ebs() * D.rastroVel, D.rastroRaio); }
         if (b.y > H - 60 || b.x < 40 || b.x > W - 40 || b.y < 40) {
           b.x = clamp(b.x, 40, W - 40); b.y = clamp(b.y, 40, H - 60);
-          ring(b.x, b.y, D.impacto, ebs() * D.impactoVel, D.impactoRaio);
+          bRing(b.x, b.y, D.impacto, ebs() * D.impactoVel, D.impactoRaio);
           if (b.left > 0) { b.mode = 'warn'; b.wt = D.avisoSeguinte; } else b.mode = 'back';
         }
       } else {
         const dy = b.ty - b.y; b.y += clamp(dy, -D.volta * dt, D.volta * dt);
-        if (Math.abs(dy) < 2) { b.mode = 'patrol'; b.patT = fury(b, D.intervalo); ring(b.x, b.y, D.anel, ebs() * D.anelVel, D.anelRaio); }
+        if (Math.abs(dy) < 2) { b.mode = 'patrol'; b.patT = fury(b, D.intervalo); bRing(b.x, b.y, D.anel, ebs() * D.anelVel, D.anelRaio); }
       }
     },
     draw(b) {
@@ -195,12 +200,12 @@ const BOSSES = {
       b.patT -= dt;
       if (b.patT <= 0) {
         b.patT = D.intervalo[f];
-        if (b.idx && !b.rage2) for (let k = 0; k < D.leque; k++) eShoot(b.x, b.y + 20, Math.PI / 2 + (k - (D.leque - 1) / 2) * D.lequeAbertura, ebs() * D.lequeVel, 5);
-        else aimed(b, D.tiros, D.tiroAbertura, ebs() * D.tiroVel);
-        if (b.rage2) ring(b.x, b.y, D.anel, ebs() * D.anelVel, D.anelRaio);
+        if (b.idx && !b.rage2) for (let k = 0; k < D.leque; k++) bShoot(b.x, b.y + 20, Math.PI / 2 + (k - (D.leque - 1) / 2) * D.lequeAbertura, ebs() * D.lequeVel, 5);
+        else bAimed(b, D.tiros, D.tiroAbertura, ebs() * D.tiroVel);
+        if (b.rage2) bRing(b.x, b.y, D.anel, ebs() * D.anelVel, D.anelRaio);
       }
       if (timer(b, 'rjT', dt, D.rajadaIntervalo[f], D.rajadaIntervalo[f] + b.idx * 1.5))
-        for (let w = 0; w < D.rajada; w++) setTimeoutFx(w * D.rajadaPausa, () => { if (!b.dead) aimed(b, 1, 0, ebs() * D.rajadaVel); });
+        for (let w = 0; w < D.rajada; w++) setTimeoutFx(w * D.rajadaPausa, () => { if (!b.dead) bAimed(b, 1, 0, ebs() * D.rajadaVel); });
     },
     draw(b) { const c = b.idx ? ['#b03050', '#5a1428'] : ['#3060b0', '#142c5a']; drawPlane(b.x, b.y, 2.4, c[0], c[1], true, 0, b.flash > 0); },
   },
@@ -218,7 +223,7 @@ const BOSSES = {
       if (timer(b, 'seedT', dt, fury(b, D.sementeIntervalo), D.sementePrimeiro)) {   // sementes: estouram em anel
         const n = fury(b, D.sementes);
         for (let k = 0; k < n; k++) { const a = Math.PI / 2 + (k - (n - 1) / 2) * D.sementeAbertura, v = ebs() * D.sementeVel;
-          S.ebullets.push({ x: b.x, y: b.y + 30, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: D.sementeRaio, d: 12 * eDmg(), burst: D.sementeEstoura }); }
+          S.ebullets.push({ x: b.x, y: b.y + 30, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: D.sementeRaio, d: bDmg(), bd: bDmg(), burst: D.sementeEstoura }); }
       }
     },
     draw(b) {
@@ -240,12 +245,12 @@ const BOSSES = {
       if (b.mode === 'show') {
         b.alpha = 1; b.invuln = false; patrol(b, dt, D.vel);
         b.bt = (b.bt || 0) + dt; b.y = b.baseY + Math.sin(b.bt * D.ondulaVel) * D.ondula;
-        b.patT -= dt; if (b.patT <= 0) { b.patT = fury(b, D.intervalo); aimed(b, fury(b, D.tiros), D.tiroAbertura, ebs() * D.tiroVel); }
+        b.patT -= dt; if (b.patT <= 0) { b.patT = fury(b, D.intervalo); bAimed(b, fury(b, D.tiros), D.tiroAbertura, ebs() * D.tiroVel); }
         if (b.mt <= 0) { b.mode = 'fade'; b.mt = D.some; }
       } else if (b.mode === 'fade') {
         b.alpha = Math.max(.08, b.mt / D.some); b.invuln = true;
         if (b.mt <= 0) {
-          if (rage(b)) ring(b.x, b.y, D.anel + S.phase * D.anelPorFase, ebs() * D.anelVel, D.anelRaio);   // eco onde sumiu
+          if (rage(b)) bRing(b.x, b.y, D.anel + S.phase * D.anelPorFase, ebs() * D.anelVel, D.anelRaio);   // eco onde sumiu
           const p = nearestPlayer(b);
           b.mode = 'hidden'; b.mt = D.escondido;
           b.x = clamp((p ? p.x : W / 2) + lado() * rnd(D.pertoMin, D.pertoMax), 100, W - 100);
@@ -253,7 +258,7 @@ const BOSSES = {
         }
       } else if (b.mode === 'hidden') {
         b.alpha = .08;
-        if (b.mt <= 0) { b.mode = 'show'; b.mt = fury(b, D.aparece); ring(b.x, b.y, D.anel + S.phase * D.anelPorFase, ebs() * D.anelVel, D.anelRaio); }
+        if (b.mt <= 0) { b.mode = 'show'; b.mt = fury(b, D.aparece); bRing(b.x, b.y, D.anel + S.phase * D.anelPorFase, ebs() * D.anelVel, D.anelRaio); }
       }
     },
     draw(b) {
@@ -277,12 +282,12 @@ const BOSSES = {
       if (enter(b, dt)) return;
       patrol(b, dt, fury(b, D.vel)); bob(b, dt, D);
       b.patT -= dt;
-      if (b.patT <= 0) { b.patT = fury(b, D.intervalo); aimed(b, D.tiros, D.tiroAbertura, ebs() * D.tiroVel); }
-      if (timer(b, 'ringT', dt, fury(b, D.anelIntervalo))) ring(b.x, b.y, D.anel, ebs() * D.anelVel, D.anelRaio);
+      if (b.patT <= 0) { b.patT = fury(b, D.intervalo); bAimed(b, D.tiros, D.tiroAbertura, ebs() * D.tiroVel); }
+      if (timer(b, 'ringT', dt, fury(b, D.anelIntervalo))) bRing(b.x, b.y, D.anel, ebs() * D.anelVel, D.anelRaio);
       if (timer(b, 'gapT', dt, fury(b, D.brechaIntervalo))) {   // tiros saindo pelas brechas do escudo
         const n = fury(b, D.brechaTiros);
         for (let k = 0; k < 3; k++) { const a = b.rot + k * TAU / 3 + b.arc + (TAU / 3 - b.arc) / 2;
-          for (let j = 0; j < n; j++) eShoot(b.x + Math.cos(a) * b.shR, b.y + Math.sin(a) * b.shR, a + (j - (n - 1) / 2) * .15, ebs() * D.brechaVel, D.brechaRaio); }
+          for (let j = 0; j < n; j++) bShoot(b.x + Math.cos(a) * b.shR, b.y + Math.sin(a) * b.shR, a + (j - (n - 1) / 2) * .15, ebs() * D.brechaVel, D.brechaRaio); }
       }
     },
     draw(b) {
@@ -310,7 +315,7 @@ const BOSSES = {
         for (let k = 0; k < fury(b, D.paredes); k++) setTimeoutFx(k * D.paredePausa, () => {
           if (b.dead) return;
           const gap = rnd(80, W - 80), gw = D.buraco;
-          for (let x = 15; x < W; x += D.espaco) if (Math.abs(x - gap) > gw / 2) eShoot(x, -10, Math.PI / 2, ebs() * D.paredeVel, D.paredeRaio);
+          for (let x = 15; x < W; x += D.espaco) if (Math.abs(x - gap) > gw / 2) bShoot(x, -10, Math.PI / 2, ebs() * D.paredeVel, D.paredeRaio);
         });
       }
       if (timer(b, 'boltT', dt, fury(b, D.raioIntervalo), D.raioPrimeiro)) {
@@ -318,7 +323,7 @@ const BOSSES = {
         for (let k = 0; k < n; k++) { const p = k === 0 ? nearestPlayer(b) : null; beam(p ? p.x : rnd(40, W - 40), 0, D.raioLargura, D.raioAviso, D.raioDura); }
       }
       b.hail = (b.hail || 0) + dt * fury(b, D.granizo);   // granizo caindo o tempo todo
-      while (b.hail >= 1) { b.hail--; eShoot(rnd(20, W - 20), -10, Math.PI / 2 + rnd(-.2, .2), ebs() * D.granizoVel, D.granizoRaio); }
+      while (b.hail >= 1) { b.hail--; bShoot(rnd(20, W - 20), -10, Math.PI / 2 + rnd(-.2, .2), ebs() * D.granizoVel, D.granizoRaio); }
     },
     draw(b) {
       const f = b.flash > 0;

@@ -143,7 +143,7 @@ function step(dt) {
       if (p) { const a = Math.atan2(e.vy, e.vx), ta = Math.atan2(p.y - e.y, p.x - e.x); let da = ta - a; while (da > Math.PI) da -= TAU; while (da < -Math.PI) da += TAU;
         const na = a + clamp(da, -1.6 * dt, 1.6 * dt), sp = 150; e.vx = Math.cos(na) * sp; e.vy = Math.sin(na) * sp; }
     }
-    if (e.burst !== undefined) { e.burst -= dt; if (e.burst <= 0) { e.dead = true; boom(e.x, e.y, 22, '#ffb040'); ring(e.x, e.y, 8, ebs() * .5, 5); continue; } }
+    if (e.burst !== undefined) { e.burst -= dt; if (e.burst <= 0) { e.dead = true; boom(e.x, e.y, 22, '#ffb040'); ring(e.x, e.y, 8, ebs() * .5, 5, undefined, e.bd); continue; } }
     e.x += e.vx * dt; e.y += e.vy * dt;
     if (e.y < -40 || e.y > H + 20 || e.x < -20 || e.x > W + 20) { e.dead = true; continue; }
     for (const p of S.players) if (p.alive && d2(p, e) < (p.r - 5 + e.r) ** 2) { hurt(p, e.d); e.dead = true; break; }

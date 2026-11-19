@@ -5,9 +5,9 @@
 // Tempos em segundos. Ângulos (abertura, giro) em radianos. Distâncias em px lógicos (altura da tela = 860).
 
 // Vida = base × (1 + porFase × (fase − 1)) × doisJogadores (se houver J2) × vida do chefão
-const BOSS_HP = { base: 900, porFase: .5, doisJogadores: 1.4 };
-// Dano ao encostar no chefão e do raio (os dois crescem com a fase)
-const BOSS_DMG = { toque: 30, toqueAriete: 40, raio: 25 };
+const BOSS_HP = { base: 1800, porFase: .5, doisJogadores: 1.4 };
+// Dano dos chefões (tudo cresce com a fase): toque, raio e tiros. Tiros de inimigos comuns causam 12.
+const BOSS_DMG = { toque: 60, toqueAriete: 80, raio: 50, tiro: 24 };
 // Ordem das fases (depois da 10ª recomeça com "+1", "+2"...)
 const BOSS_ORDER = ['fortress', 'carrier', 'laser', 'vortex', 'ram', 'twins', 'sower', 'ghost', 'guardian', 'storm'];
 
@@ -31,7 +31,7 @@ const BOSS_DATA = {
     escolta: 'scout', escoltaFuria: 'kamikaze', escoltaPorLado: [2, 3],
     anelIntervalo: [2.4, 1.8], anel: 12, anelPorFase: 1, anelVel: .55, anelRaio: 7,
     canhaoIntervalo: [1.5, 1], canhaoDist: 75, canhaoVel: 1.1, canhaoRaio: 6,   // canhões das asas, mirados
-    misselIntervalo: [6, 3.5], misseis: [1, 2], misselRaio: 8, misselDano: 14, misselDura: 4.5,  // teleguiados
+    misselIntervalo: [6, 3.5], misseis: [1, 2], misselRaio: 8, misselDano: 28, misselDura: 4.5,  // teleguiados
   },
   laser: {
     name: 'Colosso do Raio', r: 58, vida: 1,
@@ -81,7 +81,7 @@ const BOSS_DATA = {
     vel: [80, 110],
     balanco: 45, balancoVel: 1.5,
     minaIntervalo: [1.1, .7], minas: [1, 2], minaPavio: 5,
-    orbeIntervalo: [2.3, 1.5], orbePrimeiro: 2, orbes: [2, 3], orbeRaio: 8, orbeDano: 14, orbeDura: 5,
+    orbeIntervalo: [2.3, 1.5], orbePrimeiro: 2, orbes: [2, 3], orbeRaio: 8, orbeDano: 28, orbeDura: 5,
     sementeIntervalo: [2.6, 1.8], sementePrimeiro: 3, sementes: [3, 5], sementeAbertura: .35, sementeVel: .55, sementeRaio: 7, sementeEstoura: 1.1,
   },
   ghost: {
