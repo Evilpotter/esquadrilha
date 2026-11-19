@@ -1,0 +1,47 @@
+# Teste automático: a cada envio, joga sozinho a versão oficial e a de teste.
+# Se aparecer erro de JavaScript, o envio fica marcado com ✗ vermelho no GitHub (e chega e-mail).
+name: Teste automático
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  jogar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar Playwright e Pillow
+        run: pip install playwright pillow
+
+      - name: Conferir Chrome
+        run: /usr/bin/google-chrome --version
+
+      - name: Teste de fumaça – versão de teste
+        run: python3 ferramentas/testar.py fumaca --raiz teste
+
+      - name: Chefões – versão de teste
+        run: python3 ferramentas/testar.py chefoes --raiz teste
+
+      - name: Teste de fumaça – versão oficial
+        run: python3 ferramentas/testar.py fumaca --raiz .
+
+      - name: Fotos da versão de teste
+        if: always()
+        run: python3 ferramentas/testar.py fotos --raiz teste --saida fotos
+
+      - name: Guardar fotos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fotos
+          path: fotos/
+          retention-days: 14

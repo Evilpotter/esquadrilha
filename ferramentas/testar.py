@@ -6,6 +6,8 @@ Comandos:
   fotos       título/hangar e uma cena de cada cenário com skins  -> dist/foto-*.png
   bumerangues Bumerangue com as 8 skins lado a lado               -> dist/bumerangues.png
   bestiario   todos os inimigos por cenário e os 10 chefões       -> dist/bestiario-*.png
+  chefoes     luta 40 s com cada chefão (1 e 2 jogadores) e grava o resumo -> dist/chefoes.json
+              (mesmo arquivo antes/depois = comportamento igual)
   todos       tudo acima
 O sorteio (Math.random) é fixo, então as fotos saem iguais a cada execução:
 servem para comparar antes/depois de uma mudança (ferramentas/comparar.py).
@@ -129,8 +131,33 @@ def bestiario(p):
     print('bestiário: ok')
 
 
+def chefoes(p):
+    import json, hashlib
+    b, pg = abrir(p)
+    res = pg.evaluate("""() => {
+      const g = window.__g, out = {};
+      for (const np of [1, 2]) for (let ph = 1; ph <= 10; ph++) {
+        g.newGame(np, np === 1 ? [0] : [0, 1]); g.S.scene = 'space'; g.S.banner = null; g.S.spawnT = 1e9;
+        g.S.phase = ph; g.spawnBoss(); for (const pl of g.S.players) pl.inv = 1e9;
+        const reg = [];
+        for (let i = 0; i < 60 * 40; i++) {
+          g.step(1 / 60);
+          if (g.S.mode !== 'play') { for (let k = 0; k < g.S.players.length; k++) try { g.choose(k, 0); } catch (e) {} }
+          if (i % 60 === 59) reg.push(g.S.bosses.map(c => [Math.round(c.x), Math.round(c.y), Math.round(c.hp), c.dead ? 1 : 0]).concat([[g.S.ebullets.length, g.S.hazards.length, g.S.enemies.length]]));
+        }
+        out[np + 'J-fase' + ph + '-' + (g.S.bosses[0] ? g.S.bosses[0].kind : '?')] = reg;
+      }
+      return out;
+    }""")
+    b.close()
+    (dist / 'chefoes.json').write_text(json.dumps(res), encoding='utf-8')
+    for k, v in res.items():
+        print(' ', k, hashlib.md5(json.dumps(v).encode()).hexdigest()[:8], 'vida final', [c[2] for c in v[-1][:-1]])
+    print('chefões: ok')
+
+
 from playwright.sync_api import sync_playwright
-CMDS = {'fumaca': [fumaca], 'fotos': [fotos], 'bumerangues': [bumerangues], 'bestiario': [bestiario],
+CMDS = {'fumaca': [fumaca], 'fotos': [fotos], 'bumerangues': [bumerangues], 'bestiario': [bestiario], 'chefoes': [chefoes],
         'todos': [fumaca, fotos, bumerangues, bestiario]}
 with sync_playwright() as p:
     for fn in CMDS[a.cmd]:

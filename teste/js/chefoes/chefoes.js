@@ -1,4 +1,6 @@
-// ---------- Chefões ----------
+// ---------- Chefões: comportamento ----------
+// Números (vida, tempos, quantidade de tiros…) ficam em js/dados/chefoes.js (BOSS_DATA).
+const fury = (b, par) => rage(b) ? par[1] : par[0];
 function patrol(b, dt, spd) {
   b.x += b.dir * spd * dt;
   const m = Math.min(110, W * .2);
@@ -16,34 +18,34 @@ function beam(x, y0, w, warn, life) { S.hazards.push({ x, y0, w, warn, life, max
 
 const BOSSES = {
   fortress: {
-    name: 'Fortaleza Voadora', r: 60,
     update(b, dt) {
+      const D = BOSS_DATA.fortress;
       if (enter(b, dt)) return;
-      patrol(b, dt, rage(b) ? 120 : 70);
+      patrol(b, dt, fury(b, D.vel));
       b.patT -= dt;
       if (b.patT > 0) return;
-      b.patT = rage(b) ? 1.3 : 2.1;
-      const pat = (b.pat = (b.pat || 0) + 1) % 3, sp = ebs() * .9;
-      if (pat === 0) ring(b.x, b.y, 14 + S.phase * 2, sp, 6);
-      else if (pat === 1) for (let w = 0; w < 3; w++) setTimeoutFx(w * .18, () => { if (!b.dead) aimed(b, 3, .14, sp * 1.2); });
-      else for (let k = 0; k < 9; k++) eShoot(b.x, b.y + 30, Math.PI / 2 + (k - 4) * .17, sp, 7);
+      b.patT = fury(b, D.intervalo);
+      const pat = (b.pat = (b.pat || 0) + 1) % 3, sp = ebs() * D.velTiro;
+      if (pat === 0) ring(b.x, b.y, D.anel + S.phase * D.anelPorFase, sp, D.anelRaio);
+      else if (pat === 1) for (let w = 0; w < D.rajadas; w++) setTimeoutFx(w * D.rajadaPausa, () => { if (!b.dead) aimed(b, D.rajadaTiros, D.rajadaAbertura, sp * D.rajadaVel); });
+      else for (let k = 0; k < D.leque; k++) eShoot(b.x, b.y + 30, Math.PI / 2 + (k - (D.leque - 1) / 2) * D.lequeAbertura, sp, D.lequeRaio);
     },
     draw(b) { drawBoss(b); },
   },
   carrier: {
-    name: 'Porta-aviões', r: 64, hpM: 1.1,
     update(b, dt) {
+      const D = BOSS_DATA.carrier;
       if (enter(b, dt)) return;
-      patrol(b, dt, 50);
+      patrol(b, dt, D.vel);
       b.patT -= dt;
       if (b.patT <= 0) {
-        b.patT = rage(b) ? 2 : 3;
+        b.patT = fury(b, D.intervalo);
         b.wave = (b.wave || 0) + 1;
-        const type = rage(b) && b.wave % 2 ? 'kamikaze' : 'scout';
-        for (const s of [-1, 1]) for (let k = 0; k < 2; k++) addEnemy(type, b.x + s * (70 + k * 20), b.y + 20, { stopY: rnd(150, 300) });
+        const type = rage(b) && b.wave % 2 ? D.escoltaFuria : D.escolta;
+        for (const s of [-1, 1]) for (let k = 0; k < D.escoltaPorLado; k++) addEnemy(type, b.x + s * (70 + k * 20), b.y + 20, { stopY: rnd(150, 300) });
       }
-      b.ringT = (b.ringT || 2.5) - dt;
-      if (b.ringT <= 0) { b.ringT = 2.5; ring(b.x, b.y, 10 + S.phase, ebs() * .55, 7); }
+      b.ringT = (b.ringT || D.anelIntervalo) - dt;
+      if (b.ringT <= 0) { b.ringT = D.anelIntervalo; ring(b.x, b.y, D.anel + S.phase * D.anelPorFase, ebs() * D.anelVel, D.anelRaio); }
     },
     draw(b) {
       const f = b.flash > 0;
@@ -59,20 +61,20 @@ const BOSSES = {
     },
   },
   laser: {
-    name: 'Colosso do Raio', r: 58,
     update(b, dt) {
+      const D = BOSS_DATA.laser;
       if (enter(b, dt)) return;
       const p = nearestPlayer(b);
-      if (p) b.x += clamp(p.x - b.x, -70 * dt, 70 * dt);
+      if (p) b.x += clamp(p.x - b.x, -D.vel * dt, D.vel * dt);
       b.patT -= dt;
       if (b.patT <= 0) {
-        b.patT = rage(b) ? 2.2 : 3;
+        b.patT = fury(b, D.intervalo);
         const px = p ? p.x : b.x;
-        beam(px, b.y + 40, 38, 1, .8);
-        if (rage(b)) { beam(px - 160, b.y + 40, 38, 1.3, .8); beam(px + 160, b.y + 40, 38, 1.3, .8); }
+        beam(px, b.y + 40, D.raioLargura, D.raioAviso, D.raioDura);
+        if (rage(b)) { beam(px - D.raioExtraDist, b.y + 40, D.raioLargura, D.raioExtraAviso, D.raioDura); beam(px + D.raioExtraDist, b.y + 40, D.raioLargura, D.raioExtraAviso, D.raioDura); }
       }
-      b.shotT = (b.shotT || 1.5) - dt;
-      if (b.shotT <= 0) { b.shotT = 1.5; aimed(b, 2, .2, ebs(), 5); }
+      b.shotT = (b.shotT || D.tiroIntervalo) - dt;
+      if (b.shotT <= 0) { b.shotT = D.tiroIntervalo; aimed(b, D.tiros, D.tiroAbertura, ebs() * D.tiroVel, D.tiroRaio); }
     },
     draw(b) {
       const f = b.flash > 0;
@@ -86,19 +88,19 @@ const BOSSES = {
     },
   },
   vortex: {
-    name: 'Vórtice', r: 54,
     update(b, dt) {
+      const D = BOSS_DATA.vortex;
       if (enter(b, dt)) return;
       b.x = W / 2 + Math.sin(b.t * .5) * Math.min(W * .25, 300);
       b.cyc = (b.cyc || 0) + dt;
-      const on = b.cyc % 6.5 < 5;
-      b.spin = (b.spin || 0) + dt * (rage(b) ? 2.3 : 1.7);
+      const on = b.cyc % D.ciclo < D.atirando;
+      b.spin = (b.spin || 0) + dt * fury(b, D.giro);
       if (!on) return;
       b.shotT = (b.shotT || 0) - dt;
       if (b.shotT <= 0) {
-        b.shotT = .1;
-        const arms = rage(b) ? 4 : 3;
-        for (let k = 0; k < arms; k++) eShoot(b.x, b.y, b.spin + k / arms * TAU, ebs() * .6, 5);
+        b.shotT = D.cadencia;
+        const arms = fury(b, D.bracos);
+        for (let k = 0; k < arms; k++) eShoot(b.x, b.y, b.spin + k / arms * TAU, ebs() * D.velTiro, D.tiroRaio);
       }
     },
     draw(b) {
@@ -112,26 +114,26 @@ const BOSSES = {
     },
   },
   ram: {
-    name: 'Aríete', r: 50, hpM: .9,
     update(b, dt) {
+      const D = BOSS_DATA.ram;
       if (!b.mode && enter(b, dt)) return;
       if (!b.mode) b.mode = 'patrol';
       if (b.mode === 'patrol') {
-        patrol(b, dt, 90);
+        patrol(b, dt, D.vel);
         b.patT -= dt;
-        if (b.patT <= 0) { b.mode = 'warn'; b.wt = rage(b) ? .45 : .75; }
-        if (Math.random() < dt * 1.2) aimed(b, 1, 0, ebs());
+        if (b.patT <= 0) { b.mode = 'warn'; b.wt = fury(b, D.aviso); }
+        if (Math.random() < dt * D.chanceTiro) aimed(b, 1, 0, ebs());
       } else if (b.mode === 'warn') {
         b.wt -= dt; const p = nearestPlayer(b); if (p) { b.tx = p.x; b.ty2 = p.y; }
-        if (b.wt <= 0) { const a = Math.atan2((b.ty2 || H) - b.y, (b.tx || b.x) - b.x); b.vx = Math.cos(a) * 700; b.vy = Math.sin(a) * 700; b.mode = 'charge'; }
+        if (b.wt <= 0) { const a = Math.atan2((b.ty2 || H) - b.y, (b.tx || b.x) - b.x); b.vx = Math.cos(a) * D.investida; b.vy = Math.sin(a) * D.investida; b.mode = 'charge'; }
       } else if (b.mode === 'charge') {
         b.x += b.vx * dt; b.y += b.vy * dt;
         b.dropT = (b.dropT || 0) - dt;
-        if (b.dropT <= 0) { b.dropT = .07; eShoot(b.x, b.y, Math.atan2(b.vy, b.vx) + Math.PI / 2, ebs() * .45, 5); eShoot(b.x, b.y, Math.atan2(b.vy, b.vx) - Math.PI / 2, ebs() * .45, 5); }
+        if (b.dropT <= 0) { b.dropT = D.rastroCadencia; eShoot(b.x, b.y, Math.atan2(b.vy, b.vx) + Math.PI / 2, ebs() * D.rastroVel, D.rastroRaio); eShoot(b.x, b.y, Math.atan2(b.vy, b.vx) - Math.PI / 2, ebs() * D.rastroVel, D.rastroRaio); }
         if (b.y > H - 60 || b.x < 40 || b.x > W - 40 || b.y < 40) { b.mode = 'back'; b.x = clamp(b.x, 40, W - 40); b.y = clamp(b.y, 40, H - 60); }
       } else {
-        const dy = b.ty - b.y; b.y += clamp(dy, -260 * dt, 260 * dt);
-        if (Math.abs(dy) < 2) { b.mode = 'patrol'; b.patT = rage(b) ? 1.8 : 3; ring(b.x, b.y, 12, ebs() * .6, 6); }
+        const dy = b.ty - b.y; b.y += clamp(dy, -D.volta * dt, D.volta * dt);
+        if (Math.abs(dy) < 2) { b.mode = 'patrol'; b.patT = fury(b, D.intervalo); ring(b.x, b.y, D.anel, ebs() * D.anelVel, D.anelRaio); }
       }
     },
     draw(b) {
@@ -146,32 +148,32 @@ const BOSSES = {
     },
   },
   twins: {
-    name: 'Gêmeos', r: 42,
     update(b, dt) {
+      const D = BOSS_DATA.twins, f = b.rage2 ? 1 : 0;
       if (enter(b, dt)) return;
       const rad = Math.min(W / 2 - 80, 320);
-      b.ang = (b.ang === undefined ? b.idx * Math.PI : b.ang) + dt * (b.rage2 ? 1.4 : .8);
+      b.ang = (b.ang === undefined ? b.idx * Math.PI : b.ang) + dt * D.giro[f];
       b.x = W / 2 + Math.cos(b.ang) * rad; b.y = b.ty + Math.sin(b.ang) * 60;
       b.patT -= dt;
       if (b.patT <= 0) {
-        b.patT = b.rage2 ? .9 : 1.6;
-        aimed(b, 2, .12, ebs() * 1.05);
-        if (b.rage2) ring(b.x, b.y, 12, ebs() * .6, 5);
+        b.patT = D.intervalo[f];
+        aimed(b, D.tiros, D.tiroAbertura, ebs() * D.tiroVel);
+        if (b.rage2) ring(b.x, b.y, D.anel, ebs() * D.anelVel, D.anelRaio);
       }
     },
     draw(b) { const c = b.idx ? ['#b03050', '#5a1428'] : ['#3060b0', '#142c5a']; drawPlane(b.x, b.y, 2.4, c[0], c[1], true, 0, b.flash > 0); },
   },
   sower: {
-    name: 'Semeador', r: 56,
     update(b, dt) {
+      const D = BOSS_DATA.sower;
       if (enter(b, dt)) return;
-      patrol(b, dt, 80);
+      patrol(b, dt, D.vel);
       b.patT -= dt;
-      if (b.patT <= 0) { b.patT = rage(b) ? .8 : 1.2; addEnemy('mine', b.x + rnd(-50, 50), b.y + 30, { fuse: 5 }); }
-      b.orbT = (b.orbT || 2) - dt;
+      if (b.patT <= 0) { b.patT = fury(b, D.minaIntervalo); addEnemy('mine', b.x + rnd(-50, 50), b.y + 30, { fuse: D.minaPavio }); }
+      b.orbT = (b.orbT || D.orbePrimeiro) - dt;
       if (b.orbT <= 0) {
-        b.orbT = rage(b) ? 1.6 : 2.6;
-        for (const s of [-1, 1]) S.ebullets.push({ x: b.x + s * 40, y: b.y, vx: s * 80, vy: 60, r: 8, d: 14 * eDmg(), home: true, life: 5 });
+        b.orbT = fury(b, D.orbeIntervalo);
+        for (const s of [-1, 1]) S.ebullets.push({ x: b.x + s * 40, y: b.y, vx: s * 80, vy: 60, r: D.orbeRaio, d: D.orbeDano * eDmg(), home: true, life: D.orbeDura });
       }
     },
     draw(b) {
@@ -185,21 +187,21 @@ const BOSSES = {
     },
   },
   ghost: {
-    name: 'Fantasma', r: 50,
     update(b, dt) {
+      const D = BOSS_DATA.ghost;
       if (enter(b, dt)) return;
-      if (!b.mode) { b.mode = 'show'; b.mt = 2.5; }
+      if (!b.mode) { b.mode = 'show'; b.mt = D.apareceInicio; }
       b.mt -= dt;
       if (b.mode === 'show') {
-        b.alpha = 1; b.invuln = false; patrol(b, dt, 60);
-        b.patT -= dt; if (b.patT <= 0) { b.patT = rage(b) ? .9 : 1.4; aimed(b, 5, .16, ebs()); }
-        if (b.mt <= 0) { b.mode = 'fade'; b.mt = .5; }
+        b.alpha = 1; b.invuln = false; patrol(b, dt, D.vel);
+        b.patT -= dt; if (b.patT <= 0) { b.patT = fury(b, D.intervalo); aimed(b, D.tiros, D.tiroAbertura, ebs() * D.tiroVel); }
+        if (b.mt <= 0) { b.mode = 'fade'; b.mt = D.some; }
       } else if (b.mode === 'fade') {
-        b.alpha = Math.max(.08, b.mt / .5); b.invuln = true;
-        if (b.mt <= 0) { b.mode = 'hidden'; b.mt = .6; b.x = rnd(100, W - 100); b.y = rnd(100, 300); }
+        b.alpha = Math.max(.08, b.mt / D.some); b.invuln = true;
+        if (b.mt <= 0) { b.mode = 'hidden'; b.mt = D.escondido; b.x = rnd(100, W - 100); b.y = rnd(100, 300); }
       } else if (b.mode === 'hidden') {
         b.alpha = .08;
-        if (b.mt <= 0) { b.mode = 'show'; b.mt = rage(b) ? 2 : 2.8; ring(b.x, b.y, 16 + S.phase, ebs() * .65, 6); }
+        if (b.mt <= 0) { b.mode = 'show'; b.mt = fury(b, D.aparece); ring(b.x, b.y, D.anel + S.phase * D.anelPorFase, ebs() * D.anelVel, D.anelRaio); }
       }
     },
     draw(b) {
@@ -215,16 +217,16 @@ const BOSSES = {
     },
   },
   guardian: {
-    name: 'Guardião', r: 48, hpM: .9,
-    init(b) { b.shR = 92; b.rot = 0; b.arc = 1.25; },
+    init(b) { const D = BOSS_DATA.guardian; b.shR = D.escudoRaio; b.rot = 0; b.arc = D.escudoArco; },
     update(b, dt) {
-      b.rot += dt * (rage(b) ? 2.1 : 1.2);
+      const D = BOSS_DATA.guardian;
+      b.rot += dt * fury(b, D.giro);
       if (enter(b, dt)) return;
-      patrol(b, dt, 55);
+      patrol(b, dt, D.vel);
       b.patT -= dt;
-      if (b.patT <= 0) { b.patT = rage(b) ? 1 : 1.4; aimed(b, 3, .12, ebs()); }
-      b.ringT = (b.ringT || 4) - dt;
-      if (b.ringT <= 0) { b.ringT = rage(b) ? 2.5 : 4; ring(b.x, b.y, 18, ebs() * .6, 6); }
+      if (b.patT <= 0) { b.patT = fury(b, D.intervalo); aimed(b, D.tiros, D.tiroAbertura, ebs() * D.tiroVel); }
+      b.ringT = (b.ringT || D.anelIntervalo[0]) - dt;
+      if (b.ringT <= 0) { b.ringT = fury(b, D.anelIntervalo); ring(b.x, b.y, D.anel, ebs() * D.anelVel, D.anelRaio); }
     },
     draw(b) {
       const f = b.flash > 0;
@@ -239,21 +241,21 @@ const BOSSES = {
     },
   },
   storm: {
-    name: 'Tempestade', r: 60, hpM: 1.1,
     update(b, dt) {
+      const D = BOSS_DATA.storm;
       if (enter(b, dt)) return;
       b.x = W / 2 + Math.sin(b.t * .4) * Math.min(W * .3, 260);
       b.patT -= dt;
       if (b.patT <= 0) {
-        b.patT = rage(b) ? 2 : 2.6;
-        const gap = rnd(80, W - 80), gw = 150;
-        for (let x = 15; x < W; x += 44) if (Math.abs(x - gap) > gw / 2) eShoot(x, -10, Math.PI / 2, ebs() * .55, 6);
+        b.patT = fury(b, D.paredeIntervalo);
+        const gap = rnd(80, W - 80), gw = D.buraco;
+        for (let x = 15; x < W; x += D.espaco) if (Math.abs(x - gap) > gw / 2) eShoot(x, -10, Math.PI / 2, ebs() * D.paredeVel, D.paredeRaio);
       }
-      b.boltT = (b.boltT || 1.5) - dt;
+      b.boltT = (b.boltT || D.raioPrimeiro) - dt;
       if (b.boltT <= 0) {
-        b.boltT = rage(b) ? 1.6 : 2.4;
-        const n = rage(b) ? 4 : 2;
-        for (let k = 0; k < n; k++) { const p = k === 0 ? nearestPlayer(b) : null; beam(p ? p.x : rnd(40, W - 40), 0, 44, 1.1, .35); }
+        b.boltT = fury(b, D.raioIntervalo);
+        const n = fury(b, D.raios);
+        for (let k = 0; k < n; k++) { const p = k === 0 ? nearestPlayer(b) : null; beam(p ? p.x : rnd(40, W - 40), 0, D.raioLargura, D.raioAviso, D.raioDura); }
       }
     },
     draw(b) {
@@ -267,18 +269,17 @@ const BOSSES = {
     },
   },
 };
-const BOSS_ORDER = ['fortress', 'carrier', 'laser', 'vortex', 'ram', 'twins', 'sower', 'ghost', 'guardian', 'storm'];
 
 function mkBoss(kind, hp, extra) {
   const def = BOSSES[kind];
-  const b = Object.assign({ boss: true, kind, x: W / 2, y: -100, ty: 160, r: def.r, hp, maxHp: hp, t: 0, patT: 2, dir: 1, flash: 0, alpha: 1 }, extra || {});
+  const b = Object.assign({ boss: true, kind, x: W / 2, y: -100, ty: 160, r: BOSS_DATA[kind].r, hp, maxHp: hp, t: 0, patT: 2, dir: 1, flash: 0, alpha: 1 }, extra || {});
   if (def.init) def.init(b);
   return b;
 }
 function spawnBoss() {
-  const kind = BOSS_ORDER[(S.phase - 1) % BOSS_ORDER.length], def = BOSSES[kind];
-  const hp = 900 * (1 + .5 * (S.phase - 1)) * (S.np === 2 ? 1.4 : 1) * (def.hpM || 1);
-  if (kind === 'twins') { for (let i = 0; i < 2; i++) S.bosses.push(mkBoss(kind, hp * .55, { idx: i })); }
+  const kind = BOSS_ORDER[(S.phase - 1) % BOSS_ORDER.length], def = BOSS_DATA[kind];
+  const hp = BOSS_HP.base * (1 + BOSS_HP.porFase * (S.phase - 1)) * (S.np === 2 ? BOSS_HP.doisJogadores : 1) * def.vida;
+  if (kind === 'twins') { for (let i = 0; i < 2; i++) S.bosses.push(mkBoss(kind, hp * def.vidaCada, { idx: i })); }
   else S.bosses.push(mkBoss(kind, hp));
   S.bossName = def.name + (S.phase > BOSS_ORDER.length ? ' +' + Math.floor((S.phase - 1) / BOSS_ORDER.length) : '');
   S.banner = { t: 2.5, text: S.bossName };
@@ -288,14 +289,14 @@ function updateBosses(dt) {
     if (b.dead) continue;
     b.t += dt; if (b.flash > 0) b.flash -= dt;
     BOSSES[b.kind].update(b, dt);
-    if (!b.invuln) for (const p of S.players) if (p.alive && d2(p, b) < (p.r + b.r - 10) ** 2) hurt(p, (b.kind === 'ram' ? 40 : 30) * eDmg());
+    if (!b.invuln) for (const p of S.players) if (p.alive && d2(p, b) < (p.r + b.r - 10) ** 2) hurt(p, (b.kind === 'ram' ? BOSS_DMG.toqueAriete : BOSS_DMG.toque) * eDmg());
   }
 }
 function updateHazards(dt) {
   for (const h of S.hazards) {
     if (h.warn > 0) { h.warn -= dt; continue; }
     h.life -= dt;
-    for (const p of S.players) if (p.alive && p.y > h.y0 && Math.abs(p.x - h.x) < h.w / 2 + p.r * .6) hurt(p, 25 * eDmg());
+    for (const p of S.players) if (p.alive && p.y > h.y0 && Math.abs(p.x - h.x) < h.w / 2 + p.r * .6) hurt(p, BOSS_DMG.raio * eDmg());
   }
   S.hazards = S.hazards.filter(h => h.warn > 0 || h.life > 0);
 }
