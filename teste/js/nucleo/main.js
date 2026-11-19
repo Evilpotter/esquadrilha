@@ -5,7 +5,7 @@ genBg();
 let last = performance.now();
 function frame(now) {
   const dt = Math.min(.033, (now - last) / 1000); last = now;
-  step(dt); draw();
+  lerControles(); step(dt); draw();
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

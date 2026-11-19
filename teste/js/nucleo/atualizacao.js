@@ -40,8 +40,10 @@ function step(dt) {
     const k1 = i === 0, k2 = i === 1 || one;
     if (k1) { if (keys.KeyA) mx--; if (keys.KeyD) mx++; if (keys.KeyW) my--; if (keys.KeyS) my++; }
     if (k2) { if (keys.ArrowLeft) mx--; if (keys.ArrowRight) mx++; if (keys.ArrowUp) my--; if (keys.ArrowDown) my++; }
+    const pm = padMov[one ? 0 : i];
+    if (pm.on) { mx += pm.x; my += pm.y; }
     mx = clamp(mx, -1, 1); my = clamp(my, -1, 1);
-    const len = Math.hypot(mx, my) || 1;
+    const len = Math.max(1, Math.hypot(mx, my)); // analógico do controle pode ir mais devagar
     p.x += mx / len * p.spd * dt; p.y += my / len * p.spd * dt;
     if (i === 0 && S.touch && S.touch.cx !== undefined) {
       const tx = S.touch.px + (S.touch.cx - S.touch.x), ty = S.touch.py + (S.touch.cy - S.touch.y);

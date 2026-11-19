@@ -222,7 +222,7 @@ function drawTitle() {
     const w = Math.min(W / 2 - 40, 230), x = i ? W / 2 + 10 : W / 2 - 10 - w;
     cx.fillStyle = i ? PCOL[1].dark : PCOL[0].dark; roundRect(x, 470, w, 60, 12); cx.fill();
     txt(label, x + w / 2, 507, 20, '#fff', 'center', 700);
-    txt('tecla ' + (i + 1), x + w / 2, 550, 12, '#cfe3f5', 'center', 500);
+    txt('tecla ' + (i + 1) + (padQtd ? (i ? ' ou Y' : ' ou A') : ''), x + w / 2, 550, 12, '#cfe3f5', 'center', 500);
   }
   cx.fillStyle = 'rgba(5,12,22,.85)'; cx.fillRect(W / 2 - Math.min(W / 2 - 20, 260), 586, Math.min(W - 40, 520), 262);
   const lines = [
@@ -232,7 +232,7 @@ function drawTitle() {
     'Cada nível: escolha 1 de 3 melhorias.',
     'Fim da fase: chefão. Derrotando, escolha nova arma',
     'ou uma melhoria forte de arma.',
-    'P ou Esc: pausa      F: tela cheia',
+    padQtd ? 'Controle: analógico move · A confirma · Start pausa' : 'P ou Esc: pausa      F: tela cheia',
     'Celular: arraste para mover',
   ];
   lines.forEach((l, k) => txt(l, W / 2, 618 + k * 29, 14, k === 0 ? '#ffd36b' : '#e8eef5', 'center', 500));
