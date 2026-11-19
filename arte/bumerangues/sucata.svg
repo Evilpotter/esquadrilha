@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-42 -42 84 84">
+<g fill="#8A8F96" stroke="#24160c" stroke-width="3" stroke-linejoin="round"><rect x="-5" y="-27" width="10" height="10" rx="2" transform="rotate(0)"/><rect x="-5" y="-27" width="10" height="10" rx="2" transform="rotate(45)"/><rect x="-5" y="-27" width="10" height="10" rx="2" transform="rotate(90)"/><rect x="-5" y="-27" width="10" height="10" rx="2" transform="rotate(135)"/><rect x="-5" y="-27" width="10" height="10" rx="2" transform="rotate(180)"/><rect x="-5" y="-27" width="10" height="10" rx="2" transform="rotate(225)"/><rect x="-5" y="-27" width="10" height="10" rx="2" transform="rotate(270)"/><rect x="-5" y="-27" width="10" height="10" rx="2" transform="rotate(315)"/></g>
+<circle r="20" fill="#E08A2E" stroke="#24160c" stroke-width="3.5"/><circle r="8" fill="#8A8F96" stroke="#24160c" stroke-width="3"/>
+<g fill="#24160c"><circle cx="-12" cy="0" r="2"/><circle cx="12" cy="0" r="2"/><circle cx="0" cy="-12" r="2"/><circle cx="0" cy="12" r="2"/></g>
+<path d="M-12 -10 A15 15 0 0 1 2 -16" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+</svg>

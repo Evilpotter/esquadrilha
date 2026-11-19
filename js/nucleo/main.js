@@ -1,0 +1,16 @@
+// ---------- Inicialização e laço principal ----------
+resize();
+genBg();
+
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(.033, (now - last) / 1000); last = now;
+  step(dt); draw();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// desenhos: carrega os SVG de arte/ e prepara as imagens (até lá usa o desenho simples)
+const arteOk = carregarArte().then(() => { buildSkinImages(); buildShotImages(); buildBoomImages(); buildBestImages(); });
+
+window.__g = { step, draw, newGame, addEnemy, spawnBoss, addRock, choose, shipChoose, openShipSelect, get S() { return S; }, SKINS, skinSave, unlockSkin, skinImg, arte: arteOk, VERSAO };
