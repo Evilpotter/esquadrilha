@@ -85,10 +85,7 @@ function drawGame() {
       cx.beginPath(); cx.ellipse(b.x, b.y, b.r * .8, b.r * 1.8, Math.atan2(b.vx, -b.vy), 0, 7); cx.fill();
     }
   }
-  for (const e of S.ebullets) {
-    cx.fillStyle = '#ff3d6e'; cx.beginPath(); cx.arc(e.x, e.y, e.r, 0, 7); cx.fill();
-    cx.fillStyle = '#ffe0ea'; cx.beginPath(); cx.arc(e.x, e.y, e.r * .45, 0, 7); cx.fill();
-  }
+  for (const e of S.ebullets) drawEnemyShot(e);   // js/visual/tiros-inimigos.js
   for (const f of S.fx) {
     const k = f.t / f.life;
     cx.globalAlpha = 1 - k;

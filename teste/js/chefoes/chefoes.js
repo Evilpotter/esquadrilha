@@ -12,17 +12,17 @@ function enter(b, dt) { if (b.in) return false; if (b.y < b.ty) { b.y += 90 * dt
 // sobe e desce em volta de b.ty (começa suave a partir da entrada)
 function bob(b, dt, D) { b.bt = (b.bt || 0) + dt; b.y = b.ty + Math.sin(b.bt * D.balancoVel) * D.balanco; }
 function rage(b) { return b.hp < b.maxHp / 2 || b.rage2; }
-function ring(x, y, n, spd, r, off, d) { const o = off === undefined ? Math.random() : off; for (let k = 0; k < n; k++) eShoot(x, y, (k + o) / n * TAU, spd, r || 6, d); }
-function aimed(b, n, spread, spd, r, d) {
+function ring(x, y, n, spd, r, off, d, tk, c) { const o = off === undefined ? Math.random() : off; for (let k = 0; k < n; k++) eShoot(x, y, (k + o) / n * TAU, spd, r || 6, d, tk, c); }
+function aimed(b, n, spread, spd, r, d, tk) {
   const p = nearestPlayer(b); if (!p) return;
   const a = Math.atan2(p.y - b.y, p.x - b.x);
-  for (let k = 0; k < n; k++) eShoot(b.x, b.y + 20, a + (k - (n - 1) / 2) * spread, spd, r, d);
+  for (let k = 0; k < n; k++) eShoot(b.x, b.y + 20, a + (k - (n - 1) / 2) * spread, spd, r, d, tk);
 }
 // tiros dos chefões: mesmo jeito dos inimigos, mas com o dano de chefão (BOSS_DMG.tiro)
 const bDmg = () => BOSS_DMG.tiro * eDmg();
-const bShoot = (x, y, a, spd, r) => eShoot(x, y, a, spd, r, bDmg());
-const bRing = (x, y, n, spd, r, off) => ring(x, y, n, spd, r, off, bDmg());
-const bAimed = (b, n, spread, spd, r) => aimed(b, n, spread, spd, r, bDmg());
+const bShoot = (x, y, a, spd, r) => eShoot(x, y, a, spd, r, bDmg(), 'chefao');
+const bRing = (x, y, n, spd, r, off) => ring(x, y, n, spd, r, off, bDmg(), 'chefao');
+const bAimed = (b, n, spread, spd, r) => aimed(b, n, spread, spd, r, bDmg(), 'chefao');
 function aimFrom(b, x, y, spd, r) { const p = nearestPlayer(b); if (p) bShoot(x, y, Math.atan2(p.y - y, p.x - x), spd, r); }
 // raio vertical; vx ≠ 0 = raio que varre para o lado depois do aviso
 function beam(x, y0, w, warn, life, vx) { S.hazards.push({ x, y0, w, warn, life, max: warn, vx: vx || 0 }); }
@@ -71,7 +71,7 @@ const BOSSES = {
       if (timer(b, 'gunT', dt, fury(b, D.canhaoIntervalo))) for (const s of [-1, 1]) aimFrom(b, b.x + s * D.canhaoDist, b.y, ebs() * D.canhaoVel, D.canhaoRaio);
       if (timer(b, 'misT', dt, fury(b, D.misselIntervalo), 3)) {
         const n = fury(b, D.misseis);
-        for (let k = 0; k < n; k++) { const s = n === 1 ? lado() : (k ? 1 : -1); S.ebullets.push({ x: b.x + s * 30, y: b.y + 40, vx: s * 70, vy: 90, r: D.misselRaio, d: D.misselDano * eDmg(), home: true, life: D.misselDura }); }
+        for (let k = 0; k < n; k++) { const s = n === 1 ? lado() : (k ? 1 : -1); S.ebullets.push({ x: b.x + s * 30, y: b.y + 40, vx: s * 70, vy: 90, r: D.misselRaio, d: D.misselDano * eDmg(), home: true, life: D.misselDura, k: 'missil', c: '#c0392b' }); }
       }
     },
     draw(b) {
@@ -218,12 +218,12 @@ const BOSSES = {
       if (b.patT <= 0) { b.patT = fury(b, D.minaIntervalo); for (let k = 0; k < fury(b, D.minas); k++) addEnemy('mine', b.x + rnd(-60, 60), b.y + 30, { fuse: D.minaPavio }); }
       if (timer(b, 'orbT', dt, fury(b, D.orbeIntervalo), D.orbePrimeiro)) {
         const n = fury(b, D.orbes);
-        for (let k = 0; k < n; k++) { const s = [-1, 1, 0][k % 3]; S.ebullets.push({ x: b.x + s * 40, y: b.y, vx: s * 80, vy: s ? 60 : 110, r: D.orbeRaio, d: D.orbeDano * eDmg(), home: true, life: D.orbeDura }); }
+        for (let k = 0; k < n; k++) { const s = [-1, 1, 0][k % 3]; S.ebullets.push({ x: b.x + s * 40, y: b.y, vx: s * 80, vy: s ? 60 : 110, r: D.orbeRaio, d: D.orbeDano * eDmg(), home: true, life: D.orbeDura, k: 'orbe' }); }
       }
       if (timer(b, 'seedT', dt, fury(b, D.sementeIntervalo), D.sementePrimeiro)) {   // sementes: estouram em anel
         const n = fury(b, D.sementes);
         for (let k = 0; k < n; k++) { const a = Math.PI / 2 + (k - (n - 1) / 2) * D.sementeAbertura, v = ebs() * D.sementeVel;
-          S.ebullets.push({ x: b.x, y: b.y + 30, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: D.sementeRaio, d: bDmg(), bd: bDmg(), burst: D.sementeEstoura }); }
+          S.ebullets.push({ x: b.x, y: b.y + 30, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: D.sementeRaio, d: bDmg(), bd: bDmg(), burst: D.sementeEstoura, k: 'semente' }); }
       }
     },
     draw(b) {

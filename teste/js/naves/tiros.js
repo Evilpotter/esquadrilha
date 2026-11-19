@@ -133,9 +133,13 @@ function dronePos(p, k) {
   const s = k % 2 ? 1 : -1, j = k >> 1;
   return { x: p.x + s * (40 + j * 22), y: p.y + 12 + j * 14 + Math.sin(performance.now() / 300 + k) * 3 };
 }
-function eShoot(x, y, ang, spd, r, d) {
-  S.ebullets.push({ x, y, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd, r: r || 5, d: d || 12 * eDmg() });
+// k = tipo do tiro (ETIROS, em js/dados/inimigos.js); c = cor de quem atirou (desenho)
+function eShoot(x, y, ang, spd, r, d, k, c) {
+  k = k || 'bala';
+  S.ebullets.push({ x, y, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd, r: r || 5, d: d || (ETIROS[k] || ETIROS.bala).dano * eDmg(), k, c });
 }
+// atalho para inimigos comuns: tipo do tiro + cor do inimigo
+function eFire(e, k, x, y, ang, spd, r) { eShoot(x, y, ang, spd, r, undefined, k, ETYPES[e.type].color); }
 function nearestPlayer(e) {
   let best = null, bd = 1e12;
   for (const p of S.players) if (p.alive) { const dd = d2(p, e); if (dd < bd) { bd = dd; best = p; } }

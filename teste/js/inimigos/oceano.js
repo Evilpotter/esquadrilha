@@ -41,7 +41,7 @@ function mineBlast(e) {
   e.dead = true;
   boom(e.x, e.y, 34, '#ff4a4a');
   const n = 8 + Math.min(6, S.phase);
-  for (let k = 0; k < n; k++) eShoot(e.x, e.y, k / n * Math.PI * 2, ebs() * .7, 5);
+  for (let k = 0; k < n; k++) eShoot(e.x, e.y, k / n * Math.PI * 2, ebs() * .7, 5, undefined, 'bala');
 }
 
 // ---------- Inimigos comuns ----------
@@ -62,7 +62,7 @@ function updateEnemies(dt) {
         const tt = e.t - e.delay;
         e.x += -e.side * 230 * Math.max(1, W / 1000) * sp * dt;
         e.y = e.cyBase + Math.sin(tt * 1.8) * 110;
-        if (!e.shot && p && Math.abs(e.x - W / 2) < W * .2) { e.shot = true; eShoot(e.x, e.y, Math.atan2(p.y - e.y, p.x - e.x), bs); }
+        if (!e.shot && p && Math.abs(e.x - W / 2) < W * .2) { e.shot = true; eFire(e, 'laser', e.x, e.y, Math.atan2(p.y - e.y, p.x - e.x), bs); }
         if (tt > 1 && (e.x < -60 || e.x > W + 60)) e.dead = true;
         break;
       }
@@ -84,7 +84,7 @@ function updateEnemies(dt) {
         if (e.y < e.stopY || e.stay > 8) e.y += t.vy * sp * dt * (e.stay > 8 ? 2 : 1);
         else {
           e.stay += dt; e.shootT -= dt * rate;
-          if (e.shootT <= 0) { e.shootT = .24; const a = e.t * 2.2; eShoot(e.x, e.y, a, bs * .7, 5); eShoot(e.x, e.y, a + Math.PI, bs * .7, 5); }
+          if (e.shootT <= 0) { e.shootT = .24; const a = e.t * 2.2; eFire(e, 'metralhadora', e.x, e.y, a, bs * .7, 5); eFire(e, 'metralhadora', e.x, e.y, a + Math.PI, bs * .7, 5); }
         }
         break;
       case 'sniper':
@@ -96,7 +96,7 @@ function updateEnemies(dt) {
           else {
             e.aiming -= dt;
             if (e.aiming > .35 && p) { e.ax = p.x; e.ay = p.y; }
-            if (e.aiming <= 0) { e.aiming = 0; e.cool = 2.2; eShoot(e.x, e.y, Math.atan2(e.ay - e.y, e.ax - e.x), bs * 2.6, 5, 18 * eDmg()); }
+            if (e.aiming <= 0) { e.aiming = 0; e.cool = 2.2; eFire(e, 'laserForte', e.x, e.y, Math.atan2(e.ay - e.y, e.ax - e.x), bs * 2.6, 5); }
           }
         }
         break;
@@ -121,10 +121,10 @@ function updateEnemies(dt) {
       e.shootT -= dt * rate;
       if (e.shootT <= 0) {
         e.shootT = t.shoot * rnd(.85, 1.15);
-        if (e.type === 'gunner' && p) eShoot(e.x, e.y + 10, Math.atan2(p.y - e.y, p.x - e.x), bs);
-        if (e.type === 'heavy') { const n = S.phase >= 6 ? 5 : 3; for (let k = 0; k < n; k++) eShoot(e.x, e.y + 20, Math.PI / 2 + (k - (n - 1) / 2) * .28, bs * .85, 6); }
+        if (e.type === 'gunner' && p) eFire(e, 'laser', e.x, e.y + 10, Math.atan2(p.y - e.y, p.x - e.x), bs);
+        if (e.type === 'heavy') { const n = S.phase >= 6 ? 5 : 3; for (let k = 0; k < n; k++) eFire(e, 'missil', e.x, e.y + 20, Math.PI / 2 + (k - (n - 1) / 2) * .28, bs * .85, 6); }
         if (e.type === 'hunter') for (let w = 0; w < 3; w++) setTimeoutFx(w * .12, () => {
-          if (e.dead || !S.enemies) return; const q = nearestPlayer(e); if (q) eShoot(e.x, e.y + 12, Math.atan2(q.y - e.y, q.x - e.x), bs * 1.1);
+          if (e.dead || !S.enemies) return; const q = nearestPlayer(e); if (q) eFire(e, 'laser', e.x, e.y + 12, Math.atan2(q.y - e.y, q.x - e.x), bs * 1.1);
         });
       }
     }

@@ -32,19 +32,23 @@ function updateSceneEnemy(e, t, p, dt, sp, rate, bs) {
     case 'jeep':
       e.y += (GROUND + 70 * sp) * dt; e.x += e.vx * dt; if (e.x < 20 || e.x > W - 20) e.vx *= -1;
       e.shootT -= dt * rate;
-      if (e.shootT <= 0 && e.y > 20 && p) { e.shootT = 1.1; const a = aimAt(e, p); eShoot(e.x, e.y, a - .1, bs * .9, 4); eShoot(e.x, e.y, a + .1, bs * .9, 4); }
+      if (e.shootT <= 0 && e.y > 20 && p) { e.shootT = 1.1; const a = aimAt(e, p); eFire(e, 'metralhadora', e.x, e.y, a - .1, bs * .9, 4); eFire(e, 'metralhadora', e.x, e.y, a + .1, bs * .9, 4); }
       break;
     case 'heli':
       if (e.y < e.stopY || e.stay > 7) e.y += 100 * sp * dt * (e.stay > 7 ? 1.5 : 1);
       else { e.stay += dt; e.x += e.dir * 110 * sp * dt; if (e.x < 40) e.dir = 1; if (e.x > W - 40) e.dir = -1; }
       e.shootT -= dt * rate;
-      if (e.shootT <= 0 && e.y > 20 && p) { e.shootT = 1.4; eShoot(e.x, e.y + 10, aimAt(e, p), bs); }
+      if (e.shootT <= 0 && e.y > 20 && p) { e.shootT = 1.4; eFire(e, 'metralhadora', e.x, e.y + 10, aimAt(e, p), bs); }
       break;
     case 'tank':
       e.y += (GROUND + 20 * sp) * dt; e.x += e.vx * dt; if (e.x < 30 || e.x > W - 30) e.vx *= -1;
       e.aim = turnTo(e.aim, aimAt(e, p), 1.8 * dt);
       e.shootT -= dt * rate;
-      if (e.shootT <= 0 && e.y > 20) { e.shootT = 2 * rnd(.85, 1.15); eShoot(e.x + Math.cos(e.aim) * 26, e.y + Math.sin(e.aim) * 26, e.aim, bs * .85, 7, 16 * eDmg()); }
+      if (e.shootT <= 0 && e.y > 20) { e.shootT = 2 * rnd(.85, 1.15); eFire(e, 'missil', e.x + Math.cos(e.aim) * 26, e.y + Math.sin(e.aim) * 26, e.aim, bs * .85, 7); }
+      // metralhadora do tanque: rajada curta entre um míssil e outro
+      e.mgT = (e.mgT === undefined ? TANQUE_METRALHA.intervalo / 2 : e.mgT) - dt * rate;
+      if (e.mgT <= 0 && e.y > 20 && p) { e.mgT = TANQUE_METRALHA.intervalo;
+        for (let w = 0; w < TANQUE_METRALHA.tiros; w++) setTimeoutFx(w * TANQUE_METRALHA.espaco, () => { if (e.dead) return; const q = nearestPlayer(e); if (q) eFire(e, 'metralhadora', e.x, e.y, aimAt(e, q), bs * TANQUE_METRALHA.vel, 3); }); }
       break;
     case 'flak':
       e.y += GROUND * dt; e.aim = turnTo(e.aim, aimAt(e, p), 2 * dt);
@@ -52,7 +56,7 @@ function updateSceneEnemy(e, t, p, dt, sp, rate, bs) {
       if (e.shootT <= 0 && e.y > 20 && p) {
         e.shootT = 2.4;
         const a = aimAt(e, p), spd = bs * .6, dist = Math.sqrt(d2(e, p));
-        S.ebullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, r: 8, d: 14 * eDmg(), burst: dist / spd, shell: true });
+        S.ebullets.push({ x: e.x, y: e.y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, r: 8, d: ETIROS.granada.dano * eDmg(), burst: dist / spd, shell: true, k: 'granada', c: ETYPES.flak.color });
       }
       break;
     case 'base':
@@ -60,8 +64,8 @@ function updateSceneEnemy(e, t, p, dt, sp, rate, bs) {
       e.shootT -= dt * rate;
       if (e.shootT <= 0 && e.y > 30 && e.y < H - 120) {
         e.shootT = 2.2; e.alt = !e.alt;
-        if (e.alt) ring(e.x, e.y, 8 + Math.min(4, S.phase >> 1), bs * .6, 6);
-        else if (p) for (const [dx, dy] of [[-24, -24], [24, -24], [-24, 24], [24, 24]]) eShoot(e.x + dx, e.y + dy, Math.atan2(p.y - e.y - dy, p.x - e.x - dx), bs * .9, 5);
+        if (e.alt) ring(e.x, e.y, 8 + Math.min(4, S.phase >> 1), bs * .6, 6, undefined, undefined, 'metralhadora');
+        else if (p) for (const [dx, dy] of [[-24, -24], [24, -24], [-24, 24], [24, 24]]) eFire(e, 'missil', e.x + dx, e.y + dy, Math.atan2(p.y - e.y - dy, p.x - e.x - dx), bs * .9, 5);
       }
       break;
     case 'swarm':
@@ -72,7 +76,7 @@ function updateSceneEnemy(e, t, p, dt, sp, rate, bs) {
       else if (e.stay > 7) e.y += 160 * dt;
       else { e.stay += dt; e.x += Math.sin(e.t * 1.3) * 90 * dt; e.y += Math.cos(e.t * 2) * 30 * dt; }
       e.shootT -= dt * rate;
-      if (e.shootT <= 0 && e.y > 20) { e.shootT = 1.8; ring(e.x, e.y, 6, bs * .55, 5); }
+      if (e.shootT <= 0 && e.y > 20) { e.shootT = 1.8; ring(e.x, e.y, 6, bs * .55, 5, undefined, undefined, 'plasma', ETYPES.ufo.color); }
       break;
     case 'rock':
       e.y += (e.big ? 70 : 110) * sp * dt; e.x += e.vx * dt; e.rot = (e.rot || 0) + e.rs * dt;
@@ -95,7 +99,7 @@ function updateSceneEnemy(e, t, p, dt, sp, rate, bs) {
         e.alpha = clamp(1 - e.mt / .3, 0, 1);
         if (e.mt <= 0) {
           e.mode = 'show'; e.mt = 1.6; e.invuln = false; e.alpha = 1;
-          for (let w = 0; w < 3; w++) setTimeoutFx(w * .12, () => { if (!e.dead && !e.invuln) { const q = nearestPlayer(e); if (q) eShoot(e.x, e.y, aimAt(e, q), bs * 1.1, 5); } });
+          for (let w = 0; w < 3; w++) setTimeoutFx(w * .12, () => { if (!e.dead && !e.invuln) { const q = nearestPlayer(e); if (q) eFire(e, 'laser', e.x, e.y, aimAt(e, q), bs * 1.1, 5); } });
         }
       } else if (e.mt <= 0) {
         e.jumps = (e.jumps || 0) + 1;

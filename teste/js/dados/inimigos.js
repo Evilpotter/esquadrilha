@@ -33,3 +33,20 @@ Object.assign(ETYPES, {
   beamer:  { name: 'Raio alienígena',  hp: 70,  r: 20, xp: 4, color: '#ff7ad9', dark: '#7a1f63', from: 2, w: 1, scene: 'space' },
   blinker: { name: 'Teleportador',     hp: 45,  r: 16, xp: 3, color: '#5ae0e0', dark: '#1a6a6a', from: 3, w: 1, scene: 'space' },
 });
+
+// ---------- Tiros dos inimigos ----------
+// Cada inimigo atira o tipo que combina com ele (escolhido no comportamento, em js/inimigos/).
+// dano = antes do multiplicador da fase (eDmg). Inimigos simples: todos 12. Fortes: míssil.
+// O desenho de cada tipo fica em js/visual/tiros-inimigos.js (a cor segue a do inimigo).
+const ETIROS = {
+  bala:         { nome: 'Bala',            dano: 12 },  // estilhaços de mina e de granada
+  laser:        { nome: 'Laser',           dano: 12 },  // naves e aviões
+  laserForte:   { nome: 'Laser carregado', dano: 18 },  // franco-atirador
+  metralhadora: { nome: 'Metralhadora',    dano: 12 },  // jipe, helicóptero, torre giratória, tanque, base
+  plasma:       { nome: 'Plasma',          dano: 12 },  // disco voador
+  granada:      { nome: 'Granada',         dano: 14 },  // artilharia (estoura em estilhaços)
+  missil:       { nome: 'Míssil',          dano: 22 },  // bombardeiro, tanque, base fortificada
+  chefao:       { nome: 'Tiro de chefão',  dano: 12 },  // chefões usam BOSS_DMG (js/dados/chefoes.js)
+};
+// Tanque: rajada da metralhadora entre um míssil e outro
+const TANQUE_METRALHA = { intervalo: 1.6, tiros: 3, espaco: .1, vel: 1.15 };
