@@ -32,7 +32,11 @@ function updateSceneEnemy(e, t, p, dt, sp, rate, bs) {
     case 'jeep':
       e.y += (GROUND + 70 * sp) * dt; e.x += e.vx * dt; if (e.x < 20 || e.x > W - 20) e.vx *= -1;
       e.shootT -= dt * rate;
-      if (e.shootT <= 0 && e.y > 20 && p) { e.shootT = 1.1; const a = aimAt(e, p); eFire(e, 'metralhadora', e.x, e.y, a - .1, bs * .9, 4); eFire(e, 'metralhadora', e.x, e.y, a + .1, bs * .9, 4); }
+      if (e.shootT <= 0 && e.y > 20 && p) {
+        const J = JIPE_TIRO; e.shootT = J.intervalo * rnd(1 - J.variacao, 1 + J.variacao);
+        const a = aimAt(e, p);
+        for (let k = 0; k < J.tiros; k++) eFire(e, 'metralhadora', e.x, e.y, a + (J.tiros > 1 ? (k / (J.tiros - 1) - .5) * J.abertura : 0), bs * J.vel, 4);
+      }
       break;
     case 'heli':
       if (e.y < e.stopY || e.stay > 7) e.y += 100 * sp * dt * (e.stay > 7 ? 1.5 : 1);

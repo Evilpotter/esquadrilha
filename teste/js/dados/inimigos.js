@@ -48,5 +48,8 @@ const ETIROS = {
   missil:       { nome: 'Míssil',          dano: 22 },  // bombardeiro, tanque, base fortificada
   chefao:       { nome: 'Tiro de chefão',  dano: 12 },  // chefões usam BOSS_DMG (js/dados/chefoes.js)
 };
+// Jipe: vem em grupo de 3; cada um atira de tempo em tempo (o intervalo varia um pouco
+// para os 3 não atirarem juntos). tiros = 1 tiro só; 2 = tiro duplo (aberto por "abertura").
+const JIPE_TIRO = { intervalo: 2, variacao: .25, tiros: 1, abertura: .2, vel: .9 };
 // Tanque: rajada da metralhadora entre um míssil e outro
 const TANQUE_METRALHA = { intervalo: 1.6, tiros: 3, espaco: .1, vel: 1.15 };
