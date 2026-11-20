@@ -229,7 +229,7 @@ function drawTitle() {
     'Cada nível: escolha 1 de 3 melhorias.',
     'Fim da fase: chefão. Derrotando, escolha nova arma',
     'ou uma melhoria forte de arma.',
-    padQtd ? 'Controle: analógico move · A confirma · Start pausa' : 'P ou Esc: pausa      F: tela cheia',
+    padQtd ? 'Controle: analógico move · A confirma · Start pausa · Select som' : 'P ou Esc: pausa    F: tela cheia    M: som',
     'Celular: arraste para mover',
   ];
   lines.forEach((l, k) => txt(l, W / 2, 618 + k * 29, 14, k === 0 ? '#ffd36b' : '#e8eef5', 'center', 500));
@@ -239,7 +239,7 @@ function drawTitle() {
 }
 function draw() {
   cx.clearRect(0, 0, W, H);
-  if (S.mode === 'title') { drawTitle(); return; }
+  if (S.mode === 'title') { drawTitle(); drawSomBotao(); return; }
   if (S.mode === 'ship') { drawShipSelect(); return; }
   drawGame();
   if (S.mode === 'levelup' || S.mode === 'reward') drawSel();
@@ -251,4 +251,5 @@ function draw() {
     S.players.forEach((p, i) => txt(PCOL[i].name + ' (' + SHIPS[p.ship].name + '): ' + p.kills + ' abates', W / 2, H / 2 + 34 + i * 24, 14, PCOL[i].body, 'center', 600));
     txt('Espaço, Enter ou toque para voltar', W / 2, H / 2 + 110, 14, '#cfe3f5', 'center', 500);
   }
+  drawSomBotao();
 }

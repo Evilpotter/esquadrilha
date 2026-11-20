@@ -1,5 +1,6 @@
 // ---------- Entrada ----------
 function onKey(code) {
+  if (code === 'KeyM') { somMudo(); return; }
   if (code === 'KeyF') {
     try {
       if (document.fullscreenElement) document.exitFullscreen();
@@ -28,6 +29,7 @@ function gamePos(e) {
 }
 cv.addEventListener('pointerdown', e => {
   const g = gamePos(e);
+  if (somBotaoToque(g)) return;
   if (S.mode === 'title') {
     if (g.y > 470 && g.y < 530 && Math.abs(g.x - W / 2) < 250) openShipSelect(g.x < W / 2 ? 1 : 2);
   } else if (S.mode === 'ship') {

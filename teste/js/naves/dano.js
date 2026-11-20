@@ -3,6 +3,7 @@ function dealDmg(t, dmg, p) {
   if (t.dead || t.invuln) return;
   if (p && Math.random() < p.crit) dmg *= 2;
   t.hp -= dmg; t.flash = .07;
+  if (t.hp > 0) som(t.boss ? 'acerto_chefao' : 'acerto', t.x);
   if (t.hp <= 0) {
     t.dead = true;
     if (t.boss) {
@@ -24,18 +25,21 @@ function killEnemy(e, p) {
 }
 function explode(x, y, rad, dmg, p) {
   S.fx.push({ type: 'ring', x, y, r: rad, t: 0, life: .3, color: '#ffcf60' });
+  som('explosao_area', x);
   for (const t of targets()) if (!t.dead && d2(t, { x, y }) < (rad + t.r) ** 2) dealDmg(t, dmg, p);
 }
 function boom(x, y, r, color) {
   S.fx.push({ type: 'boom', x, y, r, t: 0, life: .45, color });
+  somExplosao(x, r);
   for (let k = 0; k < 6; k++) S.fx.push({ type: 'spark', x, y, vx: rnd(-160, 160), vy: rnd(-160, 160), t: 0, life: rnd(.3, .6), color });
 }
 function hurt(p, dmg) {
   if (p.inv > 0 || !p.alive) return;
   const a = Math.min(p.sh, dmg); p.sh -= a; dmg -= a;
   p.hp -= dmg; p.inv = .7; p.shT = 3; S.shake = .2;
+  som('dano_jogador', p.x);
   if (p.hp <= 0) {
-    p.hp = 0; p.alive = false;
+    p.hp = 0; p.alive = false; som('jogador_abatido', p.x);
     boom(p.x, p.y, 50, '#ff6040');
     if (S.players.every(q => !q.alive)) S.overT = 2;
   }

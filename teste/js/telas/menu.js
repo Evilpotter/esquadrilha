@@ -2,6 +2,9 @@
 function menuItems() {
   const it = [{ id: 'cont', label: 'Continuar' }];
   if (S.np === 1) it.push({ id: 'add', label: 'Adicionar Jogador 2' });
+  const pct = q => somCfg.mudo ? 'sem som' : Math.round(somCfg[q] * 100) + '%';
+  it.push({ id: 'musica', label: 'Música  ◀ ' + pct('musica') + ' ▶', vol: true });
+  it.push({ id: 'efeitos', label: 'Efeitos  ◀ ' + pct('efeitos') + ' ▶', vol: true });
   it.push({ id: 'quit', label: 'Sair para o início' });
   return it;
 }
@@ -14,6 +17,7 @@ function openMenu() { S.mode = 'paused'; S.menuSel = 0; }
 function menuDo(id) {
   if (id === 'cont') S.mode = 'play';
   else if (id === 'add') openShipAdd();
+  else if (id === 'musica' || id === 'efeitos') somAjusta(id, somCfg[id] >= 1 ? -1 : .2); // Enter/toque: sobe e volta ao zero
   else if (id === 'quit') S = { mode: 'title' };
 }
 function addPlayer2(ship, skin) {
@@ -29,6 +33,8 @@ function menuKey(code) {
   else if (code === 'ArrowUp' || code === 'KeyW') S.menuSel = (S.menuSel + items.length - 1) % items.length;
   else if (code === 'ArrowDown' || code === 'KeyS') S.menuSel = (S.menuSel + 1) % items.length;
   else if (code === 'Enter' || code === 'NumpadEnter' || code === 'Space') menuDo(items[S.menuSel].id);
+  else if (items[S.menuSel].vol && (code === 'ArrowLeft' || code === 'KeyA')) somAjusta(items[S.menuSel].id, -.1);
+  else if (items[S.menuSel].vol && (code === 'ArrowRight' || code === 'KeyD')) somAjusta(items[S.menuSel].id, .1);
 }
 function drawMenu() {
   cx.fillStyle = 'rgba(5,12,22,.78)'; cx.fillRect(0, 0, W, H);
@@ -42,5 +48,6 @@ function drawMenu() {
   });
   const last = L[L.length - 1];
   txt('↑/↓ ou W/S para escolher · Enter ou Espaço para confirmar · Esc volta ao jogo', W / 2, last.y + last.h + 34, 13, '#9fb3c8', 'center', 500);
+  txt('←/→ muda o volume · M liga/desliga o som', W / 2, last.y + last.h + 78, 13, '#9fb3c8', 'center', 500);
   if (S.np === 1) txt('O Jogador 2 entra com as setas e começa do zero.', W / 2, last.y + last.h + 56, 13, '#9fb3c8', 'center', 500);
 }

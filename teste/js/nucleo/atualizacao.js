@@ -84,7 +84,7 @@ function step(dt) {
         const o = b.p, dx = o.x - b.x, dy = o.y - b.y, dd = Math.hypot(dx, dy) || 1;
         const ns = Math.min(780, Math.max(sp, 60) + 950 * dt), k = Math.min(1, 9 * dt);
         b.vx += (dx / dd * ns - b.vx) * k; b.vy += (dy / dd * ns - b.vy) * k;
-        if (o.alive && dd < o.r + 14) { b.dead = true; S.fx.push({ type: 'ring', x: o.x, y: o.y - 6, r: 16, t: 0, life: .18, color: b.color }); continue; }
+        if (o.alive && dd < o.r + 14) { b.dead = true; som('bumerangue_pega', o.x); S.fx.push({ type: 'ring', x: o.x, y: o.y - 6, r: 16, t: 0, life: .18, color: b.color }); continue; }
       }
     }
     if (b.type === 'barrage') {
@@ -100,10 +100,11 @@ function step(dt) {
       if (b.x > W - b.r && b.vx > 0) { b.vx = -b.vx; hw = true; }
       if (b.y < 56 && b.vy < 0) { b.vy = -b.vy; hw = true; }
       if (b.y > H - b.r && b.vy > 0) { b.vy = -b.vy; hw = true; }
-      if (hw) { b.bounce--; b.hit = null; S.fx.push({ type: 'spark', x: b.x, y: b.y, vx: rnd(-60, 60), vy: rnd(-60, 60), t: 0, life: .15, color: b.color }); }
+      if (hw) { b.bounce--; b.hit = null; som('ricochete_quique', b.x); S.fx.push({ type: 'spark', x: b.x, y: b.y, vx: rnd(-60, 60), vy: rnd(-60, 60), t: 0, life: .15, color: b.color }); }
     }
     if (b.life <= 0 || (!b.boom && (b.y < -30 || b.y > H + 30 || b.x < -30 || b.x > W + 30))) { b.dead = true; continue; }
     if (S.bosses.length && shieldBlocks(b)) {
+      som('escudo_bloqueio', b.x);
       S.fx.push({ type: 'spark', x: b.x, y: b.y, vx: rnd(-80, 80), vy: rnd(-80, 0), t: 0, life: .2, color: '#78e6ff' });
       if (b.boom) { if (!b.ret) { b.ret = true; b.hitT.clear(); } }
       else { b.dead = true; continue; }
@@ -162,7 +163,7 @@ function step(dt) {
       if (dd < p.r + 8) { got = p; break; }
       if (dd < p.mag) { const s = 520 * dt / dd; g.x += (p.x - g.x) * Math.min(1, s); g.y += (p.y - g.y) * Math.min(1, s); g.pulled = true; }
     }
-    if (got) { g.dead = true; addXp(g.v); continue; }
+    if (got) { g.dead = true; addXp(g.v); somXp(g.x); continue; }
     if (!g.pulled) g.y += 50 * dt;
     g.pulled = false;
     if (g.y > H + 20) g.dead = true;

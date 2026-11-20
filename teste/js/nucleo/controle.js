@@ -1,7 +1,7 @@
 // ---------- Controle (gamepad: Xbox, PlayStation e similares) ----------
 // Controle 1 = Jogador 1, controle 2 = Jogador 2. Com 1 jogador, qualquer controle move a nave.
 // Analógico esquerdo ou direcional: move a nave e navega nos menus.
-// A/✕ confirma · B/○ volta · Start pausa · na tela inicial: A = 1 jogador, Y/△ = 2 jogadores.
+// A/✕ confirma · B/○ volta · Start pausa · Select liga/desliga o som · na tela inicial: A = 1 jogador, Y/△ = 2 jogadores.
 // Nos menus, cada controle "aperta" as mesmas teclas do jogador dele (W A S D/Espaço ou setas/Enter).
 const PAD_ZONA = .2;   // zona morta do analógico
 const PAD_MENU = .55;  // inclinação do analógico que conta como um toque nos menus
@@ -31,7 +31,7 @@ function lerControles() {
     if (x || y) { m.x = clamp(m.x + x, -1, 1); m.y = clamp(m.y + y, -1, 1); m.on = true; }
     // botões "virtuais" para os menus
     const b = {
-      ok: bt(0), volta: bt(1), y2: bt(3), start: bt(9),
+      ok: bt(0), volta: bt(1), y2: bt(3), start: bt(9), select: bt(8),
       cima: bt(12) || ay < -PAD_MENU, baixo: bt(13) || ay > PAD_MENU,
       esq: bt(14) || ax < -PAD_MENU, dir: bt(15) || ax > PAD_MENU,
     };
@@ -44,6 +44,7 @@ function lerControles() {
 
 function padAperta(n, k) {
   const t = PAD_TECLAS[n], modo = S.mode;
+  if (k === 'select') { onKey('KeyM'); return; }
   if (modo === 'title') {
     if (k === 'ok' || k === 'start') onKey(n === 0 ? 'Digit1' : 'Digit2');
     else if (k === 'y2') onKey('Digit2');

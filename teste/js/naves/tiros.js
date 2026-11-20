@@ -8,6 +8,7 @@ function firePlayer(p, dt) {
     w.t += d.cd * w.cdM;
     if (w.t < 0) w.t = 0;
     const dmg = d.dmg * w.dmgM * p.dmg, n = w.shots, col = shotColor(p, w, d.color), sk = shotSkin(p, w);
+    if (w.type !== 'chain') somTiro(w.type, p.x);
     const mk = (x, y, ang) => S.bullets.push({
       x, y, vx: Math.sin(ang) * d.spd, vy: -Math.cos(ang) * d.spd, r: d.r, dmg, p,
       pierce: w.pierce, hit: null, explo: w.explosive, homing: !!d.homing, color: col, sk, life: 3, type: w.type,
@@ -67,6 +68,7 @@ function fireChain(p, w, dmg, n) {
   const from0 = { x: p.x, y: p.y - 16 };
   const firsts = T.filter(t => d2(t, from0) < range * range && !chainBlocked(from0, t)).sort((a, b) => d2(a, from0) - d2(b, from0));
   if (!firsts.length) { w.t = .1; return; }
+  somTiro('chain', p.x);
   for (let k = 0; k < n; k++) {
     let cur = firsts[k % firsts.length], dm = dmg;
     const hit = new Set(), pts = [from0];
@@ -104,7 +106,7 @@ function updateSaws(dt) {
         for (const t of T) {
           if (t.dead || t.invuln || hits.has(t)) continue;
           if (d2(t, bp) < (t.r + d.r) ** 2) {
-            dealDmg(t, dmg, p); hits.set(t, cd);
+            dealDmg(t, dmg, p); hits.set(t, cd); som('serra_corte', bp.x);
             if (w.explosive) explode(bp.x, bp.y, w.explosive, dmg * .6, p);
             S.fx.push({ type: 'spark', x: bp.x, y: bp.y, vx: rnd(-90, 90), vy: rnd(-90, 90), t: 0, life: .18, color: '#fff' });
           }
@@ -136,6 +138,7 @@ function dronePos(p, k) {
 // k = tipo do tiro (ETIROS, em js/dados/inimigos.js); c = cor de quem atirou (desenho)
 function eShoot(x, y, ang, spd, r, d, k, c) {
   k = k || 'bala';
+  somTiroInimigo(k, x);
   S.ebullets.push({ x, y, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd, r: r || 5, d: d || (ETIROS[k] || ETIROS.bala).dano * eDmg(), k, c });
 }
 // atalho para inimigos comuns: tipo do tiro + cor do inimigo
