@@ -233,6 +233,7 @@ function drawTitle() {
     'Celular: arraste para mover',
   ];
   lines.forEach((l, k) => txt(l, W / 2, 618 + k * 29, 14, k === 0 ? '#ffd36b' : '#e8eef5', 'center', 500));
+  const ps = padStatus(); if (ps) txt(ps, W / 2, 572, 12, '#9fe3b0', 'center', 600);
   const vt = versaoTexto(); cx.font = '500 12px system-ui, sans-serif'; const vl = cx.measureText(vt).width + 16;
   cx.fillStyle = 'rgba(5,12,22,.6)'; roundRect(W - vl - 8, H - 31, vl, 22, 8); cx.fill();
   txt(vt, W - 16, H - 15, 12, 'rgba(232,238,245,.85)', 'right', 500);
