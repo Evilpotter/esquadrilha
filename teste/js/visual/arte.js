@@ -5,7 +5,7 @@
 const ARTE = { naves: {}, inimigos: {}, chefoes: {}, tiros: {}, bumerangues: {} };
 const ENEMY_ART = {}, BOSS_ART = {}, SHOT_ART = {}, BOOM_ART = {};
 
-const ARTE_NAVES = { falcon: 'falcao', boomer: 'bumerangue', arty: 'artilheiro' };
+const ARTE_NAVES = { falcon: 'falcao', boomer: 'bumerangue', arty: 'artilheiro', pirate: 'pirata' };
 const ARTE_INIMIGOS = ['scout', 'zig', 'swooper', 'gunner', 'kamikaze', 'heavy', 'splitter', 'mini', 'spinner', 'sniper', 'miner', 'mine', 'hunter',
   'jeep', 'heli', 'tank', 'flak', 'base', 'swarm', 'ufo', 'rock', 'beamer', 'blinker', 'tank_top', 'heli_top', 'flak_top'];
 const ARTE_CHEFOES = ['fortress', 'carrier', 'laser', 'vortex', 'ram', 'twins', 'twins2', 'sower', 'ghost', 'guardian', 'storm'];

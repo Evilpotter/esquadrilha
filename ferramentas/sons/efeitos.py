@@ -379,6 +379,80 @@ def nova_fase():
     return limitador(reverb(mix(*trompas, *tim), .3, 2.4, 5000), -1)
 
 
+# ---------- Âncora Negra (nave pirata, ideia do Bryan) ----------
+
+def tiro_ancora():
+    """Corrente correndo (elos batendo) + zunido pesado da âncora."""
+    d = 0.42
+    r = np.random.default_rng(11)
+    elos = [(metal(r.uniform(1500, 2600), 0.07, 12) * r.uniform(.4, .8), k * 0.026, 1) for k in range(12)]
+    zun = sopro(d, 300, 1400, 1.4) * np.sin(np.linspace(0, np.pi, n(d))) ** 1.2
+    return reverb(mix(*elos, (zun, 0, .7), (grave(140, 60, 0.12), 0, .5)), .12, .6)
+
+
+def ancora_pega():
+    """Batida pesada de ferro."""
+    return reverb(mix((metal(420, 0.5, 5), 0, .8), (metal(980, 0.25, 8), 0, .4), (grave(110, 45, 0.18), 0, 1), (estalo(0.01, 1500), 0, .6)), .18, .9)
+
+
+def onda():
+    """Onda do mar: ruído que sobe e quebra + bolhas."""
+    d = 1.3
+    corpo = filtro(ruido(d, 'rosa'), 'pb', curva(300, 3200, d), ordem=2)
+    corpo = corpo * adsr(d, .45, .25, .55, .6) * 1.6
+    espuma = filtro(ruido(d), 'pa', 3500) * adsr(d, .5, .2, .3, .5) * .35
+    r = np.random.default_rng(5)
+    bolhas = [(osc(curva(f, f * 1.8, .06)) * env(.06, .002, curva_=5) * .25, t, 1) for f, t in zip(r.uniform(500, 1400, 14), r.uniform(.4, 1.2, 14))]
+    return reverb(mix((corpo, 0, 1), (espuma, 0, 1), *bolhas, (grave(70, 40, .5), .35, .6)), .25, 1.6)
+
+
+def dragao_vira():
+    """Rugido do dragão + água espirrando + harpa subindo."""
+    d = 1.4
+    r = np.random.default_rng(7)
+    f = curva(95, 70, d) * (1 + .05 * filtro(r.standard_normal(n(d)), 'pb', 30) * 6)
+    rugido = sat(filtro(osc(f, forma='serra') + ruido(d, 'rosa') * .6, 'pb', curva(1800, 600, d), ordem=2) * adsr(d, .08, .3, .7, .6) * 2, 2.5)
+    agua = filtro(ruido(.6, 'rosa'), 'pf', curva(800, 4000, .6), 1.2) * env(.6, .01, curva_=3) * .8
+    harpa = [(gm(46, 60 + k, 100, .3, .6), k * 0.035, .35) for k in (0, 4, 7, 12, 16, 19)]
+    return limitador(reverb(mix((rugido, 0, 1), (agua, 0, 1), *harpa), .3, 1.8), -1)
+
+
+def jato_agua():
+    d = 0.12
+    j = filtro(ruido(d), 'pf', 2600, 1.2) * env(d, .004, curva_=4)
+    return mix((j, 0, .8), (osc(curva(900, 1500, .05)) * env(.05, .002, curva_=5) * .15, 0, 1))
+
+
+def canhao_bordo():
+    """Tiro de canhão antigo: estouro + estrondo grave + eco."""
+    b = explosao(0.7, (3500, 180), (75, 32), 0.45, 0.25, tam=1.2, seed=4)
+    return reverb(mix((b, 0, 1), (estalo(0.02, 900, .7), 0, .6)), .3, 1.4)
+
+
+def barril_solta():
+    """Barril de madeira caindo + pavio chiando."""
+    madeira = sino(240, .2, ((1, 1), (2.3, .5), (3.9, .2)), 9) * .7
+    pavio = filtro(ruido(.5), 'pa', 5000) * (0.6 + 0.4 * np.abs(np.sin(np.linspace(0, 40, n(.5))))) * env(.5, .02, curva_=2) * .35
+    return reverb(mix((madeira, 0, 1), (grave(130, 70, .08), 0, .6), (pavio, .06, 1)), .1, .5)
+
+
+def papagaio():
+    """Grasnado do papagaio (dois gritinhos)."""
+    def grito(f0, f1, d):
+        x = fm(curva(f0, f1, d), 1.5, curva(6, 2, d)) * adsr(d, .005, .03, .7, .04)
+        return sat(filtro(x, 'pf', 2200, .8) * 2, 2.5)
+    return reverb(mix((grito(1300, 2200, .09), 0, 1), (grito(1500, 1100, .12), .11, .9)), .08, .3)
+
+
+def redemoinho():
+    """Vento girando (passa de um lado para o outro)."""
+    d = 1.2
+    v = sopro(d, 400, 1600, 2.5) * (0.55 + 0.45 * np.sin(np.linspace(0, 2 * np.pi * 7, n(d)))) * adsr(d, .2, .2, .7, .5)
+    gr = filtro(ruido(d, 'marrom'), 'pb', 300) * adsr(d, .2, .2, .7, .5) * .6
+    e = np.stack([v * (0.5 + 0.5 * np.sin(np.linspace(0, 2 * np.pi * 3.5, n(d)))), v * (0.5 - 0.5 * np.sin(np.linspace(0, 2 * np.pi * 3.5, n(d))))], 1)
+    return reverb(mix((e, 0, 1.4), (gr, 0, 1)), .2, 1.2)
+
+
 TODOS = {
     'tiro_metralhadora': (tiro_metralhadora, False), 'tiro_leque': (tiro_leque, False), 'tiro_missil': (tiro_missil, False),
     'tiro_plasma': (tiro_plasma, True), 'tiro_drone': (tiro_drone, False), 'tiro_ricochete': (tiro_ricochete, False),
@@ -395,6 +469,9 @@ TODOS = {
     'pausa': (pausa, True), 'despausa': (despausa, True),
     'chefao_alerta': (chefao_alerta, True), 'chefao_chegada': (chefao_chegada, True), 'chefao_furia': (chefao_furia, True),
     'raio_carga': (raio_carga, True), 'raio_disparo': (raio_disparo, True), 'trovao': (trovao, True), 'nova_fase': (nova_fase, True),
+    'tiro_ancora': (tiro_ancora, False), 'ancora_pega': (ancora_pega, False), 'onda': (onda, True), 'dragao_vira': (dragao_vira, True),
+    'jato_agua': (jato_agua, False), 'canhao_bordo': (canhao_bordo, True), 'barril_solta': (barril_solta, False),
+    'papagaio': (papagaio, False), 'redemoinho': (redemoinho, True),
 }
 
 if __name__ == '__main__':

@@ -6,6 +6,7 @@ Comandos:
   fotos       título/hangar e uma cena de cada cenário com skins  -> dist/foto-*.png
   bumerangues Bumerangue com as 8 skins lado a lado               -> dist/bumerangues.png
   bestiario   todos os inimigos por cenário e os 10 chefões       -> dist/bestiario-*.png
+  pirata      Âncora Negra: joga com todas as armas piratas e fotografa âncora, onda, dragões -> dist/pirata-*.png
   chefoes     luta 40 s com cada chefão (1 e 2 jogadores) e grava o resumo -> dist/chefoes.json
               (mesmo arquivo antes/depois = comportamento igual)
   todos       tudo acima
@@ -59,7 +60,7 @@ def fumaca(p):
     b, pg = abrir(p)
     res = pg.evaluate("""() => {
       const g = window.__g, out = {};
-      for (const ships of [[0], [1, 2]]) {
+      for (const ships of [[0], [1, 2]].concat(typeof PIRATA !== 'undefined' ? [[3, 0]] : [])) {
         g.newGame(ships.length, ships);
         for (const pl of g.S.players) pl.inv = 1e9;
         for (let i = 0; i < 60 * 150; i++) {
@@ -131,6 +132,54 @@ def bestiario(p):
     print('bestiário: ok')
 
 
+def pirata(p):
+    """Âncora Negra com todas as armas piratas: 2 min de jogo sem erro + fotos (armas, dragões por skin, hangar)."""
+    from PIL import Image
+    b, pg = abrir(p)
+    pg.evaluate("() => { const g = window.__g; for (const s of g.SKINS) g.unlockSkin(s.id); }")
+    res = pg.evaluate("""() => {
+      const g = window.__g, out = {};
+      for (const [n, ships] of [[1, [3]], [2, [3, 3]]]) {
+        g.newGame(n, ships);
+        for (const pl of g.S.players) for (const t of ['wave', 'dragon', 'broadside', 'barrel', 'parrot', 'whirl']) pl.weapons.push(g.newWeapon(t));
+        for (let i = 0; i < 60 * 150; i++) {
+          g.step(1/60);
+          if (g.S.mode === 'levelup' || g.S.mode === 'reward') { for (let k = 0; k < g.S.players.length; k++) try { g.choose(k, 0); } catch (e) {} }
+          if (g.S.mode === 'gameover') break;
+          if (i % 900 === 0) g.draw();
+        }
+        out[ships.join('+')] = { modo: g.S.mode, fase: g.S.phase, nivel: g.S.level, abates: g.S.kills,
+          armas: g.S.players[0].weapons.map(w => w.type + w.lvl).join(' ') };
+      }
+      return out; }""")
+    print('pirata jogo:', res)
+    # armas em ação
+    pg.evaluate("""() => { const g = window.__g; g.newGame(1, [3], ['classic']); g.S.scene = 'sea'; g.S.banner = null;
+      const p = g.S.players[0]; p.inv = 1e9;
+      for (const t of ['wave', 'broadside', 'barrel', 'parrot', 'whirl']) p.weapons.push(g.newWeapon(t));
+      for (let i = 0; i < 60 * 12; i++) g.step(1/60); g.draw(); }""")
+    pg.screenshot(path=str(dist / f'pirata-armas-{vw}.png'))
+    # dragão de cada skin
+    shots = []
+    for sk in ['classic', 'sucata', 'bosque', 'garra', 'geada', 'lamina', 'vazio', 'espectro', 'dragao']:
+        pg.evaluate(f"""() => {{ const g = window.__g; g.newGame(1, [3], ['{sk}']); g.S.scene = 'space'; g.S.banner = null; g.S.spawnT = 1e9;
+          const p = g.S.players[0], x0 = p.x; p.inv = 1e9; p.weapons.push(g.newWeapon('dragon'));
+          g.addEnemy('gunner', x0, 150, {{ stopY: 150 }}); g.S.enemies[0].hp = 1e9;
+          for (let i = 0; i < 90; i++) {{ g.step(1/60); p.x = x0 + Math.sin(i / 20) * 50; }}
+          g.S.enemies = []; g.S.ebullets = []; g.draw(); return p.dragonT; }}""")
+        f = dist / f'_d_{sk}.png'
+        pg.screenshot(path=str(f), clip={'x': vw / 2 - 100, 'y': vh * .42, 'width': 200, 'height': vh * .58}); shots.append(f)
+    ims = [Image.open(f) for f in shots]
+    out = Image.new('RGB', (200 * len(ims), ims[0].height))
+    for k, i in enumerate(ims): out.paste(i, (k * 200, 0))
+    out.save(str(dist / 'pirata-dragoes.png'))
+    for f in shots: f.unlink()
+    pg.evaluate("() => { const g = window.__g; g.openShipSelect(1); g.S.ss.skin = ['espectro', 'classic']; g.S.ss.cur = [3, 0]; for (let i = 0; i < 30; i++) g.step(1/60); g.draw(); }")
+    pg.screenshot(path=str(dist / f'pirata-hangar-{vw}.png'))
+    b.close()
+    print('pirata: ok')
+
+
 def chefoes(p):
     import json, hashlib
     b, pg = abrir(p)
@@ -158,7 +207,7 @@ def chefoes(p):
 
 from playwright.sync_api import sync_playwright
 CMDS = {'fumaca': [fumaca], 'fotos': [fotos], 'bumerangues': [bumerangues], 'bestiario': [bestiario], 'chefoes': [chefoes],
-        'todos': [fumaca, fotos, bumerangues, bestiario]}
+        'pirata': [pirata], 'todos': [fumaca, fotos, bumerangues, bestiario]}
 with sync_playwright() as p:
     for fn in CMDS[a.cmd]:
         fn(p)

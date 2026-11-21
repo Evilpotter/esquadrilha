@@ -3,6 +3,6 @@
 // Só muda ao publicar: o teste já mostra o número que o oficial terá quando
 // a rodada for validada (um passo só, pelo maior tipo de mudança da rodada).
 // CANAL: 'teste' no Esquadrilha – Teste; '' na versão oficial.
-const VERSAO = '1.1.0';
+const VERSAO = '2.0.0';
 const CANAL = 'teste';
 function versaoTexto() { return 'v' + VERSAO + (CANAL ? ' · ' + CANAL : ''); }

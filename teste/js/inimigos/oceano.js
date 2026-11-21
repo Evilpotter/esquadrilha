@@ -45,10 +45,11 @@ function mineBlast(e) {
 }
 
 // ---------- Inimigos comuns ----------
-function updateEnemies(dt) {
+function updateEnemies(dt0) {
   const sp = eSpd(), rate = eRate(), bs = ebs();
   for (const e of S.enemies) {
     if (e.dead) continue;
+    const dt = lentoDt(e, dt0); // Onda da Âncora Negra deixa lento (js/naves/pirata.js)
     const t = ETYPES[e.type];
     e.t += dt; if (e.flash > 0) e.flash -= dt;
     const p = nearestPlayer(e);

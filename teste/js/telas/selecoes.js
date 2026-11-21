@@ -10,11 +10,13 @@ function openLevelUp() {
 }
 function bossOpts(p) {
   const owned = p.weapons.map(w => w.type);
-  const avail = Object.keys(WEAPONS).filter(t => !owned.includes(t) && !WEAPONS[t].ship);
+  // Âncora Negra só recebe armas piratas; as outras naves nunca recebem
+  const pirata = !!SHIPS[p.ship].exclusivas;
+  const avail = Object.keys(WEAPONS).filter(t => !owned.includes(t) && !WEAPONS[t].ship && !!WEAPONS[t].pirata === pirata);
   const o = [];
   if (avail.length) o.push({ kind: 'new', type: pick(avail, 1)[0] });
   const ups = [];
-  p.weapons.forEach(w => WUPS.forEach(u => ups.push({ kind: 'up', w, u })));
+  p.weapons.forEach(w => WUPS.forEach(u => { if (!(WEAPONS[w.type].noUp || []).includes(u.id)) ups.push({ kind: 'up', w, u }); }));
   o.push(...pick(ups, 2 - o.length));
   return o;
 }

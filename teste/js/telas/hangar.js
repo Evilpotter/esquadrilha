@@ -18,8 +18,15 @@ function shipLayout() {
     else if (side) { w = Math.min(W / 2 - 40, 680); x = pi ? W / 2 + 20 : W / 2 - 20 - w; top = H / 2 - 240; ch = 325; }
     else { w = W - 40; x = 20; top = pi ? 466 : 96; ch = 286; }
     panels.push({ pi, x, w, top });
-    const cw = (w - 24) / 3;
-    for (let j = 0; j < 3; j++) out.push({ pi, j, x: x + j * (cw + 12), y: top + 36, w: cw, h: ch });
+    const N = SHIPS.length;
+    let cols = N, cw = (w - 12 * (N - 1)) / N, chh = ch;
+    if (cw < 150 && n === 1) { // tela estreita (celular): 2 colunas, 2 linhas, cartão sem a descrição
+      cols = 2; cw = (w - 12) / 2; chh = 236; top = Math.max(60, top - 120); panels[panels.length - 1].top = top;
+    }
+    for (let j = 0; j < N; j++) {
+      const c = j % cols, l = Math.floor(j / cols);
+      out.push({ pi, j, x: x + c * (cw + 12), y: top + 36 + l * (chh + 12), w: cw, h: chh });
+    }
   }
   return { cards: out, panels, compact: n === 2 && !side };
 }
@@ -46,18 +53,19 @@ function shipKey(code) {
   if (skinKey(code)) return;
   const single = ss.who.length === 1;
   const maps = {
-    0: { l: ['KeyA'], r: ['KeyD'], ok: ['Space'], d: ['Digit1', 'Digit2', 'Digit3'] },
-    1: { l: ['ArrowLeft'], r: ['ArrowRight'], ok: ['Enter', 'NumpadEnter'], d: ['Numpad1', 'Numpad2', 'Numpad3'] },
+    0: { l: ['KeyA'], r: ['KeyD'], ok: ['Space'], d: ['Digit1', 'Digit2', 'Digit3', 'Digit4'] },
+    1: { l: ['ArrowLeft'], r: ['ArrowRight'], ok: ['Enter', 'NumpadEnter'], d: ['Numpad1', 'Numpad2', 'Numpad3', 'Numpad4'] },
   };
   for (const pi of ss.who) {
     if (ss.done[pi]) continue;
     let m = maps[pi];
     if (single) m = { l: maps[0].l.concat(maps[1].l), r: maps[0].r.concat(maps[1].r), ok: maps[0].ok.concat(maps[1].ok), d: maps[0].d.concat(maps[1].d) };
-    if (m.l.includes(code)) ss.cur[pi] = (ss.cur[pi] + 2) % 3;
-    if (m.r.includes(code)) ss.cur[pi] = (ss.cur[pi] + 1) % 3;
+    const N = SHIPS.length;
+    if (m.l.includes(code)) ss.cur[pi] = (ss.cur[pi] + N - 1) % N;
+    if (m.r.includes(code)) ss.cur[pi] = (ss.cur[pi] + 1) % N;
     if (m.ok.includes(code)) shipChoose(pi, ss.cur[pi]);
     const di = m.d.indexOf(code);
-    if (di >= 0) shipChoose(pi, di % 3);
+    if (di >= 0 && di % 4 < N) shipChoose(pi, di % 4);
   }
 }
 function stepShip(dt) {
@@ -75,7 +83,7 @@ function drawShipSelect() {
   txt(title, W / 2, L.compact ? 50 : L.panels[0].top - 30, 30, '#fff', 'center', 800);
   for (const P of L.panels) {
     const c = PCOL[P.pi], single = ss.who.length === 1;
-    const hint = single ? '←/→ ou A/D e Enter/Espaço · ou 1, 2, 3 · clique' : (P.pi === 0 ? 'A/D + Espaço · ou 1, 2, 3' : '←/→ + Enter · ou Num 1, 2, 3');
+    const hint = single ? '←/→ ou A/D e Enter/Espaço · ou 1 a 4 · clique' : (P.pi === 0 ? 'A/D + Espaço · ou 1 a 4' : '←/→ + Enter · ou Num 1 a 4');
     txt(c.name, P.x, P.top + 22, 16, c.body);
     txt(ss.done[P.pi] ? 'Pronto' : hint, P.x + P.w, P.top + 22, 12, ss.done[P.pi] ? '#7dff8a' : '#9fb3c8', 'right', 500);
   }
@@ -91,11 +99,11 @@ function drawShipSelect() {
     drawShipPreview(card.j, cxm, py, card.w);
     drawShip(card.j, cxm, py, 1.5, c.body, c.dark, sel ? Math.sin(titleT * 3) * .3 : 0, false, ss.skin[card.pi]);
     let y = card.y + 120;
-    txt(sh.name, cxm, y, 19, '#fff', 'center', 800);
+    txt(sh.name, cxm, y, Math.min(19, card.w / 7.2), '#fff', 'center', 800);
     txt(sh.tag, cxm, y + 18, 12, '#ffd36b', 'center', 600);
     y += 40;
     const barW = Math.min(mw - 76, 110);
-    for (const [lab, v] of sh.stats) {
+    if (card.w >= 140) for (const [lab, v] of sh.stats) { // cartão estreito: só nave, nome e tipo
       txt(lab, px, y, 12, '#b8c8d8', 'left', 500);
       for (let k = 0; k < 5; k++) {
         cx.fillStyle = k < v ? c.body : 'rgba(255,255,255,.12)';
@@ -104,7 +112,7 @@ function drawShipSelect() {
       y += 18;
     }
     cx.font = '400 12.5px system-ui,sans-serif'; cx.fillStyle = '#d6e2ee'; cx.textAlign = 'left';
-    wrap(card.w < 200 ? sh.short : sh.desc, px, y + 10, mw, 16);
+    if (card.h >= 280 && card.w >= 140) wrap(card.w < 200 ? sh.short : sh.desc, px, y + 10, mw, 16);
     txt(String(card.j + 1), card.x + card.w - 10, card.y + 18, 12, '#7f93a8', 'right', 600);
     if (chosen) txt('Escolhida', cxm, card.y + card.h - 12, 14, '#7dff8a', 'center', 700);
     cx.globalAlpha = 1;
@@ -124,6 +132,8 @@ function drawShipPreview(j, x, y, cw) {
   } else if (j === 1) {
     const ph = (t * .9) % 1, d = Math.sin(ph * Math.PI) * 16;
     drawBoomerang(x + Math.sin(ph * Math.PI * 2) * 16, y - 28 - d, t * 16, '#7ff0c8', false);
+  } else if (j === 3) {
+    drawPirataPreview(x, y - 20);
   } else {
     for (let k = 0; k < 5; k++) {
       const ph = (t * 1.1 + k * .09) % 1, s = k % 2 ? 1 : -1;

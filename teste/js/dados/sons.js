@@ -17,6 +17,16 @@ const SONS = {
   tiro_bumerangue:   { vol: .24, var: .7, max: 3, int: .06 },
   bumerangue_pega:   { vol: .18, var: 1, max: 2, int: .1 },
   tiro_saraivada:    { vol: .30, var: .6, max: 2, int: .1 },
+  // Âncora Negra
+  tiro_ancora:       { vol: .32, var: .8, max: 3, int: .08 },
+  ancora_pega:       { vol: .30, var: 1, max: 2, int: .1 },
+  onda:              { vol: .45, max: 2, int: .2 },
+  dragao_vira:       { vol: .60, max: 1 },
+  jato_agua:         { vol: .10, var: 1.5, max: 3, int: .05 },
+  canhao_bordo:      { vol: .30, var: 1, max: 3, int: .08 },
+  barril_solta:      { vol: .28, var: 1, max: 2, int: .1 },
+  papagaio:          { vol: .18, var: 2, max: 2, int: .15 },
+  redemoinho:        { vol: .32, max: 2, int: .3 },
   // acertos e explosões
   acerto:            { vol: .20, var: 2, max: 4, int: .03 },
   acerto_chefao:     { vol: .22, var: 1.5, max: 2, int: .08 },
@@ -61,6 +71,7 @@ const SONS = {
 const SOM_ARMA = {
   gun: 'tiro_metralhadora', spread: 'tiro_leque', missile: 'tiro_missil', plasma: 'tiro_plasma', drone: 'tiro_drone',
   ricochet: 'tiro_ricochete', chain: 'tiro_raio', boomerang: 'tiro_bumerangue', barrage: 'tiro_saraivada',
+  anchor: 'tiro_ancora', wave: 'onda', dragon: 'dragao_vira', broadside: 'canhao_bordo', barrel: 'barril_solta', whirl: 'redemoinho',
 };
 // som de cada tipo de tiro inimigo (ETIROS); 'bala' (estilhaços) não tem som próprio
 const SOM_TIRO_INIMIGO = {

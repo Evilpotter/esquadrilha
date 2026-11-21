@@ -1,5 +1,6 @@
 // ---------- Dano ----------
-function dealDmg(t, dmg, p) {
+// src = tipo do tiro que acertou (usado pelo Saque da Âncora Negra)
+function dealDmg(t, dmg, p, src) {
   if (t.dead || t.invuln) return;
   if (p && Math.random() < p.crit) dmg *= 2;
   t.hp -= dmg; t.flash = .07;
@@ -10,11 +11,12 @@ function dealDmg(t, dmg, p) {
       boom(t.x, t.y, 80, '#ffa030');
       if (S.bosses.every(b => b.dead)) bossDie(t);
       else S.bosses.forEach(b => { b.rage2 = true; });
-    } else killEnemy(t, p);
+    } else killEnemy(t, p, src);
   }
 }
-function killEnemy(e, p) {
+function killEnemy(e, p, src) {
   const xp = ETYPES[e.type].xp;
+  if (src) saque(p, src);
   if (e.type === 'mine') { boom(e.x, e.y, 20, '#ffb040'); return; }
   if (e.type === 'splitter') for (const s of [-1, 1]) addEnemy('mini', e.x + s * 12, e.y, { vx: s * 110 });
   if (e.type === 'rock' && e.big) for (const s of [-1, 1]) addRock(e.x + s * 10, e.y, 13, false, s * rnd(60, 100));
@@ -35,6 +37,7 @@ function boom(x, y, r, color) {
 }
 function hurt(p, dmg) {
   if (p.inv > 0 || !p.alive) return;
+  if (p.dragonT > 0) dmg *= 1 - PIRATA.dragao.defesa; // dragão de água: toma 70% menos dano
   const a = Math.min(p.sh, dmg); p.sh -= a; dmg -= a;
   p.hp -= dmg; p.inv = .7; p.shT = 3; S.shake = .2;
   som('dano_jogador', p.x);

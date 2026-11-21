@@ -1,6 +1,6 @@
 // ---------- Skins: desenho das naves, rastros, tiros e bumerangues ----------
 // Os desenhos ficam em arte/naves, arte/tiros e arte/bumerangues (carregados por visual/arte.js).
-const SHIP_ART_KEY = ['falcon', 'boomer', 'arty'];
+const SHIP_ART_KEY = ['falcon', 'boomer', 'arty', 'pirate'];
 function skinArt(shipIdx, skinId) { return (ARTE.naves[SHIP_ART_KEY[shipIdx]] || {})[skinId] || null; }
 // ---------- Imagens prontas (o SVG vira imagem uma vez só) ----------
 const SKIN_U = .3;          // pixels por unidade do desenho (escala 1 do jogo)
@@ -43,7 +43,7 @@ function drawPlayerMark(p) {
 }
 
 // ---------- Rastro de cada skin ----------
-const SHIP_EXHAUST = [[[0, 26]], [[0, 22]], [[-10, 28], [10, 28]]];
+const SHIP_EXHAUST = [[[0, 26]], [[0, 22]], [[-10, 28], [10, 28]], [[0, 30]]];
 function skinTrail(p, dt) {
   if (!p.alive || !p.skin || p.skin === 'classic') return;
   const sk = skinById(p.skin); if (!sk.trail) return;

@@ -62,7 +62,9 @@ function step(dt) {
   // tiros do jogador
   const T = targets();
   for (const b of S.bullets) {
+    if (PIRATA_BALA[b.type]) { PIRATA_BALA[b.type](b, dt, T); continue; } // onda, barril, redemoinho (js/naves/pirata.js)
     skinBoomTrail(b, dt);
+    if (b.anc && moveAncora(b, dt)) continue;
     if (b.homing) {
       let best = null, bd = 1e12;
       for (const t of T) if (!t.dead) { const dd = d2(t, b); if (dd < bd) { bd = dd; best = t; } }
@@ -102,24 +104,27 @@ function step(dt) {
       if (b.y > H - b.r && b.vy > 0) { b.vy = -b.vy; hw = true; }
       if (hw) { b.bounce--; b.hit = null; som('ricochete_quique', b.x); S.fx.push({ type: 'spark', x: b.x, y: b.y, vx: rnd(-60, 60), vy: rnd(-60, 60), t: 0, life: .15, color: b.color }); }
     }
-    if (b.life <= 0 || (!b.boom && (b.y < -30 || b.y > H + 30 || b.x < -30 || b.x > W + 30))) { b.dead = true; continue; }
+    if (b.life <= 0 || (!b.boom && !b.anc && (b.y < -30 || b.y > H + 30 || b.x < -30 || b.x > W + 30))) { b.dead = true; continue; }
     if (S.bosses.length && shieldBlocks(b)) {
       som('escudo_bloqueio', b.x);
       S.fx.push({ type: 'spark', x: b.x, y: b.y, vx: rnd(-80, 80), vy: rnd(-80, 0), t: 0, life: .2, color: '#78e6ff' });
       if (b.boom) { if (!b.ret) { b.ret = true; b.hitT.clear(); } }
+      else if (b.anc) voltaAncora(b);
       else { b.dead = true; continue; }
     }
     for (const t of T) {
       if (t.dead || t.invuln || (b.hit && b.hit.has(t))) continue;
-      if (b.boom && (b.hitT.get(t) || 0) > b.age) continue;
+      if ((b.boom || b.anc) && (b.hitT.get(t) || 0) > b.age) continue;
+      if (b.anc && t.preso && !t.preso.dead) continue; // o inimigo preso na âncora já levou o golpe
       if (d2(t, b) < (t.r + b.r) ** 2) {
-        dealDmg(t, b.dmg, b.p);
+        dealDmg(t, b.dmg, b.p, b.type);
         if (b.explo) {
           explode(b.x, b.y, b.explo, b.dmg * (b.splash || .6), b.p);
           if (b.type === 'barrage') S.fx.push({ type: 'boom', x: b.x, y: b.y, r: b.explo * .55, t: 0, life: .3, color: '#ffb040' });
         }
         else S.fx.push({ type: 'spark', x: b.x, y: b.y, vx: rnd(-60, 60), vy: rnd(-60, 0), t: 0, life: .15, color: b.color });
         if (b.boom) { b.hitT.set(t, 1e9); continue; } // 1 acerto na ida e 1 na volta
+        if (b.anc) { b.hitT.set(t, 1e9); if (!t.dead) ancoraAcerta(b, t); continue; }
         if (b.type === 'ricochet' && b.bounce > 0) {
           const dx = b.x - t.x, dy = b.y - t.y, dd = Math.hypot(dx, dy) || 1, nx = dx / dd, ny = dy / dd, dot = b.vx * nx + b.vy * ny;
           if (dot < 0) { b.vx -= 2 * dot * nx; b.vy -= 2 * dot * ny; }
@@ -134,7 +139,10 @@ function step(dt) {
   S.bullets = S.bullets.filter(b => !b.dead);
 
   updateSaws(dt);
+  updatePapagaios(dt);
+  updateDragoes(dt);
   updateEnemies(dt);
+  arrastaPresos();
   updateBosses(dt);
   updateHazards(dt);
 

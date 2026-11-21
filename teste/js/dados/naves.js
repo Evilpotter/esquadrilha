@@ -13,5 +13,11 @@ const SHIPS = [
     desc: 'Dispara uma saraivada de mísseis balísticos em linha reta. Dano baixo por míssil, com pequena explosão em área.',
     short: 'Saraivada de mísseis em linha reta, com pequena explosão.',
     stats: [['Dano', 2], ['Cadência', 4], ['Perfuração', 1], ['Área', 4]] },
+  // ideia do Bryan (21/11/2026): nave pirata de corpo a corpo, só com armas exclusivas (PIRATA em armas.js)
+  { id: 'pirate', name: 'Âncora Negra', weapon: 'anchor', rate: 1, tag: 'Corpo a corpo', exclusivas: true,
+    saque: 1, // Saque: cada inimigo derrotado pela âncora (ou pelo jato do dragão) cura esta vida
+    desc: 'Arremessa uma âncora pesada no inimigo mais perto e puxa de volta. Saque: cada inimigo derrotado pela âncora cura 1 de vida. Só pega armas piratas.',
+    short: 'Âncora de perto, dano alto. Cura ao derrotar inimigos. Armas piratas.',
+    stats: [['Dano', 5], ['Cadência', 2], ['Perfuração', 3], ['Área', 1]] },
 ];
 

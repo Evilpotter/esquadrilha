@@ -44,6 +44,7 @@ function drawGame() {
   for (const e of S.enemies) if (ETYPES[e.type].ground) drawEnemy(e);
   for (const e of S.enemies) if (!ETYPES[e.type].ground) drawEnemy(e);
   for (const b of S.bosses) if (!b.dead && !drawBossArt(b)) BOSSES[b.kind].draw(b);
+  drawLentos(); // inimigos lentos pela Onda (js/visual/pirata.js)
   S.players.forEach(p => {
     if (!p.alive) return;
     if (p.inv > 0 && Math.floor(p.inv * 12) % 2) return;
@@ -56,14 +57,17 @@ function drawGame() {
     for (const w of p.weapons) if (w.type === 'saw') for (let k = 0; k < w.shots; k++) {
       const sp = sawPos(p, w, k); drawSaw(sp.x, sp.y, (w.ang || 0) * 3, !!w.explosive);
     }
+    drawPapagaios(p);
     if (p.skin && p.skin !== 'classic') drawPlayerMark(p);
-    drawShip(p.ship, p.x, p.y, 1, c.body, c.dark, p.tilt, false, p.skin);
+    if (p.dragonT > 0) drawDragao(p, p.x, p.y, 0, p.skin, p.rastro, S.phaseT); // Dragão de água
+    else drawShip(p.ship, p.x, p.y, 1, c.body, c.dark, p.tilt, false, p.skin);
     if (p.sh > 0) {
       cx.strokeStyle = 'rgba(120,230,255,' + (.25 + .5 * p.sh / Math.max(1, p.maxSh)) + ')'; cx.lineWidth = 2;
       cx.beginPath(); cx.arc(p.x, p.y, 28, 0, 7); cx.stroke();
     }
   });
   for (const b of S.bullets) {
+    if (drawPirataBala(b)) continue; // âncora e armas piratas (js/visual/pirata.js)
     if (b.type === 'boomerang') {
       if (!(b.sk && drawSkinBoomerang(b.sk, b.x, b.y, b.rot, !!b.explo))) drawBoomerang(b.x, b.y, b.rot, b.color, !!b.explo);
     } else if (b.type === 'barrage') {
@@ -145,12 +149,19 @@ function drawHud() {
     bar(14, 44, W - 28, 3, S.phaseT / PHASE_LEN, '#ffcf60', 'rgba(0,0,0,.25)');
   }
   S.players.forEach((p, i) => {
-    const x = i === 0 ? 12 : W - 182, y = H - 52;
-    cx.fillStyle = 'rgba(8,20,32,.55)'; cx.fillRect(x - 4, y - 18, 178, 64);
+    // lista de armas em linhas de até 170 px (a caixa cresce para cima)
+    cx.font = '500 11px system-ui,-apple-system,"Segoe UI",sans-serif';
+    const linhas = [];
+    for (const nome of p.weapons.map(w => WEAPONS[w.type].name.split(' ')[0] + (w.lvl > 1 ? ' +' + (w.lvl - 1) : ''))) {
+      const l = linhas.length ? linhas[linhas.length - 1] + ' · ' + nome : nome;
+      if (linhas.length && cx.measureText(l).width <= 170) linhas[linhas.length - 1] = l; else linhas.push(nome);
+    }
+    const x = i === 0 ? 12 : W - 182, y = H - 52 - (linhas.length - 1) * 13;
+    cx.fillStyle = 'rgba(8,20,32,.55)'; cx.fillRect(x - 4, y - 18, 178, 64 + (linhas.length - 1) * 13);
     txt(PCOL[i].name + ' · ' + SHIPS[p.ship].name + (p.alive ? '' : ' – abatido'), x, y - 4, 12, PCOL[i].body);
-    bar(x, y + 2, 170, 9, p.hp / p.maxHp, '#4cd964');
+    bar(x, y + 2, 170, 9, p.hp / p.maxHp, p.dragonT > 0 ? '#6fd6ff' : '#4cd964');
     if (p.maxSh > 0) bar(x, y + 13, 170, 4, p.sh / p.maxSh, '#78e6ff');
-    txt(p.weapons.map(w => WEAPONS[w.type].name.split(' ')[0] + (w.lvl > 1 ? ' +' + (w.lvl - 1) : '')).join(' · '), x, y + 32, 11, '#cfe3f5', 'left', 500);
+    linhas.forEach((l, k) => txt(l, x, y + 32 + k * 13, 11, '#cfe3f5', 'left', 500));
   });
   drawSkinToast();
   if (S.banner) {
@@ -208,9 +219,10 @@ function roundRect(x, y, w, h, r) {
 }
 function drawTitle() {
   drawBg();
-  drawShip(1, W / 2 - 110, 345 + Math.sin(titleT * 2 + 2) * 8, 1.7, '#5fbf9f', '#2a6b55', 0);
-  drawShip(0, W / 2, 325 + Math.sin(titleT * 2) * 8, 1.9, PCOL[0].body, PCOL[0].dark, 0);
-  drawShip(2, W / 2 + 110, 345 + Math.sin(titleT * 2 + 1) * 8, 1.7, PCOL[1].body, PCOL[1].dark, 0);
+  drawShip(1, W / 2 - 165, 345 + Math.sin(titleT * 2 + 2) * 8, 1.7, '#5fbf9f', '#2a6b55', 0);
+  drawShip(0, W / 2 - 55, 325 + Math.sin(titleT * 2) * 8, 1.9, PCOL[0].body, PCOL[0].dark, 0);
+  drawShip(3, W / 2 + 55, 325 + Math.sin(titleT * 2 + 3) * 8, 1.9, PIRATA_TITULO[0], PIRATA_TITULO[1], 0);
+  drawShip(2, W / 2 + 165, 345 + Math.sin(titleT * 2 + 1) * 8, 1.7, PCOL[1].body, PCOL[1].dark, 0);
   drawClouds();
   cx.fillStyle = 'rgba(5,12,22,.8)'; cx.fillRect(0, 130, W, 120);
   txt('Esquadrilha', W / 2, 200, 52, '#fff', 'center', 800);
@@ -223,7 +235,7 @@ function drawTitle() {
   }
   cx.fillStyle = 'rgba(5,12,22,.85)'; cx.fillRect(W / 2 - Math.min(W / 2 - 20, 260), 586, Math.min(W - 40, 520), 262);
   const lines = [
-    'Escolha sua nave: Falcão, Bumerangue ou Artilheiro.',
+    'Escolha sua nave: Falcão, Bumerangue, Artilheiro ou Âncora Negra.',
     'Tiro automático. Desvie e colete os cristais verdes (XP).',
     'Jogador 1: W A S D        Jogador 2: setas',
     'Cada nível: escolha 1 de 3 melhorias.',

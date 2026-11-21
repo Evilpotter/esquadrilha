@@ -3,6 +3,7 @@ function drawShip(shipIdx, x, y, s, c1, c2, tilt, flash, skin) {
   if (skin && skin !== 'classic' && !flash && drawSkinShip(shipIdx, skin, x, y, s, tilt)) return;
   const id = SHIPS[shipIdx || 0].id;
   if (id === 'falcon') return drawPlane(x, y, s, c1, c2, false, tilt, flash);
+  if (id === 'pirate') return drawPirataShip(x, y, s, c1, c2, tilt); // js/visual/pirata.js
   cx.save(); cx.translate(x, y); cx.scale(s * (1 - Math.abs(tilt || 0) * .12), s);
   const body = flash ? '#fff' : c1, dk = flash ? '#fff' : c2;
   const fl = 5 + Math.sin(performance.now() / 40) * 2;

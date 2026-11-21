@@ -354,8 +354,9 @@ function spawnBoss() {
 function updateBosses(dt) {
   for (const b of S.bosses) {
     if (b.dead) continue;
-    b.t += dt; if (b.flash > 0) b.flash -= dt;
-    BOSSES[b.kind].update(b, dt);
+    const bdt = lentoDt(b, dt); // Onda da Âncora Negra (metade do efeito nos chefões)
+    b.t += bdt; if (b.flash > 0) b.flash -= dt;
+    BOSSES[b.kind].update(b, bdt);
     if (!b.invuln) for (const p of S.players) if (p.alive && d2(p, b) < (p.r + b.r - 10) ** 2) hurt(p, (b.kind === 'ram' ? BOSS_DMG.toqueAriete : BOSS_DMG.toque) * eDmg());
   }
 }
