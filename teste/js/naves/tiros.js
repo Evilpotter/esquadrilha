@@ -2,7 +2,7 @@
 function firePlayer(p, dt) {
   for (const w of p.weapons) {
     const d = WEAPONS[w.type];
-    if (w.type === 'saw' || w.type === 'parrot') continue; // serra e papagaio são atualizados à parte
+    if (w.type === 'saw' || w.type === 'parrot' || w.type === 'chick') continue; // serra, papagaio e filhote são atualizados à parte
     if (w.type === 'anchor' && p.dragonT > 0) continue;    // dragão de água: o jato substitui a âncora
     w.t -= dt * p.rate;
     if (w.t > 0) continue;
@@ -10,6 +10,7 @@ function firePlayer(p, dt) {
     if (w.t < 0) w.t = 0;
     const dmg = d.dmg * w.dmgM * p.dmg, n = w.shots, col = shotColor(p, w, d.color), sk = shotSkin(p, w);
     if (PIRATA_TIRO[w.type]) { if (!PIRATA_TIRO[w.type](p, w, d, dmg, n, col)) w.t = .1; continue; } // js/naves/pirata.js
+    if (FENIX_TIRO[w.type]) { if (!FENIX_TIRO[w.type](p, w, d, dmg, n, col)) w.t = .1; continue; }   // js/naves/fenix.js
     if (w.type !== 'chain') somTiro(w.type, p.x);
     const mk = (x, y, ang) => S.bullets.push({
       x, y, vx: Math.sin(ang) * d.spd, vy: -Math.cos(ang) * d.spd, r: d.r, dmg, p,

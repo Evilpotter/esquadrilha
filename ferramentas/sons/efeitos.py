@@ -453,6 +453,68 @@ def redemoinho():
     return reverb(mix((e, 0, 1.4), (gr, 0, 1)), .2, 1.2)
 
 
+# ---------- Fênix ----------
+
+def fogo(d, fc=1800, seed=21):
+    """Fogo crepitando: chiado grave + estalidos."""
+    ch = filtro(ruido(d, 'rosa'), 'pb', fc, ordem=2) * adsr(d, .03, .1, .7, d * .4)
+    return mix((ch, 0, .8), (faiscas(d, 160, 3200, 2.0, seed), 0, .9))
+
+
+def tiro_pena():
+    """Penas de fogo: sopro rápido subindo + estalo de chama."""
+    d = 0.3
+    s = sopro(d, 700, 4200, 1.8) * env(d, .004, curva_=4) * 1.3
+    return reverb(mix((s, 0, 1), (fogo(.22, 2500, 22), 0, .6), (osc(curva(500, 1300, .08)) * env(.08, .002, curva_=5) * .25, 0, 1)), .1, .5)
+
+
+def asas_fogo():
+    d = 0.45
+    return reverb(fogo(d, 1500, 23) * .9, .1, .4)
+
+
+def meteoro():
+    """Assobio caindo + estrondo de pedra e fogo."""
+    d = 1.4
+    assobio = osc(curva(1800, 300, .9)) * adsr(.9, .05, .2, .8, .2) * .25
+    vento = sopro(.9, 3000, 500, 2.0) * adsr(.9, .1, .2, .8, .2) * .6
+    b = explosao(0.9, (3800, 220), (80, 34), 0.45, 0.7, tam=1.3, seed=24)
+    return limitador(reverb(mix((assobio, 0, 1), (vento, 0, 1), (b, .9, 1), (fogo(.5, 2000, 25), 1.0, .6)), .25, 1.4), -1)
+
+
+def filhote():
+    """Piado agudo + chama."""
+    def pio(f0, f1, d):
+        return osc(curva(f0, f1, d)) * adsr(d, .004, .02, .7, .03)
+    return reverb(mix((pio(2400, 3400, .07), 0, .6), (pio(3200, 2600, .08), .08, .5), (fogo(.2, 2600, 26), .05, .7)), .1, .4)
+
+
+def sol_nascente():
+    """Acorde brilhante subindo + rugido de calor."""
+    d = 1.8
+    calor = filtro(ruido(d, 'rosa'), 'pb', curva(400, 5000, d), ordem=2) * adsr(d, .5, .3, .6, .7) * 1.3
+    coro = [(gm(52, 60 + k, 100, 1.2, 1.0), k * .06, .3) for k in (0, 4, 7, 12, 16)]
+    sinos = [(sino(f, 1.2, queda=3), .3 + i * .05, .2) for i, f in enumerate((1047, 1319, 1568, 2093))]
+    return limitador(reverb(mix((calor, 0, 1), *coro, *sinos), .3, 2.0), -1)
+
+
+def fenix_ovo():
+    """Fogo se fechando + batida de coração."""
+    d = 1.6
+    fe = sopro(.6, 4000, 400, 1.5) * env(.6, .02, curva_=3) * .9
+    cor = [(grave(70, 50, .18), t, 1) for t in (.55, .8, 1.15, 1.4)]
+    return reverb(mix((fe, 0, 1), (fogo(.6, 1200, 27), 0, .5), *cor), .2, 1.0)
+
+
+def fenix_renasce():
+    """Ovo quebrando + explosão de fogo + grito da fênix + harpa subindo."""
+    casca = mix(*[(estalo(.012, 2500 + i * 300, 1.0), i * .03, .8) for i in range(5)])
+    b = explosao(1.0, (5000, 300), (90, 40), .4, .9, tam=1.1, seed=28)
+    grito = sat(filtro(fm(curva(900, 1600, .5), 2.0, curva(4, 1, .5)), 'pf', 1800, .8) * adsr(.5, .02, .1, .7, .2) * 1.5, 2)
+    harpa = [(gm(46, 64 + k, 100, .3, .6), .15 + i * .04, .35) for i, k in enumerate((0, 4, 7, 12, 16, 19, 24))]
+    return limitador(reverb(mix((casca, 0, 1), (b, .05, .9), (grito, .15, .6), *harpa), .3, 1.8), -1)
+
+
 TODOS = {
     'tiro_metralhadora': (tiro_metralhadora, False), 'tiro_leque': (tiro_leque, False), 'tiro_missil': (tiro_missil, False),
     'tiro_plasma': (tiro_plasma, True), 'tiro_drone': (tiro_drone, False), 'tiro_ricochete': (tiro_ricochete, False),
@@ -472,6 +534,8 @@ TODOS = {
     'tiro_ancora': (tiro_ancora, False), 'ancora_pega': (ancora_pega, False), 'onda': (onda, True), 'dragao_vira': (dragao_vira, True),
     'jato_agua': (jato_agua, False), 'canhao_bordo': (canhao_bordo, True), 'barril_solta': (barril_solta, False),
     'papagaio': (papagaio, False), 'redemoinho': (redemoinho, True),
+    'tiro_pena': (tiro_pena, False), 'asas_fogo': (asas_fogo, False), 'meteoro': (meteoro, True), 'filhote': (filhote, False),
+    'sol_nascente': (sol_nascente, True), 'fenix_ovo': (fenix_ovo, True), 'fenix_renasce': (fenix_renasce, True),
 }
 
 if __name__ == '__main__':

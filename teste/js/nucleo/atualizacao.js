@@ -14,7 +14,7 @@ function step(dt) {
   for (let k = delayed.length - 1; k >= 0; k--) { delayed[k].t -= dt; if (delayed[k].t <= 0) { delayed[k].fn(); delayed.splice(k, 1); } }
   if (S.banner) { S.banner.t -= dt; if (S.banner.t <= 0) S.banner = null; }
   if (S.skinMsg) { S.skinMsg.t -= dt; if (S.skinMsg.t <= 0) S.skinMsg = null; }
-  if (S.players) for (const p of S.players) skinTrail(p, dt);
+  if (S.players) for (const p of S.players) { skinTrail(p, dt); fenixBrasas(p, dt); }
   if (S.shake > 0) S.shake -= dt;
 
   // fase / chefão
@@ -36,6 +36,7 @@ function step(dt) {
   const one = S.np === 1;
   S.players.forEach((p, i) => {
     if (!p.alive) return;
+    if (p.ovoT > 0) { ovoPasso(p, dt); return; } // ovo da Fênix: parado até renascer (js/naves/fenix.js)
     let mx = 0, my = 0;
     const k1 = i === 0, k2 = i === 1 || one;
     if (k1) { if (keys.KeyA) mx--; if (keys.KeyD) mx++; if (keys.KeyW) my--; if (keys.KeyS) my++; }
@@ -63,6 +64,7 @@ function step(dt) {
   const T = targets();
   for (const b of S.bullets) {
     if (PIRATA_BALA[b.type]) { PIRATA_BALA[b.type](b, dt, T); continue; } // onda, barril, redemoinho (js/naves/pirata.js)
+    if (FENIX_BALA[b.type]) { FENIX_BALA[b.type](b, dt, T); continue; }   // chama, meteoro, sol (js/naves/fenix.js)
     skinBoomTrail(b, dt);
     if (b.anc && moveAncora(b, dt)) continue;
     if (b.homing) {
@@ -118,6 +120,7 @@ function step(dt) {
       if (b.anc && t.preso && !t.preso.dead) continue; // o inimigo preso na âncora já levou o golpe
       if (d2(t, b) < (t.r + b.r) ** 2) {
         dealDmg(t, b.dmg, b.p, b.type);
+        if (b.queima) aplicaQueima(t, b.p, b.queima); // penas da Fênix
         if (b.explo) {
           explode(b.x, b.y, b.explo, b.dmg * (b.splash || .6), b.p);
           if (b.type === 'barrage') S.fx.push({ type: 'boom', x: b.x, y: b.y, r: b.explo * .55, t: 0, life: .3, color: '#ffb040' });
@@ -141,6 +144,8 @@ function step(dt) {
   updateSaws(dt);
   updatePapagaios(dt);
   updateDragoes(dt);
+  updateFilhotes(dt);
+  updateQueimas(dt);
   updateEnemies(dt);
   arrastaPresos();
   updateBosses(dt);

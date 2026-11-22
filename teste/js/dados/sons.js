@@ -27,6 +27,14 @@ const SONS = {
   barril_solta:      { vol: .28, var: 1, max: 2, int: .1 },
   papagaio:          { vol: .18, var: 2, max: 2, int: .15 },
   redemoinho:        { vol: .32, max: 2, int: .3 },
+  // Fênix
+  tiro_pena:         { vol: .24, var: .8, max: 3, int: .06 },
+  asas_fogo:         { vol: .12, var: 1.5, max: 2, int: .15 },
+  meteoro:           { vol: .40, var: .8, max: 2, int: .2 },
+  filhote:           { vol: .20, var: 2, max: 3, int: .1 },
+  sol_nascente:      { vol: .55, max: 1, int: .3 },
+  fenix_ovo:         { vol: .55, max: 1 },
+  fenix_renasce:     { vol: .70, max: 1 },
   // acertos e explosões
   acerto:            { vol: .20, var: 2, max: 4, int: .03 },
   acerto_chefao:     { vol: .22, var: 1.5, max: 2, int: .08 },
@@ -72,6 +80,7 @@ const SOM_ARMA = {
   gun: 'tiro_metralhadora', spread: 'tiro_leque', missile: 'tiro_missil', plasma: 'tiro_plasma', drone: 'tiro_drone',
   ricochet: 'tiro_ricochete', chain: 'tiro_raio', boomerang: 'tiro_bumerangue', barrage: 'tiro_saraivada',
   anchor: 'tiro_ancora', wave: 'onda', dragon: 'dragao_vira', broadside: 'canhao_bordo', barrel: 'barril_solta', whirl: 'redemoinho',
+  feather: 'tiro_pena', wings: 'asas_fogo', meteor: 'meteoro', sun: 'sol_nascente',
 };
 // som de cada tipo de tiro inimigo (ETIROS); 'bala' (estilhaços) não tem som próprio
 const SOM_TIRO_INIMIGO = {

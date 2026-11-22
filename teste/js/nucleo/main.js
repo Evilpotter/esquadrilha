@@ -13,4 +13,4 @@ requestAnimationFrame(frame);
 // desenhos: carrega os SVG de arte/ e prepara as imagens (até lá usa o desenho simples)
 const arteOk = carregarArte().then(() => { buildSkinImages(); buildShotImages(); buildBoomImages(); buildBestImages(); });
 
-window.__g = { step, draw, newGame, newWeapon, addEnemy, spawnBoss, addRock, choose, shipChoose, openShipSelect, get S() { return S; }, SKINS, skinSave, unlockSkin, skinImg, arte: arteOk, VERSAO };
+window.__g = { step, draw, newGame, hurt, newWeapon, addEnemy, spawnBoss, addRock, choose, shipChoose, openShipSelect, get S() { return S; }, SKINS, skinSave, unlockSkin, skinImg, arte: arteOk, VERSAO };

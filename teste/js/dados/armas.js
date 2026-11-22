@@ -21,6 +21,23 @@ const WEAPONS = {
   barrel:    { name: 'Barril de pólvora', desc: 'Larga um barril para trás que explode quando um inimigo encosta', cd: 2.2, dmg: 40, spd: 0, shots: 1, r: 12, color: '#a0662e', splashR: 85, splash: 1, pirata: true, noUp: ['pierce'] },
   parrot:    { name: 'Papagaio', desc: 'Um papagaio voa junto e bica os inimigos que chegam perto', cd: .45, dmg: 10, spd: 620, shots: 1, r: 9, color: '#3fbf4f', pirata: true, noUp: ['pierce'] },
   whirl:     { name: 'Redemoinho', desc: 'Um redemoinho na frente da nave puxa os inimigos para o meio e machuca', cd: 5, dmg: 6, spd: 0, shots: 1, r: 110, color: '#5fc8e8', pirata: true, noUp: ['explo'] },
+  // ---- Fênix (sugestão do Claude aprovada para teste em 22/11/2026) ----
+  // feather = arma da nave; as marcadas com fenix: true só aparecem como recompensa de chefão para ela
+  feather:   { name: 'Penas de fogo', desc: 'Leque curto de penas em chamas: quem é atingido pega fogo', cd: .5, dmg: 6, spd: 640, shots: 3, r: 6, color: '#ffb347', ship: true },
+  wings:     { name: 'Asas de fogo', desc: 'Deixa um rastro de fogo por onde a nave passa', cd: .16, dmg: 5, spd: 0, shots: 1, r: 22, color: '#ff8a2a', fenix: true, noUp: ['explo'] },
+  meteor:    { name: 'Chuva de meteoros', desc: 'Meteoros caem do céu em cima dos inimigos e explodem em fogo', cd: 3.5, dmg: 30, spd: 0, shots: 3, r: 12, color: '#ff6a2a', splashR: 70, splash: 1, fenix: true, noUp: ['pierce'] },
+  chick:     { name: 'Filhote de fênix', desc: 'Um filhote voa junto e mergulha nos inimigos, deixando fogo', cd: 1.1, dmg: 14, spd: 0, shots: 1, r: 10, color: '#ffcf60', fenix: true, noUp: ['pierce'] },
+  sun:       { name: 'Sol nascente', desc: 'Onda de calor pela tela toda: queima todos os inimigos e derrete os tiros deles', cd: 12, dmg: 12, spd: 900, shots: 1, r: 0, color: '#ffd23a', fenix: true, noUp: ['explo'] },
+};
+// números da Fênix (tempos em segundos, distâncias em px)
+const FENIX = {
+  queima:   { dps: 5, tempo: 3, max: 3, tick: .25 },      // cada chama tira 5 de vida por segundo, dura 3 s; até 3 chamas no mesmo inimigo
+  pena:     { vida: .55, abertura: .5 },                   // penas somem depois de 0,55 s (curto alcance); leque de 0,5 rad
+  renascer: { ovo: 2, vida: .5, raio: 170, dano: 40, inv: 1.5 }, // 2 s de ovo, volta com 50% da vida e explode em fogo
+  asas:     { vida: 1.6, tick: .4, maisVida: .4 },         // chama do rastro dura 1,6 s (+40% por ponto de melhoria), queima a cada 0,4 s
+  meteoro:  { aviso: .7, queda: .35 },                     // sombra no chão por 0,7 s, depois cai em 0,35 s
+  filhote:  { alcance: 360, voo: 300, mergulho: 900 },
+  sol:      { chamas: 1, raioTiro: 22 },                   // chamas por onda (+1 por ponto de melhoria); derrete tiros a 22 px da borda
 };
 // números das armas piratas (tempos em segundos, distâncias em px)
 const PIRATA = {
@@ -40,22 +57,26 @@ function newWeapon(type) {
 // Upgrades de arma (recompensa do chefão) — fortes
 const WUPS = [
   { id: 'shots', name: w => ({ drone: '+1 drone', boomerang: '+1 bumerangue', barrage: '+2 mísseis por saraivada', spread: '+2 projéteis por disparo', ricochet: '+1 tiro ricochete', chain: '+1 raio', saw: '+1 lâmina',
-      anchor: '+1 âncora', wave: '+1 onda', dragon: 'Jato duplo', broadside: '+1 canhão de cada lado', barrel: '+1 barril', parrot: '+1 papagaio', whirl: '+1 redemoinho' })[w.type] || '+1 projétil por disparo',
+      anchor: '+1 âncora', wave: '+1 onda', dragon: 'Jato duplo', broadside: '+1 canhão de cada lado', barrel: '+1 barril', parrot: '+1 papagaio', whirl: '+1 redemoinho',
+      feather: '+2 penas', wings: 'Rastro mais largo', meteor: '+1 meteoro', chick: '+1 filhote', sun: '+1 onda de calor' })[w.type] || '+1 projétil por disparo',
     desc: w => ({ boomerang: 'Lança mais um disco em leque', chain: 'Dispara mais um raio em outro inimigo', saw: 'Mais uma lâmina girando em volta da nave',
       anchor: 'Arremessa mais uma âncora em outro inimigo', wave: 'Solta uma segunda onda logo depois da primeira', dragon: 'O dragão solta dois jatos de água',
-      broadside: 'Mais uma bola de canhão para cada lado', barrel: 'Larga mais um barril de cada vez', parrot: 'Mais um papagaio voando junto', whirl: 'Cria mais um redemoinho' })[w.type] || 'Mais tiros a cada disparo',
-    apply: w => { w.shots += (w.type === 'spread' || w.type === 'barrage') ? 2 : 1; } },
-  { id: 'explo', name: w => w.explosive ? 'Explosão maior' : ({ anchor: 'Âncora explosiva', parrot: 'Bicadas explosivas' })[w.type] || 'Tiros explosivos',
+      broadside: 'Mais uma bola de canhão para cada lado', barrel: 'Larga mais um barril de cada vez', parrot: 'Mais um papagaio voando junto', whirl: 'Cria mais um redemoinho',
+      feather: 'O leque solta mais 2 penas', wings: 'O rastro de fogo fica mais largo', meteor: 'Cai mais um meteoro de cada vez', chick: 'Mais um filhote voando junto', sun: 'Solta uma segunda onda logo depois' })[w.type] || 'Mais tiros a cada disparo',
+    apply: w => { w.shots += (w.type === 'spread' || w.type === 'barrage' || w.type === 'feather') ? 2 : 1; } },
+  { id: 'explo', name: w => w.explosive ? 'Explosão maior' : ({ anchor: 'Âncora explosiva', parrot: 'Bicadas explosivas', feather: 'Penas explosivas', chick: 'Mergulho explosivo' })[w.type] || 'Tiros explosivos',
     desc: w => w.explosive ? 'Raio da explosão +40%' : 'Os tiros explodem ao contato e causam dano em área',
     apply: w => { w.explosive = w.explosive ? w.explosive * 1.4 : 55; } },
   { id: 'pierce', name: w => ({ boomerang: 'Alcance +35%', ricochet: '+2 quiques', chain: '+2 saltos', saw: 'Órbita +35%',
-      anchor: 'Corrente mais longa', wave: 'Lentidão mais longa', dragon: 'Dragão dura +2 s', whirl: 'Redemoinho maior' })[w.type] || 'Perfurante +2',
+      anchor: 'Corrente mais longa', wave: 'Lentidão mais longa', dragon: 'Dragão dura +2 s', whirl: 'Redemoinho maior',
+      wings: 'Fogo dura mais', sun: 'Queima mais forte' })[w.type] || 'Perfurante +2',
     desc: w => ({ boomerang: 'O bumerangue vai mais longe antes de voltar', ricochet: 'O tiro quica mais 2 vezes antes de sumir', chain: 'O raio pula para mais 2 inimigos', saw: 'As lâminas giram mais longe da nave',
-      anchor: 'A âncora alcança 35% mais longe', wave: 'Os inimigos ficam lentos por mais 1,5 s', dragon: 'Fica mais tempo na forma de dragão', whirl: 'O redemoinho fica 35% maior' })[w.type] || 'Cada tiro atravessa mais 2 inimigos',
+      anchor: 'A âncora alcança 35% mais longe', wave: 'Os inimigos ficam lentos por mais 1,5 s', dragon: 'Fica mais tempo na forma de dragão', whirl: 'O redemoinho fica 35% maior',
+      feather: 'Cada pena atravessa mais 2 inimigos', wings: 'As chamas do rastro ficam mais tempo no chão', sun: 'A onda de calor põe mais 2 chamas em cada inimigo' })[w.type] || 'Cada tiro atravessa mais 2 inimigos',
     apply: w => { if (['boomerang', 'saw', 'anchor', 'whirl'].includes(w.type)) w.range *= 1.35; else w.pierce += 2; } },
   { id: 'dmg', name: () => 'Dano da arma +60%', desc: () => 'Aumento forte de dano só nesta arma', apply: w => { w.dmgM *= 1.6; } },
-  { id: 'rate', name: w => ({ dragon: 'Recarga do dragão −30%', wave: 'Recarga da onda −30%', parrot: 'Bicadas +40% mais rápidas' })[w.type] || 'Cadência da arma +40%',
-    desc: w => ({ dragon: 'Vira dragão mais vezes', wave: 'Solta ondas mais vezes' })[w.type] || 'Esta arma dispara bem mais rápido', apply: w => { w.cdM /= 1.4; } },
+  { id: 'rate', name: w => ({ dragon: 'Recarga do dragão −30%', wave: 'Recarga da onda −30%', parrot: 'Bicadas +40% mais rápidas', sun: 'Recarga do sol −30%', chick: 'Mergulhos +40% mais rápidos', meteor: 'Meteoros mais frequentes' })[w.type] || 'Cadência da arma +40%',
+    desc: w => ({ dragon: 'Vira dragão mais vezes', wave: 'Solta ondas mais vezes', sun: 'Solta a onda de calor mais vezes', meteor: 'A chuva de meteoros vem mais vezes' })[w.type] || 'Esta arma dispara bem mais rápido', apply: w => { w.cdM /= 1.4; } },
 ];
 
 // Melhorias por nível (XP) — menores

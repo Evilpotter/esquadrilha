@@ -1,10 +1,11 @@
 // ---------- Dano ----------
-// src = tipo do tiro que acertou (usado pelo Saque da Âncora Negra)
+// src = tipo do tiro que acertou (usado pelo Saque da Âncora Negra); 'burn' = fogo da Fênix (sem piscar nem som)
 function dealDmg(t, dmg, p, src) {
   if (t.dead || t.invuln) return;
   if (p && Math.random() < p.crit) dmg *= 2;
-  t.hp -= dmg; t.flash = .07;
-  if (t.hp > 0) som(t.boss ? 'acerto_chefao' : 'acerto', t.x);
+  t.hp -= dmg;
+  if (src !== 'burn') t.flash = .07;
+  if (t.hp > 0 && src !== 'burn') som(t.boss ? 'acerto_chefao' : 'acerto', t.x);
   if (t.hp <= 0) {
     t.dead = true;
     if (t.boss) {
@@ -36,12 +37,13 @@ function boom(x, y, r, color) {
   for (let k = 0; k < 6; k++) S.fx.push({ type: 'spark', x, y, vx: rnd(-160, 160), vy: rnd(-160, 160), t: 0, life: rnd(.3, .6), color });
 }
 function hurt(p, dmg) {
-  if (p.inv > 0 || !p.alive) return;
+  if (p.inv > 0 || !p.alive || p.ovoT > 0) return; // ovo da Fênix não leva dano
   if (p.dragonT > 0) dmg *= 1 - PIRATA.dragao.defesa; // dragão de água: toma 70% menos dano
   const a = Math.min(p.sh, dmg); p.sh -= a; dmg -= a;
   p.hp -= dmg; p.inv = .7; p.shT = 3; S.shake = .2;
   som('dano_jogador', p.x);
   if (p.hp <= 0) {
+    if (fenixSalva(p)) return; // Renascer da Fênix (js/naves/fenix.js)
     p.hp = 0; p.alive = false; som('jogador_abatido', p.x);
     boom(p.x, p.y, 50, '#ff6040');
     if (S.players.every(q => !q.alive)) S.overT = 2;

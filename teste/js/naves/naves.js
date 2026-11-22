@@ -4,6 +4,7 @@ function drawShip(shipIdx, x, y, s, c1, c2, tilt, flash, skin) {
   const id = SHIPS[shipIdx || 0].id;
   if (id === 'falcon') return drawPlane(x, y, s, c1, c2, false, tilt, flash);
   if (id === 'pirate') return drawPirataShip(x, y, s, c1, c2, tilt, flash); // js/visual/pirata.js
+  if (id === 'phoenix') return drawFenixShip(x, y, s, c1, c2, tilt, flash, skin); // js/visual/fenix.js
   cx.save(); cx.translate(x, y); cx.scale(s * (1 - Math.abs(tilt || 0) * .12), s);
   const body = flash ? '#fff' : c1, dk = flash ? '#fff' : c2;
   const fl = 5 + Math.sin(performance.now() / 40) * 2;

@@ -10,18 +10,17 @@ function openShipAdd() {
 }
 function shipLayout() {
   const ss = S.ss, out = [], panels = [];
-  const n = ss.who.length, side = n === 2 && W >= 1000;
+  const n = ss.who.length, side = n === 2 && W >= 1000, N = SHIPS.length, largo = N > 4; // 5 naves: painel mais largo
   for (let k = 0; k < n; k++) {
     const pi = ss.who[k];
     let x, w, top, ch;
-    if (n === 1) { w = Math.min(W - 40, 760); x = (W - w) / 2; top = H / 2 - 240; ch = 325; }
-    else if (side) { w = Math.min(W / 2 - 40, 680); x = pi ? W / 2 + 20 : W / 2 - 20 - w; top = H / 2 - 240; ch = 325; }
+    if (n === 1) { w = Math.min(W - 40, largo ? 900 : 760); x = (W - w) / 2; top = H / 2 - 240; ch = 325; }
+    else if (side) { w = Math.min(W / 2 - 40, largo ? 860 : 680); x = pi ? W / 2 + 20 : W / 2 - 20 - w; top = H / 2 - 240; ch = 325; }
     else { w = W - 40; x = 20; top = pi ? 466 : 96; ch = 286; }
     panels.push({ pi, x, w, top });
-    const N = SHIPS.length;
     let cols = N, cw = (w - 12 * (N - 1)) / N, chh = ch;
-    if (cw < 150 && n === 1) { // tela estreita (celular): 2 colunas, 2 linhas, cartão sem a descrição
-      cols = 2; cw = (w - 12) / 2; chh = 236; top = Math.max(60, top - 120); panels[panels.length - 1].top = top;
+    if (cw < 150 && n === 1) { // tela estreita (celular): 2 linhas (2 ou 3 colunas), cartão sem a descrição
+      cols = Math.ceil(N / 2); cw = (w - 12 * (cols - 1)) / cols; chh = 236; top = Math.max(60, top - 120); panels[panels.length - 1].top = top;
     }
     for (let j = 0; j < N; j++) {
       const c = j % cols, l = Math.floor(j / cols);
@@ -53,8 +52,8 @@ function shipKey(code) {
   if (skinKey(code)) return;
   const single = ss.who.length === 1;
   const maps = {
-    0: { l: ['KeyA'], r: ['KeyD'], ok: ['Space'], d: ['Digit1', 'Digit2', 'Digit3', 'Digit4'] },
-    1: { l: ['ArrowLeft'], r: ['ArrowRight'], ok: ['Enter', 'NumpadEnter'], d: ['Numpad1', 'Numpad2', 'Numpad3', 'Numpad4'] },
+    0: { l: ['KeyA'], r: ['KeyD'], ok: ['Space'], d: ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5'] },
+    1: { l: ['ArrowLeft'], r: ['ArrowRight'], ok: ['Enter', 'NumpadEnter'], d: ['Numpad1', 'Numpad2', 'Numpad3', 'Numpad4', 'Numpad5'] },
   };
   for (const pi of ss.who) {
     if (ss.done[pi]) continue;
@@ -65,7 +64,7 @@ function shipKey(code) {
     if (m.r.includes(code)) ss.cur[pi] = (ss.cur[pi] + 1) % N;
     if (m.ok.includes(code)) shipChoose(pi, ss.cur[pi]);
     const di = m.d.indexOf(code);
-    if (di >= 0 && di % 4 < N) shipChoose(pi, di % 4);
+    if (di >= 0 && di % 5 < N) shipChoose(pi, di % 5);
   }
 }
 function stepShip(dt) {
@@ -83,7 +82,7 @@ function drawShipSelect() {
   txt(title, W / 2, L.compact ? 50 : L.panels[0].top - 30, 30, '#fff', 'center', 800);
   for (const P of L.panels) {
     const c = PCOL[P.pi], single = ss.who.length === 1;
-    const hint = single ? '←/→ ou A/D e Enter/Espaço · ou 1 a 4 · clique' : (P.pi === 0 ? 'A/D + Espaço · ou 1 a 4' : '←/→ + Enter · ou Num 1 a 4');
+    const nn = SHIPS.length, hint = single ? '←/→ ou A/D e Enter/Espaço · ou 1 a ' + nn + ' · clique' : (P.pi === 0 ? 'A/D + Espaço · ou 1 a ' + nn : '←/→ + Enter · ou Num 1 a ' + nn);
     txt(c.name, P.x, P.top + 22, 16, c.body);
     txt(ss.done[P.pi] ? 'Pronto' : hint, P.x + P.w, P.top + 22, 12, ss.done[P.pi] ? '#7dff8a' : '#9fb3c8', 'right', 500);
   }
@@ -134,6 +133,8 @@ function drawShipPreview(j, x, y, cw) {
     drawBoomerang(x + Math.sin(ph * Math.PI * 2) * 16, y - 28 - d, t * 16, '#7ff0c8', false);
   } else if (j === 3) {
     drawPirataPreview(x, y - 20);
+  } else if (j === 4) {
+    drawFenixPreview(x, y - 20);
   } else {
     for (let k = 0; k < 5; k++) {
       const ph = (t * 1.1 + k * .09) % 1, s = k % 2 ? 1 : -1;

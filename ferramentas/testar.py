@@ -7,6 +7,7 @@ Comandos:
   bumerangues Bumerangue com as 8 skins lado a lado               -> dist/bumerangues.png
   bestiario   todos os inimigos por cenário e os 10 chefões       -> dist/bestiario-*.png
   pirata      Âncora Negra: joga com todas as armas piratas e fotografa âncora, onda, dragões -> dist/pirata-*.png
+  fenix       Fênix: joga com todas as armas de fogo, testa o Renascer e fotografa armas, skins e ovo -> dist/fenix-*.png
   chefoes     luta 40 s com cada chefão (1 e 2 jogadores) e grava o resumo -> dist/chefoes.json
               (mesmo arquivo antes/depois = comportamento igual)
   todos       tudo acima
@@ -60,7 +61,7 @@ def fumaca(p):
     b, pg = abrir(p)
     res = pg.evaluate("""() => {
       const g = window.__g, out = {};
-      for (const ships of [[0], [1, 2]].concat(typeof PIRATA !== 'undefined' ? [[3, 0]] : [])) {
+      for (const ships of [[0], [1, 2]].concat(typeof PIRATA !== 'undefined' ? [[3, 0]] : [], typeof FENIX !== 'undefined' ? [[4, 1]] : [])) {
         g.newGame(ships.length, ships);
         for (const pl of g.S.players) pl.inv = 1e9;
         for (let i = 0; i < 60 * 150; i++) {
@@ -180,6 +181,70 @@ def pirata(p):
     print('pirata: ok')
 
 
+def fenix(p):
+    """Fênix com todas as armas de fogo: 150 s sem erro, Renascer (sozinha e salvando o parceiro) e fotos."""
+    from PIL import Image
+    b, pg = abrir(p)
+    pg.evaluate("() => { const g = window.__g; for (const s of g.SKINS) g.unlockSkin(s.id); }")
+    res = pg.evaluate("""() => {
+      const g = window.__g, out = {};
+      for (const [n, ships] of [[1, [4]], [2, [4, 0]]]) {
+        g.newGame(n, ships);
+        for (const t of ['wings', 'meteor', 'chick', 'sun']) g.S.players[0].weapons.push(g.newWeapon(t));
+        let ovos = 0;
+        for (let i = 0; i < 60 * 150; i++) {
+          g.step(1/60);
+          if (g.S.players.some(q => q.ovoT > 0)) ovos++;
+          if (g.S.mode === 'levelup' || g.S.mode === 'reward') { for (let k = 0; k < g.S.players.length; k++) try { g.choose(k, 0); } catch (e) {} }
+          if (g.S.mode === 'gameover') break;
+          if (i % 900 === 0) g.draw();
+        }
+        out[ships.join('+')] = { modo: g.S.mode, fase: g.S.phase, nivel: g.S.level, abates: g.S.kills, quadrosOvo: ovos,
+          armas: g.S.players[0].weapons.map(w => w.type + w.lvl).join(' ') };
+      }
+      // Renascer sozinha: cai, vira ovo, volta com 50%; segunda queda na mesma fase é para valer
+      g.newGame(1, [4]); g.S.spawnT = 1e9; let p = g.S.players[0]; p.inv = 0;
+      g.hurt(p, 999); const ovo = p.ovoT > 0 && p.alive;
+      for (let i = 0; i < 150; i++) g.step(1/60);
+      const volta = p.alive && !(p.ovoT > 0) && Math.round(p.hp) === 50;
+      p.inv = 0; g.hurt(p, 999); const cai = !p.alive;
+      // salvando o parceiro: Falcão cai, a Fênix gasta o renascer nele
+      g.newGame(2, [0, 4]); g.S.spawnT = 1e9; const f = g.S.players[0], fx = g.S.players[1]; f.inv = 0;
+      g.hurt(f, 999); const salvo = f.alive && f.ovoT > 0 && fx.renasceFase === 1;
+      for (let i = 0; i < 150; i++) g.step(1/60);
+      out.renascer = { ovo, volta, segundaQuedaCai: cai, salvaParceiro: salvo, parceiroVolta: f.alive && Math.round(f.hp) === 50 };
+      return out; }""")
+    print('fênix:', res)
+    r = res['renascer']
+    if not all(r.values()): erros.append('Renascer falhou: ' + str(r))
+    # armas em ação
+    pg.evaluate("""() => { const g = window.__g; g.newGame(1, [4], ['classic']); g.S.scene = 'sea'; g.S.banner = null;
+      const p = g.S.players[0]; p.inv = 1e9;
+      for (const t of ['wings', 'meteor', 'chick', 'sun']) p.weapons.push(g.newWeapon(t));
+      for (let i = 0; i < 60 * 14; i++) { g.step(1/60); p.x = g.S.players[0].x + Math.sin(i / 40) * 3; } p.inv = 0; g.draw(); }""")
+    pg.screenshot(path=str(dist / f'fenix-armas-{vw}.png'))
+    # nave de cada skin (parada e atirando) e o ovo
+    shots = []
+    for sk in ['classic', 'sucata', 'bosque', 'garra', 'geada', 'lamina', 'vazio', 'espectro', 'dragao', 'ovo']:
+        pg.evaluate(f"""() => {{ const g = window.__g; g.newGame(1, [4], ['{sk if sk != 'ovo' else 'classic'}']); g.S.scene = 'space'; g.S.banner = null; g.S.spawnT = 1e9;
+          const p = g.S.players[0], x0 = p.x; p.inv = 1e9;
+          g.addEnemy('gunner', x0, p.y - 170, {{ stopY: p.y - 170 }}); g.S.enemies[0].hp = 1e9;
+          for (let i = 0; i < 70; i++) g.step(1/60);
+          if ('{sk}' === 'ovo') {{ p.inv = 0; g.hurt(p, 999); for (let i = 0; i < 80; i++) g.step(1/60); }}
+          p.inv = 0; g.S.ebullets = []; g.draw(); }}""")
+        f = dist / f'_f_{sk}.png'
+        pg.screenshot(path=str(f), clip={'x': vw / 2 - 100, 'y': vh * .42, 'width': 200, 'height': vh * .58}); shots.append(f)
+    ims = [Image.open(f) for f in shots]
+    out = Image.new('RGB', (200 * len(ims), ims[0].height))
+    for k, i in enumerate(ims): out.paste(i, (k * 200, 0))
+    out.save(str(dist / 'fenix-skins.png'))
+    for f in shots: f.unlink()
+    pg.evaluate("() => { const g = window.__g; g.openShipSelect(1); g.S.ss.skin = ['dragao', 'classic']; g.S.ss.cur = [4, 0]; for (let i = 0; i < 30; i++) g.step(1/60); g.draw(); }")
+    pg.screenshot(path=str(dist / f'fenix-hangar-{vw}.png'))
+    b.close()
+    print('fênix: ok')
+
+
 def chefoes(p):
     import json, hashlib
     b, pg = abrir(p)
@@ -207,7 +272,7 @@ def chefoes(p):
 
 from playwright.sync_api import sync_playwright
 CMDS = {'fumaca': [fumaca], 'fotos': [fotos], 'bumerangues': [bumerangues], 'bestiario': [bestiario], 'chefoes': [chefoes],
-        'pirata': [pirata], 'todos': [fumaca, fotos, bumerangues, bestiario]}
+        'pirata': [pirata], 'fenix': [fenix], 'todos': [fumaca, fotos, bumerangues, bestiario]}
 with sync_playwright() as p:
     for fn in CMDS[a.cmd]:
         fn(p)

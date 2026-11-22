@@ -217,7 +217,7 @@ function updatePapagaios(dt) {
 function updateDragoes(dt) {
   const D = PIRATA.dragao;
   for (const p of S.players) {
-    if (!SHIPS[p.ship].exclusivas) continue;
+    if (SHIPS[p.ship].exclusivas !== 'pirata') continue;
     p.rastro = p.rastro || [];
     p.rastro.unshift(p.x); if (p.rastro.length > 40) p.rastro.pop();
     if (!(p.dragonT > 0)) continue;

@@ -45,6 +45,8 @@ function drawGame() {
   for (const e of S.enemies) if (!ETYPES[e.type].ground) drawEnemy(e);
   for (const b of S.bosses) if (!b.dead && !drawBossArt(b)) BOSSES[b.kind].draw(b);
   drawLentos(); // inimigos lentos pela Onda (js/visual/pirata.js)
+  drawQueimas(); // inimigos pegando fogo (js/visual/fenix.js)
+  drawFenixChao(); // chamas do rastro e sombras dos meteoros, embaixo das naves
   S.players.forEach(p => {
     if (!p.alive) return;
     if (p.inv > 0 && Math.floor(p.inv * 12) % 2) return;
@@ -58,7 +60,9 @@ function drawGame() {
       const sp = sawPos(p, w, k); drawSaw(sp.x, sp.y, (w.ang || 0) * 3, !!w.explosive);
     }
     drawPapagaios(p);
+    drawFilhotes(p);
     if (p.skin && p.skin !== 'classic') drawPlayerMark(p);
+    if (p.ovoT > 0) { drawOvo(p); return; } // ovo da Fênix
     if (p.dragonT > 0) drawDragao(p, p.x, p.y, 0, p.skin, p.rastro, S.phaseT); // Dragão de água
     else drawShip(p.ship, p.x, p.y, 1, c.body, c.dark, p.tilt, false, p.skin);
     if (p.sh > 0) {
@@ -68,6 +72,7 @@ function drawGame() {
   });
   for (const b of S.bullets) {
     if (drawPirataBala(b)) continue; // âncora e armas piratas (js/visual/pirata.js)
+    if (drawFenixBala(b)) continue;  // penas, meteoros e sol (js/visual/fenix.js)
     if (b.type === 'boomerang') {
       if (!(b.sk && drawSkinBoomerang(b.sk, b.x, b.y, b.rot, !!b.explo))) drawBoomerang(b.x, b.y, b.rot, b.color, !!b.explo);
     } else if (b.type === 'barrage') {
@@ -158,8 +163,9 @@ function drawHud() {
     }
     const x = i === 0 ? 12 : W - 182, y = H - 52 - (linhas.length - 1) * 13;
     cx.fillStyle = 'rgba(8,20,32,.55)'; cx.fillRect(x - 4, y - 18, 178, 64 + (linhas.length - 1) * 13);
-    txt(PCOL[i].name + ' · ' + SHIPS[p.ship].name + (p.alive ? '' : ' – abatido'), x, y - 4, 12, PCOL[i].body);
-    bar(x, y + 2, 170, 9, p.hp / p.maxHp, p.dragonT > 0 ? '#6fd6ff' : '#4cd964');
+    txt(PCOL[i].name + ' · ' + SHIPS[p.ship].name + (p.alive ? (p.ovoT > 0 ? ' – renascendo' : '') : ' – abatido'), x, y - 4, 12, PCOL[i].body);
+    if (SHIPS[p.ship].renascer) drawRenascerIcone(x + 160, y - 9, renascerDisponivel(p));
+    bar(x, y + 2, 170, 9, p.ovoT > 0 ? 1 - p.ovoT / p.ovoMax : p.hp / p.maxHp, p.ovoT > 0 ? '#ffb347' : p.dragonT > 0 ? '#6fd6ff' : '#4cd964');
     if (p.maxSh > 0) bar(x, y + 13, 170, 4, p.sh / p.maxSh, '#78e6ff');
     linhas.forEach((l, k) => txt(l, x, y + 32 + k * 13, 11, '#cfe3f5', 'left', 500));
   });
@@ -219,10 +225,12 @@ function roundRect(x, y, w, h, r) {
 }
 function drawTitle() {
   drawBg();
-  drawShip(1, W / 2 - 165, 345 + Math.sin(titleT * 2 + 2) * 8, 1.7, '#5fbf9f', '#2a6b55', 0);
-  drawShip(0, W / 2 - 55, 325 + Math.sin(titleT * 2) * 8, 1.9, PCOL[0].body, PCOL[0].dark, 0);
-  drawShip(3, W / 2 + 55, 325 + Math.sin(titleT * 2 + 3) * 8, 1.9, PIRATA_TITULO[0], PIRATA_TITULO[1], 0);
-  drawShip(2, W / 2 + 165, 345 + Math.sin(titleT * 2 + 1) * 8, 1.7, PCOL[1].body, PCOL[1].dark, 0);
+  const tx = Math.min(110, (W - 100) / 4); // 5 naves: espaço menor em tela estreita
+  drawShip(1, W / 2 - 2 * tx, 350 + Math.sin(titleT * 2 + 2) * 8, 1.6, '#5fbf9f', '#2a6b55', 0);
+  drawShip(0, W / 2 - tx, 330 + Math.sin(titleT * 2) * 8, 1.8, PCOL[0].body, PCOL[0].dark, 0);
+  drawShip(4, W / 2, 328 + Math.sin(titleT * 2 + 4) * 8, 1.9, FENIX_TITULO[0], FENIX_TITULO[1], 0);
+  drawShip(3, W / 2 + tx, 330 + Math.sin(titleT * 2 + 3) * 8, 1.8, PIRATA_TITULO[0], PIRATA_TITULO[1], 0);
+  drawShip(2, W / 2 + 2 * tx, 350 + Math.sin(titleT * 2 + 1) * 8, 1.6, PCOL[1].body, PCOL[1].dark, 0);
   drawClouds();
   cx.fillStyle = 'rgba(5,12,22,.8)'; cx.fillRect(0, 130, W, 120);
   txt('Esquadrilha', W / 2, 200, 52, '#fff', 'center', 800);
@@ -235,7 +243,7 @@ function drawTitle() {
   }
   cx.fillStyle = 'rgba(5,12,22,.85)'; cx.fillRect(W / 2 - Math.min(W / 2 - 20, 260), 586, Math.min(W - 40, 520), 262);
   const lines = [
-    'Escolha sua nave: Falcão, Bumerangue, Artilheiro ou Âncora Negra.',
+    'Naves: Falcão, Bumerangue, Artilheiro, Âncora Negra e Fênix.',
     'Tiro automático. Desvie e colete os cristais verdes (XP).',
     'Jogador 1: W A S D        Jogador 2: setas',
     'Cada nível: escolha 1 de 3 melhorias.',
