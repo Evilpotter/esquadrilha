@@ -22,7 +22,8 @@ const PIRATA_TIRO = {
   anchor(p, w, d, dmg, n, col) {
     const T = targets().filter(t => !t.dead && !t.invuln && t.y > 0);
     const R = d.range * w.range, from = { x: p.x, y: p.y - 14 };
-    const alvos = T.filter(t => d2(t, from) < (R + t.r) ** 2).sort((a, b) => d2(a, from) - d2(b, from));
+    // chefão no alcance vem primeiro (senão os ajudantes, mais perto, roubam todas as âncoras); depois o mais perto
+    const alvos = T.filter(t => d2(t, from) < (R + t.r) ** 2).sort((a, b) => (b.boss ? 1 : 0) - (a.boss ? 1 : 0) || d2(a, from) - d2(b, from));
     if (!alvos.length) return false;
     somTiro('anchor', p.x);
     for (let k = 0; k < n; k++) {
@@ -30,7 +31,7 @@ const PIRATA_TIRO = {
       const ang = Math.atan2(t.y - from.y, t.x - from.x) + (k >= alvos.length ? (k % 2 ? .25 : -.25) : 0);
       S.bullets.push({ x: from.x, y: from.y, vx: Math.cos(ang) * d.spd, vy: Math.sin(ang) * d.spd, r: d.r, dmg, p,
         explo: w.explosive, splash: .6, color: col, sk: p.skin, life: 4, type: 'anchor', anc: true,
-        ida: Math.min(R, dist + 24), andou: 0, ret: false, age: 0, hitT: new Map(), hook: null });
+        ida: Math.min(R, dist + 24), andou: 0, ret: false, age: 0, hitT: new Map(), hook: null, alvoChefe: !!t.boss });
     }
     return true;
   },
@@ -157,7 +158,8 @@ function voltaAncora(b) { if (!b.ret) { b.ret = true; b.hitT.clear(); } }
 function soltaGancho(b) { if (b.hook) { b.hook.preso = null; b.hook = null; } }
 // acerto da âncora: inimigo pequeno fica preso e é puxado
 function ancoraAcerta(b, t) {
-  if (b.ret || b.hook || t.boss || (t.preso && !t.preso.dead)) return;
+  // âncora indo no chefão não prende ajudante no caminho (só acerta e segue até o chefão)
+  if (b.ret || b.hook || b.alvoChefe || t.boss || (t.preso && !t.preso.dead)) return;
   const tp = ETYPES[t.type];
   if (!tp || tp.ground || t.type === 'mine' || t.r > PIRATA.ancora.puxaRaio) return;
   b.hook = t; t.preso = b;

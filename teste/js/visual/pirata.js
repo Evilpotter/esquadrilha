@@ -86,35 +86,35 @@ const PIRATA_SKIN = {
   dragao:   { pal: { casco: '#7a1610', conves: '#B8231A', vela: '#B8231A', asa: '#7a1610', enfeite: '#FFC23D', emblema: '#FFC23D' }, deco: { emblema: 'dragao', pontas: 'morcego' } },
 };
 
-// nave "Original": imagem montada com as cores do jogador (uma vez por cor)
-const pirataImg = {};
-function pirataOriginal(c1, c2) {
-  const key = c1 + c2;
-  if (pirataImg[key]) return pirataImg[key];
-  const a = pirataSVG({ casco: '#8a5a2b', conves: '#c08a4e', vela: c1, asa: c2, enfeite: '#e8d8a8', emblema: '#ffffff' }, { emblema: 'caveira' });
-  const rec = pirataImg[key] = { ready: false, a }, [vx, vy, vw, vh] = a.vb;
-  if (typeof Image === 'undefined') return rec;
-  const img = new Image();
-  img.onload = () => {
-    const c = document.createElement('canvas');
-    c.width = Math.round(vw * SKIN_U * SKIN_RES); c.height = Math.round(vh * SKIN_U * SKIN_RES);
-    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); rec.cv = c; rec.ready = true;
-  };
-  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vx} ${vy} ${vw} ${vh}" width="${vw * SKIN_U * SKIN_RES}" height="${vh * SKIN_U * SKIN_RES}">${a.g}</svg>`);
-  return rec;
-}
-function pirataPrepara() { pirataOriginal(PIRATA_TITULO[0], PIRATA_TITULO[1]); for (const c of PCOL) pirataOriginal(c.body, c.dark); }
-const PIRATA_TITULO = ['#3a3a46', '#1c1c24']; // velas pretas na tela inicial
-function drawPirataShip(x, y, s, c1, c2, tilt) {
-  const rec = pirataOriginal(c1, c2);
-  cx.save(); cx.translate(x, y); cx.scale(1 - Math.abs(tilt || 0) * .12, 1);
-  if (rec.ready) {
-    const [vx, vy, vw, vh] = rec.a.vb, [px, py] = rec.a.pv, u = SKIN_U * s;
-    cx.drawImage(rec.cv, (vx - px) * u, (vy - py) * u, vw * u, vh * u);
-  } else { // enquanto a imagem carrega
-    cx.scale(s, s); cx.fillStyle = '#8a5a2b'; cx.beginPath(); cx.ellipse(0, 2, 12, 27, 0, 0, TAU); cx.fill();
-    cx.fillStyle = c1; cx.fillRect(-20, -6, 40, 9);
-  }
+// nave "Original": desenho simples nas cores do jogador, no mesmo padrão das outras naves
+// (formas chapadas, sem contorno; cabine azul-clara; detalhes brancos e vermelhos)
+const PIRATA_TITULO = ['#c0563a', '#6e2a1c']; // tela inicial: casco vermelho-ferrugem
+function drawPirataShip(x, y, s, c1, c2, tilt, flash) {
+  cx.save(); cx.translate(x, y); cx.scale(s * (1 - Math.abs(tilt || 0) * .12), s);
+  const body = flash ? '#fff' : c1, dk = flash ? '#fff' : c2, cl = (a, b) => flash ? '#fff' : (b || a);
+  const fl = 5 + Math.sin(performance.now() / 40) * 2;
+  // chama do motor na popa
+  cx.fillStyle = '#ffb347'; cx.beginPath(); cx.moveTo(-4, 22); cx.lineTo(4, 22); cx.lineTo(0, 23 + fl * 1.6); cx.closePath(); cx.fill();
+  // gurupés (ponta da frente)
+  cx.fillStyle = dk; cx.fillRect(-1.5, -33, 3, 10);
+  // asas
+  cx.fillStyle = dk;
+  cx.beginPath(); cx.moveTo(-9, 2); cx.lineTo(-27, 13); cx.lineTo(-25, 19); cx.lineTo(-9, 14); cx.closePath(); cx.fill();
+  cx.beginPath(); cx.moveTo(9, 2); cx.lineTo(27, 13); cx.lineTo(25, 19); cx.lineTo(9, 14); cx.closePath(); cx.fill();
+  // canhões dos lados
+  cx.fillStyle = cl('#e8e8e8');
+  for (const [sx, sy] of [[-16, -2], [-16, 7], [12, -2], [12, 7]]) cx.fillRect(sx, sy, 4, 4);
+  // casco
+  cx.fillStyle = body;
+  cx.beginPath(); cx.moveTo(0, -26); cx.quadraticCurveTo(13, -16, 13, 4); cx.quadraticCurveTo(13, 18, 6, 22); cx.lineTo(-6, 22); cx.quadraticCurveTo(-13, 18, -13, 4); cx.quadraticCurveTo(-13, -16, 0, -26); cx.closePath(); cx.fill();
+  // convés
+  cx.fillStyle = dk; cx.beginPath(); cx.ellipse(0, 6, 6, 13, 0, 0, TAU); cx.fill();
+  // vela (barra) com o emblema
+  cx.fillStyle = cl('#f2ead8');
+  cx.beginPath(); cx.moveTo(-21, -6); cx.quadraticCurveTo(0, -12, 21, -6); cx.lineTo(19, 1); cx.quadraticCurveTo(0, -5, -19, 1); cx.closePath(); cx.fill();
+  cx.fillStyle = cl('#e74c3c'); cx.beginPath(); cx.arc(0, -4.5, 2.6, 0, TAU); cx.fill();
+  // cabine
+  cx.fillStyle = cl('#bfe6ff'); cx.beginPath(); cx.ellipse(0, -15, 3, 5, 0, 0, TAU); cx.fill();
   cx.restore();
 }
 
