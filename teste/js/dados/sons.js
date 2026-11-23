@@ -51,6 +51,15 @@ const SONS = {
   inimigo_plasma:       { vol: .17, var: 1.5, max: 2, int: .08 },
   inimigo_granada:      { vol: .20, var: 1, max: 2, int: .1 },
   chefao_tiro:          { vol: .20, var: 1.5, max: 3, int: .07 },
+  // Mar dos Piratas
+  inimigo_mosquete:     { vol: .16, var: 1.5, max: 3, int: .06 },
+  inimigo_canhao:       { vol: .26, var: 1, max: 2, int: .1 },
+  inimigo_barril:       { vol: .20, var: 1, max: 2, int: .15 },
+  inimigo_tinta:        { vol: .18, var: 1.5, max: 2, int: .1 },
+  inimigo_chama:        { vol: .18, var: 1, max: 2, int: .1 },
+  gaivota:              { vol: .26, var: 1.5, max: 2, int: .4 },
+  kraken_sobe:          { vol: .40, var: 1, max: 2, int: .3 },
+  navio_fantasma:       { vol: .32, max: 2, int: .5 },
   // jogador
   dano_jogador:      { vol: .55, var: .5, max: 2, int: .1 },
   jogador_abatido:   { vol: .80, max: 1 },
@@ -86,12 +95,15 @@ const SOM_ARMA = {
 const SOM_TIRO_INIMIGO = {
   laser: ['inimigo_laser', 0, 1], laserForte: ['inimigo_laser', -5, 1.6], metralhadora: ['inimigo_metralhadora', 0, 1],
   plasma: ['inimigo_plasma', 0, 1], granada: ['inimigo_granada', 0, 1], missil: ['inimigo_missil', 0, 1], chefao: ['chefao_tiro', 0, 1],
+  mosquete: ['inimigo_mosquete', 0, 1], balaCanhao: ['inimigo_canhao', 0, 1], barril: ['inimigo_barril', 0, 1],
+  tinta: ['inimigo_tinta', 0, 1], chamaFantasma: ['inimigo_chama', 0, 1],
 };
 
 // músicas: vol relativo · laco: repete sem parar
 const MUSICAS = {
   menu:    { vol: .55, laco: true },
   fase:    { vol: .50, laco: true },
+  piratas: { vol: .50, laco: true }, // fase no Mar dos Piratas
   chefao:  { vol: .55, laco: true },
   vitoria: { vol: .70, laco: false },
   derrota: { vol: .60, laco: false },

@@ -68,6 +68,25 @@ function drawEnemyArt(e) {
       bestDraw(key, e.x, e.y, 0, k, f);
       if (e.charge > 0 && Math.floor(e.charge * 14) % 2) { cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(e.x, e.y + 2, 6, 0, TAU); cx.fill(); }
       return true;
+    // Mar dos Piratas
+    case 'bote': return bestDraw(key, e.x, e.y, Math.sin(e.t * 4 + (e.ph0 || 0)) * .08, k, f);
+    case 'gaivota': return bestDraw(key, e.x, e.y, e.mergulho ? Math.atan2(e.vy, e.vx) - Math.PI / 2 : Math.cos(e.t * 2.2 + (e.ph0 || 0)) * .3, k * (1 + .08 * Math.sin(e.t * 14)), f);
+    case 'escuna':
+      bestDraw(key, e.x, e.y, Math.sin(e.t * 1.3) * .04, k, f);
+      return bestDraw('e:escuna_top', e.x, e.y, e.aim - Math.PI / 2, k, f);
+    case 'balao': return bestDraw(key, e.x, e.y, Math.sin(e.t * 1.6) * .1, k, f);
+    case 'kraken': {
+      const sub = e.sub || 0, r = e.r * (1.4 + .25 * Math.sin(e.t * 3));
+      // água borbulhando em volta (anel de espuma)
+      cx.save(); cx.translate(e.x, e.y + e.r * .7);
+      cx.fillStyle = 'rgba(13,61,68,.5)'; cx.beginPath(); cx.ellipse(0, 0, r, r * .42, 0, 0, TAU); cx.fill();
+      cx.strokeStyle = 'rgba(255,255,255,.55)'; cx.lineWidth = 2.5; cx.setLineDash([10, 8]); cx.lineDashOffset = -e.t * 20;
+      cx.beginPath(); cx.ellipse(0, 0, r * 1.15, r * .5, 0, 0, TAU); cx.stroke(); cx.setLineDash([]); cx.restore();
+      if (sub >= .98) return true;
+      const cosp = e.cospe > 0 ? 1 + e.cospe * .6 : 1;
+      return bestDraw(key, e.x, e.y + sub * e.r * .8, Math.sin(e.t * 2.3) * .22, k * (1 - sub * .7) * cosp, f, 1 - sub * .6);
+    }
+    case 'fantasma': return bestDraw(key, e.x, e.y, Math.sin(e.t * .9) * .05, k, f, e.alpha === undefined ? 1 : e.alpha);
     default: return bestDraw(key, e.x, e.y, 0, k, f);
   }
 }

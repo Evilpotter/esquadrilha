@@ -1,5 +1,5 @@
 """Compõe e renderiza as músicas da Esquadrilha (orquestra de fantasia) em <raiz>/som/musica/*.ogg.
-Uso: python3 ferramentas/sons/musica.py [pasta_do_jogo] [nomes...]   (padrão: teste, todas)
+Uso: python3 ferramentas/sons/musica.py [pasta_do_jogo] [nomes...]   (padrão: teste, todas; piratas = fase no Mar dos Piratas)
 As músicas em laço (menu, fase, chefao) são renderizadas duas vezes seguidas e cortadas na
 segunda de três voltas: as caudas das notas e do reverb da volta anterior entram no começo, e o laço fica sem emenda."""
 import sys, pathlib, tempfile, subprocess, os
@@ -405,7 +405,98 @@ def derrota():
     return m
 
 
-PECAS = {'menu': menu, 'fase': fase, 'chefao': chefao, 'vitoria': vitoria, 'derrota': derrota}
+# =============================================================
+# PIRATAS – "Mar dos Piratas": shanty em compasso composto (12/8) para as fases do mapa pirata.
+# Rabeca (fiddle) e acordeão no tema, flautinha na resposta, tuba e cordas no "um-pá", bodhran e pandeirola.
+# =============================================================
+def jig(m, nome, ini, texto, vel=100, leg=.9, transp=0):
+    """Melodia em colcheias de 12/8: 'D5:3' = 3 colcheias (1 batida). Devolve a batida final."""
+    b = ini
+    for tok in texto.replace('|', ' ').split():
+        partes = tok.split(':')
+        d = int(partes[1]) / 3
+        v = int(partes[2]) if len(partes) > 2 else vel
+        if partes[0] != 'r':
+            m.n(nome, b, d * leg, nota(partes[0]) + transp, v)
+        b += d
+    return b
+
+
+def piratas():
+    m = Peca(118, 24)
+    m.parte('rabeca', 110, pan=50, vol=108)
+    m.parte('acordeao', 21, pan=78, vol=96)
+    m.parte('flautim', 72, pan=40, vol=92)
+    m.parte('tuba', 58, pan=64, vol=104)
+    m.parte('contrab', 45, pan=86, vol=100)
+    m.parte('cordas', 48, pan=36, vol=84)
+    m.parte('trompas', 60, pan=60, vol=100)
+    m.parte('coro', 52, pan=64, vol=92)
+    m.parte('timpano', 47, pan=70, vol=104)
+    m.parte('bodhran', 116, pan=56, vol=104)
+    m.parte('perc', 0, pan=64, vol=92, canal=9)
+    PANDEIRO = 54
+    prog = (['Dm', 'Dm', 'Dm', 'A'] + ['Dm', 'C', 'Dm', 'A', 'Dm', 'C', 'A', 'Dm'] + ['F', 'C', 'Dm', 'A', 'F', 'C', 'Bb', 'Dm']
+            + ['Dm', 'Bb', 'C', 'A'])
+    for c, ac in enumerate(prog):
+        b = c * 4
+        intro = c < 4
+        raiz, iv = acorde(ac)
+        r2, r3 = baixo(ac, 2), baixo(ac, 3)
+        quinta = r2 + 7
+        # um-pá: grave na batida (raiz / quinta), acordeão nas duas colcheias seguintes
+        for k in range(4):
+            g = r2 if k % 2 == 0 else (quinta if quinta < 52 else quinta - 12)
+            m.n('tuba', b + k, .55, g, 92 if k % 2 == 0 else 78)
+            m.n('contrab', b + k, .3, g, 84)
+            if not (intro and c < 2):
+                for off in (1 / 3, 2 / 3):
+                    m.n('acordeao', b + k + off, .2, voz(ac, 'A3', 'A4'), 70 if off < .5 else 62)
+        if not intro:
+            m.n('cordas', b, 3.9, voz(ac, 'D4', 'D5'), 58)
+        # bodhran: batida forte no 1 e no 3, "ra-ta" de colcheias antes; pandeirola no 2 e 4
+        for k, v in ((0, 112), (5 / 3, 70), (2, 96), (10 / 3, 66), (11 / 3, 78)):
+            m.n('bodhran', b + k, .25, nota('D2'), v - (16 if intro else 0))
+        if c >= 2:
+            for k in (1, 3):
+                m.n('perc', b + k, .2, PANDEIRO, 74)
+                m.n('perc', b + k + 2 / 3, .15, PANDEIRO, 52)
+        if not intro:
+            m.n('timpano', b, .5, r2 + (12 if raiz < 5 else 0), 88)
+        if c in (4, 12, 20):
+            m.n('perc', b, 3, 49, 90)
+        # metais na parte B
+        if 12 <= c < 20:
+            m.n('trompas', b, 1.6, voz(ac, 'F3', 'E4'), 84)
+            m.n('trompas', b + 2, 1.6, voz(ac, 'F3', 'E4'), 76)
+    # "Ei!" do coro no fim das frases
+    for bt in (31, 63):
+        m.n('coro', bt, .5, ['D4', 'A4', 'D5'], 112)
+    # introdução: rabeca sozinha chamando
+    jig(m, 'rabeca', 8, 'A4:2 D5:1 F5:3 E5:2 D5:1 C#5:3 | A4:3 r:3 A4:2 C#5:1 E5:3', 92)
+    ta = ('A4:3 D5:2 E5:1 F5:2 E5:1 D5:3 | E5:3 C5:2 D5:1 E5:2 G5:1 E5:3 | F5:3 D5:2 E5:1 F5:2 A5:1 F5:2 E5:1 | E5:2 C#5:1 A4:3 A4:6 | '
+          'A4:3 D5:2 E5:1 F5:2 E5:1 D5:3 | G5:3 E5:2 C5:1 G5:2 A5:1 G5:3 | F5:2 E5:1 D5:3 C#5:2 D5:1 E5:3 | D5:9 r:3')
+    jig(m, 'rabeca', 16, ta, 104)
+    jig(m, 'acordeao', 16, ta, 70, transp=-12)
+    tb = ('A5:3 A5:2 G5:1 F5:3 C5:3 | G5:3 G5:2 F5:1 E5:3 C5:3 | F5:2 G5:1 A5:2 F5:1 D5:2 E5:1 F5:3 | E5:3 C#5:3 A4:6 | '
+          'A5:3 A5:2 Bb5:1 C6:3 A5:3 | G5:2 A5:1 G5:2 F5:1 E5:3 C5:3 | D5:2 F5:1 Bb5:3 A5:2 G5:1 E5:3 | D5:9 r:3')
+    jig(m, 'rabeca', 48, tb, 104)
+    jig(m, 'flautim', 48, tb, 80)
+    m.rampa('trompas', 48, 50, 70, 120)
+    # respostas do flautim na parte A (fim das frases)
+    for b0, frase in ((28, 'A5:1 G5:1 F5:1 E5:1 D5:1 C#5:1'), (44, 'D6:1 C6:1 A5:1 F5:1 E5:1 D5:1')):
+        jig(m, 'flautim', b0, frase, 78)
+    # ponte: trompas e cordas crescem, rabeca em corrida, rufo para voltar ao começo
+    m.melodia('trompas', 80, 'D5:4 | D5:2 F5:2 | E5:4 | C#5:4', 94, transp=-12)
+    jig(m, 'rabeca', 80, 'D5:1 E5:1 F5:1 G5:1 A5:1 Bb5:1 A5:1 G5:1 F5:1 E5:1 D5:1 C#5:1 | D5:1 F5:1 A5:1 D6:1 A5:1 F5:1 Bb5:1 A5:1 G5:1 F5:1 E5:1 D5:1 | '
+                         'C5:1 E5:1 G5:1 C6:1 G5:1 E5:1 C5:3 E5:3 | A4:3 C#5:3 E5:3 A5:3', 96, leg=.85)
+    m.rampa('cordas', 80, 96, 80, 120)
+    rufo_timpano(m, 'timpano', 92, 4, nota('A2'), 50, 116, 1 / 6)
+    m.n('perc', 95.5, .5, 57, 88)
+    return m
+
+
+PECAS = {'menu': menu, 'fase': fase, 'chefao': chefao, 'vitoria': vitoria, 'derrota': derrota, 'piratas': piratas}
 
 if __name__ == '__main__':
     raiz = pathlib.Path(__file__).resolve().parents[2] / (sys.argv[1] if len(sys.argv) > 1 else 'teste')

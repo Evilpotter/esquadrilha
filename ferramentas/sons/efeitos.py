@@ -515,6 +515,77 @@ def fenix_renasce():
     return limitador(reverb(mix((casca, 0, 1), (b, .05, .9), (grito, .15, .6), *harpa), .3, 1.8), -1)
 
 
+# ---------- Mar dos Piratas (inimigos) ----------
+
+def inimigo_mosquete():
+    """Mosquete: estalo seco + pólvora chiando + baforada."""
+    crack = filtro(ruido(.03), 'pf', 2600, .9) * env(.03, .0004, curva_=6)
+    polvora = filtro(ruido(.22, 'rosa'), 'pb', curva(3000, 500, .22)) * env(.22, .002, decai=.06) * .6
+    return reverb(mix((crack, 0, 1), (grave(240, 110, .05), 0, .6), (polvora, .005, 1)), .1, .5)
+
+
+def inimigo_canhao():
+    """Canhão da escuna: estrondo abafado, mais curto que os Canhões de bordo da Âncora Negra."""
+    b = explosao(0.5, (2200, 150), (82, 38), 0.32, 0.12, tam=.9, seed=31)
+    return reverb(filtro(mix((b, 0, 1), (estalo(.015, 700, .7), 0, .5)), 'pb', 2600), .22, 1.0)
+
+
+def inimigo_barril():
+    """Barril arremessado: zunido girando + pavio chiando."""
+    d = .55
+    zun = sopro(.35, 500, 1500, 1.6) * (0.6 + 0.4 * np.abs(np.sin(np.linspace(0, 9, n(.35))))) * env(.35, .03, curva_=2)
+    pavio = filtro(filtro(ruido(d), 'pa', 3000), 'pb', 7000) * (0.5 + 0.5 * np.abs(np.sin(np.linspace(0, 55, n(d))))) * adsr(d, .05, .1, .7, .2) * .22
+    return reverb(mix((zun, 0, 1), (pavio, .05, 1)), .1, .4)
+
+
+def inimigo_tinta():
+    """Kraken cuspindo tinta: 'splórt' gosmento + bolhas."""
+    d = .32
+    f = curva(260, 70, d) * (1 + .3 * osc(22, d))
+    gosma = filtro(filtro(ruido(d, 'rosa'), 'pb', 1400) * env(d, .004, decai=.09), 'pf', curva(900, 300, d), 4) * 2.4
+    r = np.random.default_rng(32)
+    bolhas = [(osc(curva(fb, fb * 1.7, .05)) * env(.05, .002, curva_=5) * .3, t, 1) for fb, t in zip(r.uniform(400, 900, 5), r.uniform(.05, .25, 5))]
+    return reverb(mix((osc(f) * env(d, .002, decai=.08), 0, .8), (gosma, 0, .8), *bolhas), .12, .5)
+
+
+def inimigo_chama():
+    """Chama fantasma: sopro assombrado com uivo descendo."""
+    d = .5
+    sop = ressonante(sopro(d, 600, 1800, 1.5) * env(d, .02, decai=.18), 1100, 6) * .7
+    uivo = osc(curva(880, 520, d) * (1 + .02 * osc(7, d))) * adsr(d, .03, .1, .6, .25) * .35
+    return reverb(mix((sop, 0, 1), (uivo, 0, 1)), .35, 1.4)
+
+
+def gaivota():
+    """Bando de gaivotas: três gritos 'ki-ááu'."""
+    def grito(f0, f1, f2, d):
+        h = n(d) // 3
+        fr = np.concatenate([curva(f0, f1, h / SR), curva(f1, f2, (n(d) - h) / SR)])
+        x = fm(fr, 2.0, curva(5, 2, d)) * adsr(d, .01, .05, .7, .08)
+        return filtro(sat(filtro(x, 'pf', 2000, .9) * 2, 2), 'pb', 4200, ordem=2)
+    return reverb(mix((grito(1300, 1900, 1100, .32), 0, 1), (grito(1500, 2100, 1250, .26), .22, .7), (grito(1200, 1700, 1000, .3), .42, .5)), .2, .9)
+
+
+def kraken_sobe():
+    """Kraken saindo da água: onda subindo + rosnado grave + bolhas."""
+    d = 1.0
+    agua = filtro(ruido(d, 'rosa'), 'pb', curva(400, 3000, d * .5), ordem=2) * adsr(d, .25, .2, .5, .5) * 1.4
+    r = np.random.default_rng(33)
+    fr = curva(62, 48, d) * (1 + .06 * filtro(r.standard_normal(n(d)), 'pb', 25) * 6)
+    ronco = sat(filtro(osc(fr, forma='serra'), 'pb', 500, ordem=2) * adsr(d, .15, .2, .7, .4) * 2.2, 2.5)
+    bolhas = [(osc(curva(fb, fb * 1.8, .06)) * env(.06, .002, curva_=5) * .25, t, 1) for fb, t in zip(r.uniform(300, 1100, 12), r.uniform(.1, .9, 12))]
+    return limitador(reverb(mix((agua, 0, 1), (ronco, .1, .9), *bolhas), .25, 1.5), -1)
+
+
+def navio_fantasma():
+    """Navio fantasma: coro gemendo descendo + sino do navio + vento."""
+    d = 1.8
+    coro = [(tom(gm(53, nt, 90, 1.4, 1.0), 0), k * .05, .3) for k, nt in enumerate((50, 53, 57))]
+    sino_ = metal(330, 1.6, 3) * .35
+    vento = sopro(d, 300, 900, 3.0) * adsr(d, .4, .3, .6, .7) * .5
+    return limitador(reverb(mix(*coro, (sino_, .1, 1), (vento, 0, 1)), .4, 2.4), -1)
+
+
 TODOS = {
     'tiro_metralhadora': (tiro_metralhadora, False), 'tiro_leque': (tiro_leque, False), 'tiro_missil': (tiro_missil, False),
     'tiro_plasma': (tiro_plasma, True), 'tiro_drone': (tiro_drone, False), 'tiro_ricochete': (tiro_ricochete, False),
@@ -536,6 +607,9 @@ TODOS = {
     'papagaio': (papagaio, False), 'redemoinho': (redemoinho, True),
     'tiro_pena': (tiro_pena, False), 'asas_fogo': (asas_fogo, False), 'meteoro': (meteoro, True), 'filhote': (filhote, False),
     'sol_nascente': (sol_nascente, True), 'fenix_ovo': (fenix_ovo, True), 'fenix_renasce': (fenix_renasce, True),
+    'inimigo_mosquete': (inimigo_mosquete, False), 'inimigo_canhao': (inimigo_canhao, True), 'inimigo_barril': (inimigo_barril, False),
+    'inimigo_tinta': (inimigo_tinta, False), 'inimigo_chama': (inimigo_chama, True), 'gaivota': (gaivota, True),
+    'kraken_sobe': (kraken_sobe, True), 'navio_fantasma': (navio_fantasma, True),
 }
 
 if __name__ == '__main__':

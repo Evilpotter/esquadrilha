@@ -80,6 +80,59 @@ const ETIRO_DESENHO = {
     cx.fillStyle = '#3e7a1e'; cx.beginPath(); cx.ellipse(0, -r * 1.2, r * .25, r * .45, .6, 0, TAU); cx.fill();
     cx.restore();
   },
+  // ---------- Mar dos Piratas ----------
+  mosquete(e, a) {
+    // bolinha de chumbo com rastro de fumaça
+    const hx = Math.cos(a), hy = Math.sin(a), L = e.r * 4;
+    cx.lineCap = 'round'; cx.strokeStyle = 'rgba(220,220,210,.5)'; cx.lineWidth = e.r * 1.6;
+    cx.beginPath(); cx.moveTo(e.x - hx * L, e.y - hy * L); cx.lineTo(e.x, e.y); cx.stroke(); cx.lineCap = 'butt';
+    cx.fillStyle = '#4a4a50'; cx.strokeStyle = SKIN_OUT; cx.lineWidth = 1.5;
+    cx.beginPath(); cx.arc(e.x, e.y, e.r, 0, TAU); cx.fill(); cx.stroke();
+    cx.fillStyle = '#c8ccd2'; cx.beginPath(); cx.arc(e.x - e.r * .3, e.y - e.r * .3, e.r * .35, 0, TAU); cx.fill();
+  },
+  balaCanhao(e, a) {
+    const hx = Math.cos(a), hy = Math.sin(a), r = e.r;
+    cx.globalAlpha = .3; cx.fillStyle = '#24160c';
+    for (let k = 1; k <= 3; k++) { cx.beginPath(); cx.arc(e.x - hx * r * k * .9, e.y - hy * r * k * .9, r * (1 - k * .2), 0, TAU); cx.fill(); }
+    cx.globalAlpha = 1; cx.fillStyle = '#1e1e22'; cx.strokeStyle = SKIN_OUT; cx.lineWidth = 2;
+    cx.beginPath(); cx.arc(e.x, e.y, r, 0, TAU); cx.fill(); cx.stroke();
+    cx.fillStyle = 'rgba(255,255,255,.45)'; cx.beginPath(); cx.arc(e.x - r * .35, e.y - r * .35, r * .32, 0, TAU); cx.fill();
+  },
+  barril(e, a, t) {
+    // barril de pólvora girando, pavio aceso; pisca cada vez mais rápido perto de estourar
+    const r = e.r;
+    cx.save(); cx.translate(e.x, e.y); cx.rotate(t * 5 + e.x * .01);
+    cx.fillStyle = '#9B6A3C'; cx.strokeStyle = SKIN_OUT; cx.lineWidth = 2;
+    cx.beginPath(); cx.ellipse(0, 0, r * .8, r, 0, 0, TAU); cx.fill(); cx.stroke();
+    cx.strokeStyle = '#3a3a3a'; cx.lineWidth = 2;
+    for (const y of [-.55, .55]) { cx.beginPath(); cx.moveTo(-r * .72, y * r); cx.lineTo(r * .72, y * r); cx.stroke(); }
+    cx.fillStyle = '#2b2b2b'; cx.font = 'bold ' + Math.round(r) + 'px sans-serif'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText('X', 0, 1);
+    cx.strokeStyle = '#3a2a1a'; cx.lineWidth = 1.6; cx.beginPath(); cx.moveTo(0, -r); cx.quadraticCurveTo(r * .4, -r * 1.4, r * .2, -r * 1.7); cx.stroke();
+    const pisca = (e.burst || 0) < .4 ? 30 : 12;
+    cx.fillStyle = Math.sin(t * pisca) > 0 ? '#fff3b0' : '#ff7a1f'; cx.beginPath(); cx.arc(r * .2, -r * 1.75, r * .32, 0, TAU); cx.fill();
+    cx.restore();
+  },
+  tinta(e, a, t) {
+    // gota de tinta do Kraken (treme um pouco) com rastro de pingos
+    const hx = Math.cos(a), hy = Math.sin(a), r = e.r, w = 1 + .12 * Math.sin(t * 18 + e.y * .1);
+    cx.fillStyle = '#2a0f3a';
+    for (let k = 1; k <= 3; k++) { cx.beginPath(); cx.arc(e.x - hx * r * (1 + k * .8), e.y - hy * r * (1 + k * .8), r * (.5 - k * .1), 0, TAU); cx.fill(); }
+    cx.save(); cx.translate(e.x, e.y); cx.rotate(a);
+    cx.strokeStyle = SKIN_OUT; cx.lineWidth = 2; cx.fillStyle = '#3d1652';
+    cx.beginPath(); cx.ellipse(0, 0, r * 1.15 * w, r / w, 0, 0, TAU); cx.fill(); cx.stroke();
+    cx.fillStyle = e.c || '#9a4ab0'; cx.globalAlpha = .6; cx.beginPath(); cx.ellipse(r * .2, -r * .25, r * .45, r * .3, 0, 0, TAU); cx.fill();
+    cx.globalAlpha = 1; cx.restore();
+  },
+  chamaFantasma(e, a, t) {
+    // chama verde do navio fantasma: brilho + língua de fogo apontando para trás
+    const c = e.c || '#7af0c0', r = e.r, pul = 1 + .18 * Math.sin(t * 16 + e.x * .05);
+    cx.globalAlpha = .3; cx.fillStyle = c; cx.beginPath(); cx.arc(e.x, e.y, r * 2 * pul, 0, TAU); cx.fill(); cx.globalAlpha = 1;
+    cx.save(); cx.translate(e.x, e.y); cx.rotate(a);
+    cx.fillStyle = c; cx.beginPath(); cx.moveTo(r * 1.1, 0); cx.quadraticCurveTo(r * .6, -r * 1.2, -r * 2.6 * pul, -r * .2 * Math.sin(t * 20));
+    cx.quadraticCurveTo(r * .6, r * 1.2, r * 1.1, 0); cx.fill();
+    cx.fillStyle = '#e8fff4'; cx.beginPath(); cx.arc(r * .3, 0, r * .5, 0, TAU); cx.fill();
+    cx.restore();
+  },
 };
 // risco de laser: brilho na cor do inimigo + miolo branco, cabeça na posição do tiro
 function laserRisco(e, a, L, w, c) {

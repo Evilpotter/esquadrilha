@@ -18,7 +18,7 @@ const ETYPES = {
 const PHASE_LEN = 60;
 
 // ---------- Cenários ----------
-const SCENES = { sea: { name: 'Oceano' }, desert: { name: 'Deserto' }, space: { name: 'Espaço' } };
+const SCENES = { sea: { name: 'Oceano' }, desert: { name: 'Deserto' }, space: { name: 'Espaço' }, piratas: { name: 'Mar dos Piratas' } };
 const SCENE_KEYS = Object.keys(SCENES);
 for (const k in ETYPES) if (!ETYPES[k].scene && ETYPES[k].from < 99) ETYPES[k].scene = 'sea';
 Object.assign(ETYPES, {
@@ -32,6 +32,13 @@ Object.assign(ETYPES, {
   rock:    { name: 'Asteroide',        hp: 55,  r: 26, xp: 1, color: '#8a8580', dark: '#4a4642', from: 1, w: 2, scene: 'space' },
   beamer:  { name: 'Raio alienígena',  hp: 70,  r: 20, xp: 4, color: '#ff7ad9', dark: '#7a1f63', from: 2, w: 1, scene: 'space' },
   blinker: { name: 'Teleportador',     hp: 45,  r: 16, xp: 3, color: '#5ae0e0', dark: '#1a6a6a', from: 3, w: 1, scene: 'space' },
+  // Mar dos Piratas (comportamento em js/inimigos/piratas.js; números em PIRATAS_INI, abaixo)
+  bote:     { name: 'Bote pirata',         hp: 22,  r: 13, xp: 1, color: '#9b6a3c', dark: '#5a3a1e', from: 1, w: 3, scene: 'piratas', ground: true },
+  gaivota:  { name: 'Gaivota',             hp: 10,  r: 11, xp: 1, color: '#f2f2ea', dark: '#7a8590', from: 1, w: 3, scene: 'piratas' },
+  escuna:   { name: 'Escuna',              hp: 90,  r: 24, xp: 3, color: '#7a4a2a', dark: '#3e2414', from: 1, w: 2, scene: 'piratas', ground: true },
+  balao:    { name: 'Balão pirata',        hp: 45,  r: 20, xp: 2, color: '#c2362b', dark: '#6a1a12', from: 2, w: 2, scene: 'piratas' },
+  kraken:   { name: 'Tentáculo do Kraken', hp: 70,  r: 20, xp: 4, color: '#9a4ab0', dark: '#4a1a5a', from: 2, w: 1, scene: 'piratas', ground: true },
+  fantasma: { name: 'Navio fantasma',      hp: 220, r: 34, xp: 8, color: '#7af0c0', dark: '#1a6a50', from: 3, w: 1, scene: 'piratas', ground: true },
 });
 
 // ---------- Tiros dos inimigos ----------
@@ -47,6 +54,21 @@ const ETIROS = {
   granada:      { nome: 'Granada',         dano: 14 },  // artilharia (estoura em estilhaços)
   missil:       { nome: 'Míssil',          dano: 22 },  // bombardeiro, tanque, base fortificada
   chefao:       { nome: 'Tiro de chefão',  dano: 12 },  // chefões usam BOSS_DMG (js/dados/chefoes.js)
+  // Mar dos Piratas
+  mosquete:     { nome: 'Mosquete',        dano: 12 },  // bote pirata
+  balaCanhao:   { nome: 'Bala de canhão',  dano: 20 },  // escuna
+  barril:       { nome: 'Barril de pólvora', dano: 14 }, // balão pirata (estoura em estilhaços)
+  tinta:        { nome: 'Tinta do Kraken', dano: 12 },  // tentáculo do Kraken
+  chamaFantasma:{ nome: 'Chama fantasma',  dano: 14 },  // navio fantasma
+};
+// Inimigos do Mar dos Piratas: tempos em segundos, vel = multiplica a velocidade dos tiros da fase
+const PIRATAS_INI = {
+  bote:     { grupo: 3, remo: 45, tiro: 2.2, variacao: .25, vel: .85 },
+  gaivota:  { grupo: 5, desce: 150, mergulhaY: .3, mergulho: 330, grita: true },
+  escuna:   { desce: 22, canhao: 2.6, vel: .7, raio: 8, bordada: 3, bordadaAbre: .35 }, // a cada 2 tiros do canhão de proa, uma bordada para os dois lados
+  balao:    { desce: 70, paraMin: 90, paraMax: 200, deriva: 55, fica: 8, barril: 2.8, vel: .55, estilhacos: 7 },
+  kraken:   { sobe: .6, fica: 6, afunda: .6, tinta: 1.8, tiros: 3, abre: .28, vel: .75 },
+  fantasma: { desce: 18, some: 2.2, aparece: 3.2, fade: .5, anel: 10, velAnel: .45, mira: 3, velMira: .8, recarga: 1.6 },
 };
 // Jipe: vem em grupo de 3; cada um atira de tempo em tempo (o intervalo varia um pouco
 // para os 3 não atirarem juntos). tiros = 1 tiro só; 2 = tiro duplo (aberto por "abertura").

@@ -11,7 +11,7 @@ function drawEnemy(e) {
     cx.fillStyle = '#ff6a6a'; cx.beginPath(); cx.arc(e.x, e.y, 3, 0, TAU); cx.fill();
     return;
   }
-  if (t.scene === 'desert' || t.scene === 'space') {
+  if (t.scene === 'desert' || t.scene === 'space' || t.scene === 'piratas') {
     drawSceneEnemy(e);
   } else if (e.type === 'spinner') {
     cx.save(); cx.translate(e.x, e.y); cx.rotate(e.t * 2.2);
@@ -33,7 +33,8 @@ function drawEnemyExtras(e) {
     cx.strokeStyle = e.aiming < .35 ? 'rgba(255,60,60,.9)' : 'rgba(255,60,60,.35)'; cx.lineWidth = e.aiming < .35 ? 2 : 1;
     cx.beginPath(); cx.moveTo(e.x, e.y); cx.lineTo(e.x + (e.ax - e.x) * 4, e.y + (e.ay - e.y) * 4); cx.stroke();
   }
-  if (e.hp < e.maxHp && e.maxHp > 40) {
+  const escondido = ETYPES[e.type].scene === 'piratas' && (e.alpha < .5 || e.sub > .5); // navio fantasma sumido, kraken embaixo d'água
+  if (e.hp < e.maxHp && e.maxHp > 40 && !escondido) {
     cx.fillStyle = 'rgba(0,0,0,.4)'; cx.fillRect(e.x - 18, e.y - e.r - 10, 36, 4);
     cx.fillStyle = '#ff5a4a'; cx.fillRect(e.x - 18, e.y - e.r - 10, 36 * e.hp / e.maxHp, 4);
   }
