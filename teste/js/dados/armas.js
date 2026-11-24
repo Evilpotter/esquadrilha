@@ -23,7 +23,7 @@ const WEAPONS = {
   whirl:     { name: 'Redemoinho', desc: 'Um redemoinho na frente da nave puxa os inimigos para o meio e machuca', cd: 5, dmg: 6, spd: 0, shots: 1, r: 110, color: '#5fc8e8', pirata: true, noUp: ['explo'] },
   // ---- Fênix (sugestão do Claude aprovada para teste em 22/11/2026) ----
   // feather = arma da nave; as marcadas com fenix: true só aparecem como recompensa de chefão para ela
-  feather:   { name: 'Penas de fogo', desc: 'Leque curto de penas em chamas: quem é atingido pega fogo', cd: .5, dmg: 6, spd: 640, shots: 3, r: 6, color: '#ffb347', ship: true },
+  feather:   { name: 'Penas de fogo', desc: 'Leque curto de penas em chamas: quem é atingido pega fogo', cd: .4, dmg: 3, spd: 640, shots: 3, r: 6, color: '#ffb347', ship: true },
   wings:     { name: 'Asas de fogo', desc: 'Deixa um rastro de fogo por onde a nave passa', cd: .16, dmg: 5, spd: 0, shots: 1, r: 22, color: '#ff8a2a', fenix: true, noUp: ['explo'] },
   meteor:    { name: 'Chuva de meteoros', desc: 'Meteoros caem do céu em cima dos inimigos e explodem em fogo', cd: 3.5, dmg: 30, spd: 0, shots: 3, r: 12, color: '#ff6a2a', splashR: 70, splash: 1, fenix: true, noUp: ['pierce'] },
   chick:     { name: 'Filhote de fênix', desc: 'Um filhote voa junto e mergulha nos inimigos, deixando fogo', cd: 1.1, dmg: 14, spd: 0, shots: 1, r: 10, color: '#ffcf60', fenix: true, noUp: ['pierce'] },
@@ -31,7 +31,7 @@ const WEAPONS = {
 };
 // números da Fênix (tempos em segundos, distâncias em px)
 const FENIX = {
-  queima:   { dps: 5, tempo: 3, max: 3, tick: .25 },      // cada chama tira 5 de vida por segundo, dura 3 s; até 3 chamas no mesmo inimigo
+  queima:   { dps: 9, tempo: 3, max: 3, tick: .25 },      // cada chama tira 9 de vida por segundo, dura 3 s; até 3 chamas no mesmo inimigo
   pena:     { vida: .55, abertura: .5 },                   // penas somem depois de 0,55 s (curto alcance); leque de 0,5 rad
   renascer: { ovo: 2, vida: .5, raio: 170, dano: 40, inv: 1.5 }, // 2 s de ovo, volta com 50% da vida e explode em fogo
   asas:     { vida: 1.6, tick: .4, maisVida: .4 },         // chama do rastro dura 1,6 s (+40% por ponto de melhoria), queima a cada 0,4 s
