@@ -10,16 +10,16 @@ function openShipAdd() {
 }
 function shipLayout() {
   const ss = S.ss, out = [], panels = [];
-  const n = ss.who.length, side = n === 2 && W >= 1000, N = SHIPS.length, largo = N > 4; // 5 naves: painel mais largo
+  const n = ss.who.length, side = n === 2 && W >= 1000, N = SHIPS.length, largo = N > 4, larg6 = N > 5; // 5 ou 6 naves: painel mais largo
   for (let k = 0; k < n; k++) {
     const pi = ss.who[k];
     let x, w, top, ch;
-    if (n === 1) { w = Math.min(W - 40, largo ? 900 : 760); x = (W - w) / 2; top = H / 2 - 240; ch = 325; }
-    else if (side) { w = Math.min(W / 2 - 40, largo ? 860 : 680); x = pi ? W / 2 + 20 : W / 2 - 20 - w; top = H / 2 - 240; ch = 325; }
+    if (n === 1) { w = Math.min(W - 40, larg6 ? 1100 : largo ? 900 : 760); x = (W - w) / 2; top = H / 2 - 240; ch = 325; }
+    else if (side) { w = Math.min(W / 2 - 40, larg6 ? 1040 : largo ? 860 : 680); x = pi ? W / 2 + 20 : W / 2 - 20 - w; top = H / 2 - 240; ch = 325; }
     else { w = W - 40; x = 20; top = pi ? 466 : 96; ch = 286; }
     panels.push({ pi, x, w, top });
     let cols = N, cw = (w - 12 * (N - 1)) / N, chh = ch;
-    if (cw < 150 && n === 1) { // tela estreita (celular): 2 linhas (2 ou 3 colunas), cartão sem a descrição
+    if ((cw < 150 && n === 1) || (cw < 140 && side)) { // tela estreita: 2 linhas (2 ou 3 colunas), cartão sem a descrição
       cols = Math.ceil(N / 2); cw = (w - 12 * (cols - 1)) / cols; chh = 236; top = Math.max(60, top - 120); panels[panels.length - 1].top = top;
     }
     for (let j = 0; j < N; j++) {
@@ -52,8 +52,8 @@ function shipKey(code) {
   if (skinKey(code)) return;
   const single = ss.who.length === 1;
   const maps = {
-    0: { l: ['KeyA'], r: ['KeyD'], ok: ['Space'], d: ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5'] },
-    1: { l: ['ArrowLeft'], r: ['ArrowRight'], ok: ['Enter', 'NumpadEnter'], d: ['Numpad1', 'Numpad2', 'Numpad3', 'Numpad4', 'Numpad5'] },
+    0: { l: ['KeyA'], r: ['KeyD'], ok: ['Space'], d: ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6'] },
+    1: { l: ['ArrowLeft'], r: ['ArrowRight'], ok: ['Enter', 'NumpadEnter'], d: ['Numpad1', 'Numpad2', 'Numpad3', 'Numpad4', 'Numpad5', 'Numpad6'] },
   };
   for (const pi of ss.who) {
     if (ss.done[pi]) continue;
@@ -64,7 +64,7 @@ function shipKey(code) {
     if (m.r.includes(code)) ss.cur[pi] = (ss.cur[pi] + 1) % N;
     if (m.ok.includes(code)) shipChoose(pi, ss.cur[pi]);
     const di = m.d.indexOf(code);
-    if (di >= 0 && di % 5 < N) shipChoose(pi, di % 5);
+    if (di >= 0 && di % 6 < N) shipChoose(pi, di % 6);
   }
 }
 function stepShip(dt) {
@@ -135,6 +135,8 @@ function drawShipPreview(j, x, y, cw) {
     drawPirataPreview(x, y - 20);
   } else if (j === 4) {
     drawFenixPreview(x, y - 20);
+  } else if (j === 5) {
+    drawHypnosPreview(x, y - 20);
   } else {
     for (let k = 0; k < 5; k++) {
       const ph = (t * 1.1 + k * .09) % 1, s = k % 2 ? 1 : -1;

@@ -25,5 +25,10 @@ const SHIPS = [
     desc: 'Leque curto de penas de fogo: os inimigos queimam aos poucos (até 3 chamas). Renascer: 1 vez por fase vira ovo e volta com metade da vida, ou salva o parceiro. Só pega armas de fogo.',
     short: 'Penas de fogo que queimam. Renasce 1 vez por fase. Armas de fogo.',
     stats: [['Dano', 3], ['Cadência', 3], ['Perfuração', 1], ['Área', 3]] },
+  // ideia do Claude, nome do Bryan (24/11/2026): hipnotiza inimigos, que viram aliados; só armas da mente (HYPNOS em armas.js)
+  { id: 'hypnos', name: 'Hypnos', weapon: 'hypno', rate: 1, tag: 'Hipnotiza inimigos', exclusivas: 'hypnos',
+    lacaios: true, // Lacaios fiéis: os aliados entram na frente dos tiros e protegem a dupla
+    desc: 'Espirais hipnóticas: com 3 acertos o inimigo vira seu aliado e atira nos outros. Lacaios fiéis: os aliados entram na frente dos tiros e protegem a dupla. Só pega armas da mente.',
+    short: 'Hipnotiza inimigos, que viram aliados e protegem a dupla. Armas da mente.',
+    stats: [['Dano', 2], ['Cadência', 3], ['Perfuração', 1], ['Área', 2]] },
 ];
-

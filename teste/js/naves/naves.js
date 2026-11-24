@@ -5,6 +5,7 @@ function drawShip(shipIdx, x, y, s, c1, c2, tilt, flash, skin) {
   if (id === 'falcon') return drawPlane(x, y, s, c1, c2, false, tilt, flash);
   if (id === 'pirate') return drawPirataShip(x, y, s, c1, c2, tilt, flash); // js/visual/pirata.js
   if (id === 'phoenix') return drawFenixShip(x, y, s, c1, c2, tilt, flash, skin); // js/visual/fenix.js
+  if (id === 'hypnos') return drawHypnosShip(x, y, s, c1, c2, tilt, flash, skin); // js/visual/hypnos.js
   cx.save(); cx.translate(x, y); cx.scale(s * (1 - Math.abs(tilt || 0) * .12), s);
   const body = flash ? '#fff' : c1, dk = flash ? '#fff' : c2;
   const fl = 5 + Math.sin(performance.now() / 40) * 2;

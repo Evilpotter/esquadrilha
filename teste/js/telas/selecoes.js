@@ -10,9 +10,9 @@ function openLevelUp() {
 }
 function bossOpts(p) {
   const owned = p.weapons.map(w => w.type);
-  // Âncora Negra só recebe armas piratas e a Fênix só armas de fogo; as outras naves nunca recebem essas
+  // Âncora Negra só recebe armas piratas, a Fênix só armas de fogo e a Hypnos só armas da mente; as outras naves nunca recebem essas
   const grupo = SHIPS[p.ship].exclusivas || '';
-  const grupoDa = d => d.pirata ? 'pirata' : d.fenix ? 'fenix' : '';
+  const grupoDa = d => d.pirata ? 'pirata' : d.fenix ? 'fenix' : d.hypnos ? 'hypnos' : '';
   const avail = Object.keys(WEAPONS).filter(t => !owned.includes(t) && !WEAPONS[t].ship && grupoDa(WEAPONS[t]) === grupo);
   const o = [];
   if (avail.length) o.push({ kind: 'new', type: pick(avail, 1)[0] });

@@ -11,6 +11,7 @@ function aplicaLento(e, a, t) {
 }
 // devolve o multiplicador do tempo do inimigo (1 = normal) e desconta a lentidão
 function lentoDt(e, dt) {
+  if (e.stunT > 0) { e.stunT -= dt; return 0; } // tonto pelo Grito psíquico da Hypnos: fica parado
   if (!(e.slowT > 0)) return dt;
   e.slowT -= dt;
   return dt * (1 - e.slowA);

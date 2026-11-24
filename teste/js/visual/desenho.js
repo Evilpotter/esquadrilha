@@ -47,6 +47,7 @@ function drawGame() {
   drawLentos(); // inimigos lentos pela Onda (js/visual/pirata.js)
   drawQueimas(); // inimigos pegando fogo (js/visual/fenix.js)
   drawFenixChao(); // chamas do rastro e sombras dos meteoros, embaixo das naves
+  drawHipnose();   // marcas, inimigos tontos, ímãs e aliados hipnotizados (js/visual/hypnos.js)
   S.players.forEach(p => {
     if (!p.alive) return;
     if (p.inv > 0 && Math.floor(p.inv * 12) % 2) return;
@@ -61,6 +62,7 @@ function drawGame() {
     }
     drawPapagaios(p);
     drawFilhotes(p);
+    drawClones(p); // clones da Hypnos
     if (p.skin && p.skin !== 'classic') drawPlayerMark(p);
     if (p.ovoT > 0) { drawOvo(p); return; } // ovo da Fênix
     if (p.dragonT > 0) drawDragao(p, p.x, p.y, 0, p.skin, p.rastro, S.phaseT); // Dragão de água
@@ -73,6 +75,7 @@ function drawGame() {
   for (const b of S.bullets) {
     if (drawPirataBala(b)) continue; // âncora e armas piratas (js/visual/pirata.js)
     if (drawFenixBala(b)) continue;  // penas, meteoros e sol (js/visual/fenix.js)
+    if (drawHypnosBala(b)) continue; // espirais, grito e tiros dos aliados (js/visual/hypnos.js)
     if (b.type === 'boomerang') {
       if (!(b.sk && drawSkinBoomerang(b.sk, b.x, b.y, b.rot, !!b.explo))) drawBoomerang(b.x, b.y, b.rot, b.color, !!b.explo);
     } else if (b.type === 'barrage') {
@@ -225,12 +228,13 @@ function roundRect(x, y, w, h, r) {
 }
 function drawTitle() {
   drawBg();
-  const tx = Math.min(110, (W - 100) / 4); // 5 naves: espaço menor em tela estreita
-  drawShip(1, W / 2 - 2 * tx, 350 + Math.sin(titleT * 2 + 2) * 8, 1.6, '#5fbf9f', '#2a6b55', 0);
-  drawShip(0, W / 2 - tx, 330 + Math.sin(titleT * 2) * 8, 1.8, PCOL[0].body, PCOL[0].dark, 0);
-  drawShip(4, W / 2, 328 + Math.sin(titleT * 2 + 4) * 8, 1.9, FENIX_TITULO[0], FENIX_TITULO[1], 0);
-  drawShip(3, W / 2 + tx, 330 + Math.sin(titleT * 2 + 3) * 8, 1.8, PIRATA_TITULO[0], PIRATA_TITULO[1], 0);
-  drawShip(2, W / 2 + 2 * tx, 350 + Math.sin(titleT * 2 + 1) * 8, 1.6, PCOL[1].body, PCOL[1].dark, 0);
+  const tx = Math.min(110, (W - 90) / 5), ts = Math.min(1, tx / 100); // 6 naves: menores em tela estreita
+  drawShip(1, W / 2 - 2.5 * tx, 352 + Math.sin(titleT * 2 + 2) * 8, 1.55 * ts, '#5fbf9f', '#2a6b55', 0);
+  drawShip(0, W / 2 - 1.5 * tx, 336 + Math.sin(titleT * 2) * 8, 1.7 * ts, PCOL[0].body, PCOL[0].dark, 0);
+  drawShip(4, W / 2 - .5 * tx, 326 + Math.sin(titleT * 2 + 4) * 8, 1.85 * ts, FENIX_TITULO[0], FENIX_TITULO[1], 0);
+  drawShip(5, W / 2 + .5 * tx, 326 + Math.sin(titleT * 2 + 5) * 8, 1.85 * ts, HYPNOS_TITULO[0], HYPNOS_TITULO[1], 0);
+  drawShip(3, W / 2 + 1.5 * tx, 336 + Math.sin(titleT * 2 + 3) * 8, 1.7 * ts, PIRATA_TITULO[0], PIRATA_TITULO[1], 0);
+  drawShip(2, W / 2 + 2.5 * tx, 352 + Math.sin(titleT * 2 + 1) * 8, 1.55 * ts, PCOL[1].body, PCOL[1].dark, 0);
   drawClouds();
   cx.fillStyle = 'rgba(5,12,22,.8)'; cx.fillRect(0, 130, W, 120);
   txt('Esquadrilha', W / 2, 200, 52, '#fff', 'center', 800);
@@ -243,7 +247,7 @@ function drawTitle() {
   }
   cx.fillStyle = 'rgba(5,12,22,.85)'; cx.fillRect(W / 2 - Math.min(W / 2 - 20, 260), 586, Math.min(W - 40, 520), 262);
   const lines = [
-    'Naves: Falcão, Bumerangue, Artilheiro, Âncora Negra e Fênix.',
+    'Naves: Falcão, Bumerangue, Artilheiro, Âncora Negra, Fênix e Hypnos.',
     'Tiro automático. Desvie e colete os cristais verdes (XP).',
     'Jogador 1: W A S D        Jogador 2: setas',
     'Cada nível: escolha 1 de 3 melhorias.',

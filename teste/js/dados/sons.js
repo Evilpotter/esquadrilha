@@ -35,6 +35,15 @@ const SONS = {
   sol_nascente:      { vol: .55, max: 1, int: .3 },
   fenix_ovo:         { vol: .55, max: 1 },
   fenix_renasce:     { vol: .70, max: 1 },
+  // Hypnos
+  tiro_hipnose:      { vol: .20, var: .8, max: 3, int: .06 },
+  hipnose_converte:  { vol: .45, var: 1, max: 2, int: .1 },
+  aliado_tiro:       { vol: .10, var: 2, max: 3, int: .06 },
+  aliado_explode:    { vol: .35, var: 1, max: 2, int: .1 },
+  grito_psiquico:    { vol: .55, max: 1, int: .3 },
+  clone_surge:       { vol: .50, max: 1, int: .3 },
+  ima_mental:        { vol: .40, max: 2, int: .2 },
+  rei_lacaios:       { vol: .60, max: 1, int: .3 },
   // acertos e explosões
   acerto:            { vol: .20, var: 2, max: 4, int: .03 },
   acerto_chefao:     { vol: .22, var: 1.5, max: 2, int: .08 },
@@ -90,6 +99,7 @@ const SOM_ARMA = {
   ricochet: 'tiro_ricochete', chain: 'tiro_raio', boomerang: 'tiro_bumerangue', barrage: 'tiro_saraivada',
   anchor: 'tiro_ancora', wave: 'onda', dragon: 'dragao_vira', broadside: 'canhao_bordo', barrel: 'barril_solta', whirl: 'redemoinho',
   feather: 'tiro_pena', wings: 'asas_fogo', meteor: 'meteoro', sun: 'sol_nascente',
+  hypno: 'tiro_hipnose', grito: 'grito_psiquico', clone: 'clone_surge', ima: 'ima_mental',
 };
 // som de cada tipo de tiro inimigo (ETIROS); 'bala' (estilhaços) não tem som próprio
 const SOM_TIRO_INIMIGO = {

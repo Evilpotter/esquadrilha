@@ -8,6 +8,7 @@ Comandos:
   bestiario   todos os inimigos por cenário e os 10 chefões       -> dist/bestiario-*.png
   pirata      Âncora Negra: joga com todas as armas piratas e fotografa âncora, onda, dragões -> dist/pirata-*.png
   fenix       Fênix: joga com todas as armas de fogo, testa o Renascer e fotografa armas, skins e ovo -> dist/fenix-*.png
+  hypnos      Hypnos: joga com todas as armas da mente, confere aliados/tontura e fotografa -> dist/hypnos-*.png
   piratas     Mar dos Piratas: joga 150 s nas fases 1, 3 e 5 (1 e 2 jogadores) e fotografa -> dist/piratas-*.png
   chefoes     luta 40 s com cada chefão (1 e 2 jogadores) e grava o resumo -> dist/chefoes.json
               (mesmo arquivo antes/depois = comportamento igual)
@@ -62,7 +63,7 @@ def fumaca(p):
     b, pg = abrir(p)
     res = pg.evaluate("""() => {
       const g = window.__g, out = {};
-      for (const ships of [[0], [1, 2]].concat(typeof PIRATA !== 'undefined' ? [[3, 0]] : [], typeof FENIX !== 'undefined' ? [[4, 1]] : [])) {
+      for (const ships of [[0], [1, 2]].concat(typeof PIRATA !== 'undefined' ? [[3, 0]] : [], typeof FENIX !== 'undefined' ? [[4, 1]] : [], typeof HYPNOS !== 'undefined' ? [[5, 3]] : [])) {
         g.newGame(ships.length, ships);
         for (const pl of g.S.players) pl.inv = 1e9;
         for (let i = 0; i < 60 * 150; i++) {
@@ -247,6 +248,78 @@ def fenix(p):
     print('fênix: ok')
 
 
+def hypnos(p):
+    """Hypnos com todas as armas da mente: 150 s sem erro, confere aliados, clones, tontura e rei; fotos."""
+    from PIL import Image
+    b, pg = abrir(p)
+    pg.evaluate("() => { const g = window.__g; for (const s of g.SKINS) g.unlockSkin(s.id); }")
+    res = pg.evaluate("""() => {
+      const g = window.__g, out = {};
+      for (const [n, ships] of [[1, [5]], [2, [5, 0]]]) for (const sc of ['sea', 'desert', 'space', 'piratas']) {
+        g.newGame(n, ships); g.S.scene = sc;
+        for (const t of ['grito', 'clone', 'ima', 'rei']) g.S.players[0].weapons.push(g.newWeapon(t));
+        let maxAl = 0, quadrosAl = 0, rei = 0, clone = 0, tontos = 0, bloqueios = 0, tipos = {};
+        for (let i = 0; i < 60 * 150; i++) {
+          const antes = (g.S.aliados || []).reduce((s, a) => s + a.escudo, 0);
+          g.step(1/60);
+          const al = g.S.aliados || [];
+          if (al.length) quadrosAl++;
+          for (const a of al) tipos[a.type] = 1;
+          maxAl = Math.max(maxAl, al.filter(a => !a.rei).length);
+          if (al.some(a => a.rei)) rei++;
+          if (g.S.players[0].cloneT > 0) clone++;
+          if (g.S.enemies.some(e => e.stunT > 0)) tontos++;
+          if (al.reduce((s, a) => s + a.escudo, 0) < antes) bloqueios++;
+          if (g.S.mode === 'levelup' || g.S.mode === 'reward') { for (let k = 0; k < g.S.players.length; k++) try { g.choose(k, 0); } catch (e) {} }
+          if (g.S.mode === 'gameover') break;
+          if (i % 900 === 0) g.draw();
+        }
+        out[ships.join('+') + '-' + sc] = { modo: g.S.mode, fase: g.S.phase, abates: g.S.kills, maxAliados: maxAl, quadrosAliado: quadrosAl,
+          quadrosRei: rei, quadrosClone: clone, quadrosTonto: tontos, bloqueios, tipos: Object.keys(tipos).sort().join(' ') };
+      }
+      // aliado: 3 acertos convertem; chefão não converte; máximo de 4
+      g.newGame(1, [5]); g.S.spawnT = 1e9; const p = g.S.players[0]; p.inv = 1e9;
+      const e = g.addEnemy('gunner', p.x, p.y - 200, { stopY: p.y - 200 }); e.hp = 1e9;
+      for (let i = 0; i < 60 * 3 && !e.dead; i++) g.step(1/60);
+      const vira = e.dead && g.S.aliados.length === 1 && g.S.aliados[0].type === 'gunner';
+      for (let k = 0; k < 6; k++) { const x = g.addEnemy('scout', p.x, p.y - 150); x.hp = 1e9; x.vy = 0; }
+      for (let i = 0; i < 60 * 4; i++) { for (const q of g.S.enemies) q.y = p.y - 150; g.step(1/60); }
+      const maximo = g.S.aliados.filter(a => !a.rei).length === 4;
+      g.newGame(1, [5]); g.S.phase = 1; g.spawnBoss(); g.S.players[0].inv = 1e9;
+      for (let i = 0; i < 60 * 10; i++) g.step(1/60);
+      const chefaoNao = g.S.bosses.length > 0 && !(g.S.aliados || []).some(a => a.type === g.S.bosses[0].kind);
+      out.regras = { vira, maximo, chefaoNao };
+      return out; }""")
+    for k, v in res.items(): print('hypnos', k, v)
+    r = res['regras']
+    if not all(r.values()): erros.append('Hypnos: regra falhou ' + str(r))
+    # armas em ação
+    pg.evaluate("""() => { const g = window.__g; g.newGame(2, [5, 0], ['classic', 'classic']); g.S.scene = 'sea'; g.S.banner = null; g.S.phase = 3;
+      const p = g.S.players[0]; for (const q of g.S.players) q.inv = 1e9;
+      for (const t of ['grito', 'clone', 'ima', 'rei']) p.weapons.push(g.newWeapon(t));
+      for (let i = 0; i < 60 * 13; i++) { if (g.S.mode !== 'play') for (let k = 0; k < 2; k++) try { g.choose(k, 0); } catch (e) {} g.step(1/60); }
+      for (const q of g.S.players) q.inv = 0; g.S.banner = null; g.draw(); }""")
+    pg.screenshot(path=str(dist / f'hypnos-armas-{vw}.png'))
+    shots = []
+    for sk in ['classic', 'sucata', 'bosque', 'garra', 'geada', 'lamina', 'vazio', 'espectro', 'dragao']:
+        pg.evaluate(f"""() => {{ const g = window.__g; g.newGame(1, [5], ['{sk}']); g.S.scene = 'space'; g.S.banner = null; g.S.spawnT = 1e9;
+          const p = g.S.players[0], x0 = p.x; p.inv = 1e9;
+          g.addEnemy('gunner', x0, p.y - 190, {{ stopY: p.y - 190 }}); g.S.enemies[0].hp = 1e9;
+          for (let i = 0; i < 40; i++) g.step(1/60);
+          p.inv = 0; g.S.ebullets = []; g.draw(); }}""")
+        f = dist / f'_h_{sk}.png'
+        pg.screenshot(path=str(f), clip={'x': vw / 2 - 100, 'y': vh * .42, 'width': 200, 'height': vh * .58}); shots.append(f)
+    ims = [Image.open(f) for f in shots]
+    out = Image.new('RGB', (200 * len(ims), ims[0].height))
+    for k, i in enumerate(ims): out.paste(i, (k * 200, 0))
+    out.save(str(dist / 'hypnos-skins.png'))
+    for f in shots: f.unlink()
+    pg.evaluate("() => { const g = window.__g; g.openShipSelect(1); g.S.ss.skin = ['vazio', 'classic']; g.S.ss.cur = [5, 0]; for (let i = 0; i < 30; i++) g.step(1/60); g.draw(); }")
+    pg.screenshot(path=str(dist / f'hypnos-hangar-{vw}.png'))
+    b.close()
+    print('hypnos: ok')
+
+
 def piratas(p):
     b, pg = abrir(p)
     res = pg.evaluate("""() => {
@@ -305,7 +378,7 @@ def chefoes(p):
 
 from playwright.sync_api import sync_playwright
 CMDS = {'fumaca': [fumaca], 'fotos': [fotos], 'bumerangues': [bumerangues], 'bestiario': [bestiario], 'chefoes': [chefoes],
-        'pirata': [pirata], 'fenix': [fenix], 'piratas': [piratas], 'todos': [fumaca, fotos, bumerangues, bestiario]}
+        'pirata': [pirata], 'fenix': [fenix], 'hypnos': [hypnos], 'piratas': [piratas], 'todos': [fumaca, fotos, bumerangues, bestiario]}
 with sync_playwright() as p:
     for fn in CMDS[a.cmd]:
         fn(p)

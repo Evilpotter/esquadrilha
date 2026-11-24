@@ -11,6 +11,7 @@ function firePlayer(p, dt) {
     const dmg = d.dmg * w.dmgM * p.dmg, n = w.shots, col = shotColor(p, w, d.color), sk = shotSkin(p, w);
     if (PIRATA_TIRO[w.type]) { if (!PIRATA_TIRO[w.type](p, w, d, dmg, n, col)) w.t = .1; continue; } // js/naves/pirata.js
     if (FENIX_TIRO[w.type]) { if (!FENIX_TIRO[w.type](p, w, d, dmg, n, col)) w.t = .1; continue; }   // js/naves/fenix.js
+    if (HYPNOS_TIRO[w.type]) { if (!HYPNOS_TIRO[w.type](p, w, d, dmg, n, col)) w.t = .1; continue; } // js/naves/hypnos.js
     if (w.type !== 'chain') somTiro(w.type, p.x);
     const mk = (x, y, ang) => S.bullets.push({
       x, y, vx: Math.sin(ang) * d.spd, vy: -Math.cos(ang) * d.spd, r: d.r, dmg, p,

@@ -65,6 +65,7 @@ function step(dt) {
   for (const b of S.bullets) {
     if (PIRATA_BALA[b.type]) { PIRATA_BALA[b.type](b, dt, T); continue; } // onda, barril, redemoinho (js/naves/pirata.js)
     if (FENIX_BALA[b.type]) { FENIX_BALA[b.type](b, dt, T); continue; }   // chama, meteoro, sol (js/naves/fenix.js)
+    if (HYPNOS_BALA[b.type]) { HYPNOS_BALA[b.type](b, dt, T); continue; } // grito, ímã (js/naves/hypnos.js)
     skinBoomTrail(b, dt);
     if (b.anc && moveAncora(b, dt)) continue;
     if (b.homing) {
@@ -121,6 +122,7 @@ function step(dt) {
       if (d2(t, b) < (t.r + b.r) ** 2) {
         dealDmg(t, b.dmg, b.p, b.type);
         if (b.queima) aplicaQueima(t, b.p, b.queima); // penas da Fênix
+        if (b.hip) marcaHipnose(t, b.p, b.hip);       // espirais da Hypnos
         if (b.explo) {
           explode(b.x, b.y, b.explo, b.dmg * (b.splash || .6), b.p);
           if (b.type === 'barrage') S.fx.push({ type: 'boom', x: b.x, y: b.y, r: b.explo * .55, t: 0, life: .3, color: '#ffb040' });
@@ -145,6 +147,7 @@ function step(dt) {
   updatePapagaios(dt);
   updateDragoes(dt);
   updateFilhotes(dt);
+  updateAliados(dt);   // aliados hipnotizados (js/naves/hypnos.js)
   updateQueimas(dt);
   updateEnemies(dt);
   arrastaPresos();

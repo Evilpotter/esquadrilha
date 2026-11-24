@@ -586,6 +586,77 @@ def navio_fantasma():
     return limitador(reverb(mix(*coro, (sino_, .1, 1), (vento, 0, 1)), .4, 2.4), -1)
 
 
+
+# ---------- Hypnos ----------
+
+def wobble(f, d, vel=7.0, prof=0.04):
+    """Tom com vibrato largo (som de hipnose). f pode ser fixa ou uma curva."""
+    if not np.isscalar(f):
+        d = len(f) / SR
+    v = osc(vel, d)
+    if not np.isscalar(f):
+        v = v[:len(f)]
+    return osc(f * (1 + prof * v))
+
+
+def tiro_hipnose():
+    """Espiral hipnótica: dois tons que ondulam e sobem + brilho de vidro."""
+    d = 0.32
+    a = wobble(curva(520, 880, d), d, 14, .05) * adsr(d, .01, .05, .6, .15) * .35
+    b = wobble(curva(780, 1320, d), d, 11, .05) * adsr(d, .02, .05, .5, .15) * .2
+    return reverb(mix((a, 0, 1), (b, .02, 1), (sino(2637, .3, queda=9), 0, .12)), .2, .8)
+
+
+def hipnose_converte():
+    """Inimigo vira aliado: acorde que gira para cima + sininhos."""
+    d = 0.9
+    tons = [(wobble(curva(f * .7, f, d), d, 6, .03) * adsr(d, .02, .1, .5, .5) * .22, i * .06, 1) for i, f in enumerate((523, 659, 784, 1047))]
+    sinos = [(sino(f, .7, queda=5), .25 + i * .05, .18) for i, f in enumerate((1568, 2093, 2637))]
+    return limitador(reverb(mix(*tons, *sinos), .3, 1.4), -1)
+
+
+def aliado_tiro():
+    d = 0.12
+    return reverb(osc(curva(1400, 700, d)) * env(d, .002, curva_=5) * .5, .1, .3)
+
+
+def aliado_explode():
+    """Aliado some: estouro macio + tom descendo."""
+    b = explosao(0.5, (3000, 300), (120, 60), .3, .5, tam=.7, seed=41)
+    t = wobble(curva(900, 250, .5), .5, 9, .06) * adsr(.5, .01, .1, .5, .3) * .3
+    return limitador(reverb(mix((b, 0, .8), (t, 0, 1)), .2, .9), -1)
+
+
+def grito_psiquico():
+    """Grito psíquico: onda grave que pulsa + coro dissonante subindo + eco."""
+    d = 1.6
+    pulso = osc(curva(90, 60, d)) * (0.6 + 0.4 * osc(8, d)) * adsr(d, .02, .2, .6, .8) * .8
+    coro = [(gm(52, n, 100, .9, .8), .05 + i * .03, .28) for i, n in enumerate((60, 61, 66, 67, 72))]
+    sopr = sopro(1.0, 300, 3500, 2.0) * adsr(1.0, .05, .2, .6, .5) * .6
+    return limitador(reverb(mix((pulso, 0, 1), (sopr, 0, 1), *coro), .35, 2.0), -1)
+
+
+def clone_surge():
+    """Clone aparece: duas notas em espelho (uma sobe, outra desce) + brilho."""
+    d = 0.7
+    s1 = wobble(curva(440, 880, d), d, 6, .02) * adsr(d, .01, .1, .6, .4) * .28
+    s2 = wobble(curva(880, 440, d), d, 6, .02) * adsr(d, .01, .1, .6, .4) * .28
+    return reverb(mix((s1, 0, 1), (s2, 0, 1), (sopro(.5, 1500, 6000, 3.0) * env(.5, .2) * .5, 0, 1), (sino(1760, .6, queda=6), .3, .15)), .3, 1.2)
+
+
+def ima_mental():
+    """Ímã mental: zumbido que gira e afunda."""
+    d = 1.2
+    z = filtro(osc(curva(160, 110, d), forma='serra'), 'pb', curva(2400, 500, d)) * (0.7 + 0.3 * osc(curva(3, 12, d), d)) * adsr(d, .05, .2, .6, .5) * .5
+    return reverb(mix((z, 0, 1), (sopro(d, 2500, 400, 2.5) * adsr(d, .1, .2, .5, .5) * .4, 0, 1)), .25, 1.2)
+
+
+def rei_lacaios():
+    """Rei dos lacaios: fanfarra curta de metais + acorde hipnótico."""
+    fanf = [(gm(61, n, 110, .25 if i < 2 else .6, .5), i * .13, .35) for i, n in enumerate((67, 67, 72))]
+    acorde = [(wobble(f, 1.0, 6, .02) * adsr(1.0, .05, .1, .6, .5) * .15, .35, 1) for f in (523, 659, 784)]
+    return limitador(reverb(mix(*fanf, *acorde, (sino(2093, .8, queda=5), .4, .15)), .3, 1.5), -1)
+
 TODOS = {
     'tiro_metralhadora': (tiro_metralhadora, False), 'tiro_leque': (tiro_leque, False), 'tiro_missil': (tiro_missil, False),
     'tiro_plasma': (tiro_plasma, True), 'tiro_drone': (tiro_drone, False), 'tiro_ricochete': (tiro_ricochete, False),
@@ -610,6 +681,9 @@ TODOS = {
     'inimigo_mosquete': (inimigo_mosquete, False), 'inimigo_canhao': (inimigo_canhao, True), 'inimigo_barril': (inimigo_barril, False),
     'inimigo_tinta': (inimigo_tinta, False), 'inimigo_chama': (inimigo_chama, True), 'gaivota': (gaivota, True),
     'kraken_sobe': (kraken_sobe, True), 'navio_fantasma': (navio_fantasma, True),
+    'tiro_hipnose': (tiro_hipnose, False), 'hipnose_converte': (hipnose_converte, True), 'aliado_tiro': (aliado_tiro, False),
+    'aliado_explode': (aliado_explode, True), 'grito_psiquico': (grito_psiquico, True), 'clone_surge': (clone_surge, True),
+    'ima_mental': (ima_mental, True), 'rei_lacaios': (rei_lacaios, True),
 }
 
 if __name__ == '__main__':

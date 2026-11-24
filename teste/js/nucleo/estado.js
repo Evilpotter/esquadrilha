@@ -14,7 +14,7 @@ function newGame(n, ships, skins) {
   ships = ships || []; skins = skins || [];
   S = {
     mode: 'play', np: n, players: [...Array(n)].map((_, i) => newPlayer(i, n, ships[i] || 0, skins[i])),
-    bullets: [], ebullets: [], enemies: [], gems: [], fx: [],
+    bullets: [], ebullets: [], enemies: [], aliados: [], gems: [], fx: [],
     phase: 1, phaseT: 0, spawnT: 1, level: 1, xp: 0, xpNext: xpFor(1), pendingLv: 0,
     bosses: [], hazards: [], bossName: '', bossSpawned: false, bossTimer: 0, rewardT: 0, overT: 0,
     banner: null, scene: 'sea', sel: null, kills: 0, touch: null, shake: 0,

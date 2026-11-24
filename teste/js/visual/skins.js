@@ -1,6 +1,6 @@
 // ---------- Skins: desenho das naves, rastros, tiros e bumerangues ----------
 // Os desenhos ficam em arte/naves, arte/tiros e arte/bumerangues (carregados por visual/arte.js).
-const SHIP_ART_KEY = ['falcon', 'boomer', 'arty', 'pirate', 'phoenix']; // a Fênix é desenhada no canvas (js/visual/fenix.js)
+const SHIP_ART_KEY = ['falcon', 'boomer', 'arty', 'pirate', 'phoenix', 'hypnos']; // a Fênix e a Hypnos são desenhadas no canvas (js/visual/fenix.js, js/visual/hypnos.js)
 function skinArt(shipIdx, skinId) { return (ARTE.naves[SHIP_ART_KEY[shipIdx]] || {})[skinId] || null; }
 // ---------- Imagens prontas (o SVG vira imagem uma vez só) ----------
 const SKIN_U = .3;          // pixels por unidade do desenho (escala 1 do jogo)
@@ -43,7 +43,7 @@ function drawPlayerMark(p) {
 }
 
 // ---------- Rastro de cada skin ----------
-const SHIP_EXHAUST = [[[0, 26]], [[0, 22]], [[-10, 28], [10, 28]], [[0, 30]], [[0, 34]]];
+const SHIP_EXHAUST = [[[0, 26]], [[0, 22]], [[-10, 28], [10, 28]], [[0, 30]], [[0, 34]], [[-7, 30], [7, 30]]];
 function skinTrail(p, dt) {
   if (!p.alive || p.ovoT > 0 || !p.skin || p.skin === 'classic') return;
   const sk = skinById(p.skin); if (!sk.trail) return;
