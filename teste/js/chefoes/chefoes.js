@@ -25,7 +25,7 @@ const bRing = (x, y, n, spd, r, off) => ring(x, y, n, spd, r, off, bDmg(), 'chef
 const bAimed = (b, n, spread, spd, r) => aimed(b, n, spread, spd, r, bDmg(), 'chefao');
 function aimFrom(b, x, y, spd, r) { const p = nearestPlayer(b); if (p) bShoot(x, y, Math.atan2(p.y - y, p.x - x), spd, r); }
 // raio vertical; vx ≠ 0 = raio que varre para o lado depois do aviso
-function beam(x, y0, w, warn, life, vx) { S.hazards.push({ x, y0, w, warn, life, max: warn, vx: vx || 0 }); }
+function beam(x, y0, w, warn, life, vx, xFim) { S.hazards.push({ x, y0, w, warn, life, max: warn, vx: vx || 0, xFim }); }
 // conta o tempo de um ataque; devolve true quando dispara (o primeiro espera "primeiro" ou o próprio intervalo)
 function timer(b, key, dt, every, first) {
   if (b[key] === undefined) b[key] = first === undefined ? every : first;
@@ -92,21 +92,29 @@ const BOSSES = {
       const D = BOSS_DATA.laser;
       if (enter(b, dt)) return;
       const p = nearestPlayer(b);
+      // durante a varredura (e um pouco depois) não sai raio fixo: sempre sobra lugar para fugir
+      // (vale para todos os chefões do raio na tela: nenhum solta raio fixo enquanto houver varredura)
+      const varrendo = S.bosses.some(o => o.sweepPend && !o.dead) || S.hazards.some(h => h.vx) || S.semRaioFixo > 0;
       if (b.dashX !== undefined) {            // salto: desliza rápido e atira o raio assim que para
         b.x += clamp(b.dashX - b.x, -D.saltoVel * dt, D.saltoVel * dt);
-        if (Math.abs(b.dashX - b.x) < 2) { b.dashX = undefined; beam(p ? p.x : b.x, b.y + 40, D.raioLargura, D.raioAviso, D.raioDura); }
+        if (Math.abs(b.dashX - b.x) < 2) { b.dashX = undefined; if (!varrendo) beam(p ? p.x : b.x, b.y + 40, D.raioLargura, D.raioAviso, D.raioDura); }
       } else if (p) b.x += clamp(p.x - b.x, -fury(b, D.vel) * dt, fury(b, D.vel) * dt);
       if (timer(b, 'jumpT', dt, fury(b, D.saltoIntervalo))) b.dashX = clamp((p ? p.x : b.x) + lado() * rnd(220, 420), 100, W - 100);
       b.patT -= dt;
-      if (b.patT <= 0) {
+      if (b.patT <= 0 && !varrendo) {
         b.patT = fury(b, D.intervalo);
         const px = p ? p.x : b.x;
         beam(px, b.y + 40, D.raioLargura, D.raioAviso, D.raioDura);
         if (rage(b)) { beam(px - D.raioExtraDist, b.y + 40, D.raioLargura, D.raioExtraAviso, D.raioDura); beam(px + D.raioExtraDist, b.y + 40, D.raioLargura, D.raioExtraAviso, D.raioDura); }
       }
-      if (timer(b, 'sweepT', dt, fury(b, D.varreduraIntervalo))) {   // varredura: raio que anda na direção do jogador
+      // varredura: raio que anda na direção do jogador. Espera os raios fixos sumirem e
+      // anda no máximo até cobrir D.varreduraCobre da largura da tela (o resto fica livre)
+      if (timer(b, 'sweepT', dt, fury(b, D.varreduraIntervalo))) b.sweepPend = true;
+      if (b.sweepPend && !S.hazards.some(h => !h.vx)) {
+        b.sweepPend = false;
         const dx = (p ? p.x : b.x) - b.x, dir = Math.abs(dx) < 20 ? lado() : Math.sign(dx);
-        beam(b.x, b.y + 40, D.varreduraLargura, D.varreduraAviso, D.varreduraDura, dir * D.varreduraVel);
+        const anda = Math.min(D.varreduraVel * D.varreduraDura, Math.max(0, D.varreduraCobre * W - D.varreduraLargura));
+        beam(b.x, b.y + 40, D.varreduraLargura, D.varreduraAviso, D.varreduraDura, dir * D.varreduraVel, b.x + dir * anda);
       }
       if (timer(b, 'shotT', dt, fury(b, D.tiroIntervalo))) bAimed(b, fury(b, D.tiros), D.tiroAbertura, ebs() * D.tiroVel, D.tiroRaio);
     },
@@ -361,9 +369,12 @@ function updateBosses(dt) {
   }
 }
 function updateHazards(dt) {
+  // depois que a varredura some, mais um tempinho sem raio fixo (BOSS_DATA.laser.varreduraFolga)
+  if (S.hazards.some(h => h.vx)) S.semRaioFixo = BOSS_DATA.laser.varreduraFolga; else if (S.semRaioFixo > 0) S.semRaioFixo -= dt;
   for (const h of S.hazards) {
     if (h.warn > 0) { h.warn -= dt; continue; }
     h.life -= dt; h.x += h.vx * dt;
+    if (h.xFim !== undefined && (h.x - h.xFim) * Math.sign(h.vx) > 0) h.x = h.xFim;   // varredura para no limite
     for (const p of S.players) if (p.alive && p.y > h.y0 && Math.abs(p.x - h.x) < h.w / 2 + p.r * .6) hurt(p, BOSS_DMG.raio * eDmg());
   }
   S.hazards = S.hazards.filter(h => h.warn > 0 || h.life > 0);

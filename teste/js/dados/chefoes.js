@@ -41,6 +41,8 @@ const BOSS_DATA = {
     raioExtraDist: 160, raioExtraAviso: 1.2,   // na fúria: mais 2 raios dos lados
     saltoIntervalo: [5.5, 3.5], saltoVel: 650, // desliza rápido para outro lugar e atira o raio de cara
     varreduraIntervalo: [7, 4.5], varreduraLargura: 34, varreduraAviso: 1, varreduraDura: 2, varreduraVel: 170,
+    varreduraCobre: .75,            // a varredura cobre no máximo 75% da largura da tela (o resto é a saída)
+    varreduraFolga: .5,             // durante a varredura e 0,5 s depois não sai raio fixo
     tiroIntervalo: [1.3, 1], tiros: [3, 5], tiroAbertura: .18, tiroVel: 1, tiroRaio: 5,
   },
   vortex: {
