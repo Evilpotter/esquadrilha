@@ -24,7 +24,7 @@ function step(dt) {
       S.spawnT -= dt;
       if (S.spawnT <= 0) { spawnWave(); S.spawnT = Math.max(1.05, 2.9 - .15 * S.phase) * rnd(.8, 1.2) * (S.np === 2 ? .9 : 1) / Math.pow(W / 540, .6); }
     } else {
-      S.bossSpawned = true; S.bossTimer = 3; S.banner = { t: 2.5, text: 'Chefão chegando!' };
+      S.bossSpawned = true; S.bossTimer = BOSS_ESPERA; S.banner = { t: 2.5, text: 'Chefão chegando!' };
     }
   } else if (S.bossTimer > 0) {
     S.bossTimer -= dt; if (S.bossTimer <= 0) spawnBoss();

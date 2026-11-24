@@ -15,7 +15,8 @@ const ETYPES = {
   mine:     { name: 'Mina',         hp: 12,  r: 11, vy: 40,  xp: 0, color: '#333', dark: '#111', from: 99, w: 0 },
 };
 
-const PHASE_LEN = 60;
+const PHASE_LEN = 120;   // segundos de ondas de inimigos por fase (antes 60; Rafael, 24/11/2026)
+const BOSS_ESPERA = 5;   // segundos entre o fim das ondas e a chegada do chefão (antes 3)
 
 // ---------- Cenários ----------
 const SCENES = { sea: { name: 'Oceano' }, desert: { name: 'Deserto' }, space: { name: 'Espaço' }, piratas: { name: 'Mar dos Piratas' } };

@@ -104,16 +104,17 @@ const WUPS = [
 ];
 
 // Melhorias por nível (XP) — menores
+// melhorias por nível (reduzidas ~35% em 24/11/2026, quando a fase passou para 2 min; valores antigos no comentário)
 const SUPS = [
-  { name: 'Dano +15%', desc: 'Todas as armas', apply: p => { p.dmg *= 1.15; } },
-  { name: 'Velocidade de ataque +12%', desc: 'Todas as armas disparam mais rápido', apply: p => { p.rate *= 1.12; } },
-  { name: 'Vida máxima +20', desc: 'E recupera 20 de vida', apply: p => { p.maxHp += 20; p.hp += 20; } },
-  { name: 'Escudo +15', desc: 'Absorve dano e recarrega após 3 s', apply: p => { p.maxSh += 15; p.sh += 15; } },
-  { name: 'Velocidade +10%', desc: 'A nave se move mais rápido', apply: p => { p.spd *= 1.1; } },
-  { name: 'Regeneração +1/s', desc: 'Recupera vida aos poucos', apply: p => { p.regen += 1; } },
-  { name: 'Ímã de XP +40%', desc: 'Puxa os cristais de mais longe', apply: p => { p.mag *= 1.4; } },
-  { name: 'Reparo', desc: 'Recupera 50% da vida agora', apply: p => { p.hp = Math.min(p.maxHp, p.hp + p.maxHp * .5); } },
-  { name: 'Crítico +8%', desc: 'Chance de causar dano dobrado', apply: p => { p.crit += .08; } },
+  { name: 'Dano +10%', desc: 'Todas as armas', apply: p => { p.dmg *= 1.10; } },                                         // era +15%
+  { name: 'Velocidade de ataque +8%', desc: 'Todas as armas disparam mais rápido', apply: p => { p.rate *= 1.08; } },    // era +12%
+  { name: 'Vida máxima +12', desc: 'E recupera 12 de vida', apply: p => { p.maxHp += 12; p.hp += 12; } },                // era +20
+  { name: 'Escudo +10', desc: 'Absorve dano e recarrega após 3 s', apply: p => { p.maxSh += 10; p.sh += 10; } },         // era +15
+  { name: 'Velocidade +7%', desc: 'A nave se move mais rápido', apply: p => { p.spd *= 1.07; } },                        // era +10%
+  { name: 'Regeneração +0,6/s', desc: 'Recupera vida aos poucos', apply: p => { p.regen += .6; } },                      // era +1/s
+  { name: 'Ímã de XP +25%', desc: 'Puxa os cristais de mais longe', apply: p => { p.mag *= 1.25; } },                    // era +40%
+  { name: 'Reparo', desc: 'Recupera 35% da vida agora', apply: p => { p.hp = Math.min(p.maxHp, p.hp + p.maxHp * .35); } }, // era 50%
+  { name: 'Crítico +5%', desc: 'Chance de causar dano dobrado', apply: p => { p.crit += .05; } },                        // era +8%
 ];
 
 // w = peso no sorteio das ondas; from = fase em que começa a aparecer
