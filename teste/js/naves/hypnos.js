@@ -1,6 +1,6 @@
 // ---------- Hypnos: espirais hipnóticas, aliados, Lacaios fiéis e armas da mente ----------
 // Números em js/dados/armas.js (WEAPONS hypno/grito/clone/ima/rei e HYPNOS).
-// Desenho em js/visual/hypnos.js. Tudo automático: nenhuma tecla nova.
+// Desenho em js/visual/hypnos.js. Habilidade ativa (Onda psíquica) em js/naves/habilidades.js.
 // Aliados ficam em S.aliados (não entram em targets(): os inimigos e os tiros do jogador não mexem neles).
 
 // ---------- Hipnose (marcas) ----------
@@ -23,8 +23,9 @@ function converte(e, p, rei) {
   e.dead = true;
   const xp = ETYPES[e.type].xp;
   S.kills++; p.kills++;
-  if (xp >= 5) { for (let k = 0; k < 3; k++) S.gems.push({ x: e.x + rnd(-15, 15), y: e.y + rnd(-15, 15), v: 2 }); }
-  else S.gems.push({ x: e.x, y: e.y, v: xp });
+  const m = xpMult(); // Saraivada da Âncora Negra: XP em dobro
+  if (xp >= 5) { for (let k = 0; k < 3; k++) S.gems.push({ x: e.x + rnd(-15, 15), y: e.y + rnd(-15, 15), v: 2 * m }); }
+  else S.gems.push({ x: e.x, y: e.y, v: xp * m });
   const A = HYPNOS.aliado, R = HYPNOS.rei;
   const vida = rei ? R.dura + R.maisDura * rei.pierce : HYPNOS.hipnose.aliado;
   if (!S.aliados) S.aliados = [];

@@ -657,6 +657,59 @@ def rei_lacaios():
     acorde = [(wobble(f, 1.0, 6, .02) * adsr(1.0, .05, .1, .6, .5) * .15, .35, 1) for f in (523, 659, 784)]
     return limitador(reverb(mix(*fanf, *acorde, (sino(2093, .8, queda=5), .4, .15)), .3, 1.5), -1)
 
+
+# ---------- Habilidades ativas (desde 1.2.0) ----------
+
+def hab_mergulho():
+    """Mergulho do Falcão: rasante (whoosh descendo) + grito de rapina curto + motor acelerando."""
+    d = 0.8
+    vento = sopro(d, 4000, 600, 2.5) * adsr(d, .02, .1, .7, .5) * 1.2
+    grito = wobble(curva(1900, 1300, .35), .35, 14, .03) * adsr(.35, .01, .05, .6, .25) * .25
+    motor = osc(curva(90, 220, d), forma='serra') * adsr(d, .05, .1, .5, .4) * .12
+    return reverb(mix((vento, 0, 1), (grito, .02, 1), (filtro(motor, 'pb', 1200), 0, 1)), .2, .9)
+
+
+def hab_ciclone():
+    """Ciclone de lâminas: lâminas soltando (metal) + zunido que gira."""
+    d = 1.2
+    zum = sopro(d, 800, 2200, 4) * (0.55 + 0.45 * np.abs(np.sin(np.linspace(0, 34, n(d))))) * adsr(d, .05, .1, .7, .5) * 1.1
+    clinks = [(metal(f, .3, 10) * .25, t, 1) for f, t in ((1500, 0), (1800, .05), (2100, .1))]
+    return reverb(mix((zum, 0, 1), *clinks), .2, 1.0)
+
+
+def hab_bombardeio():
+    """Bombardeio: travas de mira (bips) + rajada de lançamento."""
+    bips = [(osc(1760, .06) * env(.06, .002, curva_=3) * .25, k * .07, 1) for k in range(4)]
+    lanca = sopro(.6, 2500, 500, 2) * adsr(.6, .01, .1, .6, .4) * .9
+    return reverb(mix(*bips, (lanca, .3, 1), (grave(120, 50, .3), .3, .5)), .15, .8)
+
+
+def hab_saraivada():
+    """Saraivada: vários canhões ao mesmo tempo (estouro largo e grave)."""
+    partes = [(explosao(0.8, (3000, 160), (70, 30), 0.5, .3, tam=1.3, seed=40 + k), k * .035, .55) for k in range(4)]
+    return limitador(reverb(mix(*partes), .35, 1.6), -1)
+
+
+def hab_baforada():
+    """Baforada de fogo: rugido de chama longo (3 s)."""
+    d = 3.0
+    rug = filtro(ruido(d, 'rosa'), 'pb', 1800, ordem=2) * adsr(d, .12, .2, .85, .6) * 1.6
+    gr = osc(curva(70, 55, d)) * adsr(d, .1, .3, .5, .6) * .35
+    return limitador(reverb(mix((rug, 0, 1), (gr, 0, 1), (faiscas(d, 90, 3000, .3, 7) * .6, 0, 1)), .2, 1.0), -1)
+
+
+def hab_onda():
+    """Onda psíquica: pulso grave que abre + coro hipnótico subindo."""
+    d = 1.8
+    pulso = osc(curva(70, 140, d)) * (0.6 + 0.4 * osc(6, d)) * adsr(d, .02, .3, .5, .9) * .8
+    coro = [(wobble(f, 1.4, 5, .03) * adsr(1.4, .1, .2, .6, .8) * .14, .1 + i * .05, 1) for i, f in enumerate((330, 415, 494, 659))]
+    return limitador(reverb(mix((pulso, 0, 1), *coro, (sopro(1.2, 400, 5000, 2) * env(1.2, .3) * .5, 0, 1)), .4, 2.2), -1)
+
+
+def hab_pronta():
+    """Habilidade pronta: dois sininhos subindo."""
+    return reverb(mix((sino(1319, .35, queda=8) * .35, 0, 1), (sino(1976, .45, queda=7) * .35, .08, 1)), .2, .8)
+
 TODOS = {
     'tiro_metralhadora': (tiro_metralhadora, False), 'tiro_leque': (tiro_leque, False), 'tiro_missil': (tiro_missil, False),
     'tiro_plasma': (tiro_plasma, True), 'tiro_drone': (tiro_drone, False), 'tiro_ricochete': (tiro_ricochete, False),
@@ -684,6 +737,8 @@ TODOS = {
     'tiro_hipnose': (tiro_hipnose, False), 'hipnose_converte': (hipnose_converte, True), 'aliado_tiro': (aliado_tiro, False),
     'aliado_explode': (aliado_explode, True), 'grito_psiquico': (grito_psiquico, True), 'clone_surge': (clone_surge, True),
     'ima_mental': (ima_mental, True), 'rei_lacaios': (rei_lacaios, True),
+    'hab_mergulho': (hab_mergulho, True), 'hab_ciclone': (hab_ciclone, True), 'hab_bombardeio': (hab_bombardeio, True),
+    'hab_saraivada': (hab_saraivada, True), 'hab_baforada': (hab_baforada, True), 'hab_onda': (hab_onda, True), 'hab_pronta': (hab_pronta, False),
 }
 
 if __name__ == '__main__':

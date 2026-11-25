@@ -45,6 +45,7 @@ function step(dt) {
     if (pm.on) { mx += pm.x; my += pm.y; }
     mx = clamp(mx, -1, 1); my = clamp(my, -1, 1);
     const len = Math.max(1, Math.hypot(mx, my)); // analógico do controle pode ir mais devagar
+    if (mx || my) { const l = Math.hypot(mx, my); p.dirX = mx / l; p.dirY = my / l; } // direção do Mergulho de rapina
     p.x += mx / len * p.spd * dt; p.y += my / len * p.spd * dt;
     if (i === 0 && S.touch && S.touch.cx !== undefined) {
       const tx = S.touch.px + (S.touch.cx - S.touch.x), ty = S.touch.py + (S.touch.cy - S.touch.y);
@@ -52,6 +53,7 @@ function step(dt) {
       if (dd > 1) { p.x += dx / dd * Math.min(dd, mv); p.y += dy / dd * Math.min(dd, mv); mx = Math.sign(dx); }
     }
     p.x = clamp(p.x, 20, W - 20); p.y = clamp(p.y, 80, H - 70);
+    mergulhoPasso(p, dt); // habilidade do Falcão (js/naves/habilidades.js)
     p.tilt += (mx - p.tilt) * Math.min(1, dt * 10);
     if (p.inv > 0) p.inv -= dt;
     if (p.regen) p.hp = Math.min(p.maxHp, p.hp + p.regen * dt);
@@ -66,6 +68,7 @@ function step(dt) {
     if (PIRATA_BALA[b.type]) { PIRATA_BALA[b.type](b, dt, T); continue; } // onda, barril, redemoinho (js/naves/pirata.js)
     if (FENIX_BALA[b.type]) { FENIX_BALA[b.type](b, dt, T); continue; }   // chama, meteoro, sol (js/naves/fenix.js)
     if (HYPNOS_BALA[b.type]) { HYPNOS_BALA[b.type](b, dt, T); continue; } // grito, ímã (js/naves/hypnos.js)
+    if (HAB_BALA[b.type]) { HAB_BALA[b.type](b, dt, T); continue; }       // míssil do Bombardeio, Onda psíquica (js/naves/habilidades.js)
     skinBoomTrail(b, dt);
     if (b.anc && moveAncora(b, dt)) continue;
     if (b.homing) {
@@ -148,6 +151,7 @@ function step(dt) {
   updateDragoes(dt);
   updateFilhotes(dt);
   updateAliados(dt);   // aliados hipnotizados (js/naves/hypnos.js)
+  updateHab(dt);       // habilidades ativas (js/naves/habilidades.js)
   updateQueimas(dt);
   updateEnemies(dt);
   arrastaPresos();

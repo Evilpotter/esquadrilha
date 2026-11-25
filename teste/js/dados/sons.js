@@ -44,6 +44,14 @@ const SONS = {
   clone_surge:       { vol: .50, max: 1, int: .3 },
   ima_mental:        { vol: .40, max: 2, int: .2 },
   rei_lacaios:       { vol: .60, max: 1, int: .3 },
+  // habilidades ativas
+  hab_mergulho:      { vol: .55, max: 2, int: .2 },
+  hab_ciclone:       { vol: .50, max: 2, int: .2 },
+  hab_bombardeio:    { vol: .50, max: 2, int: .2 },
+  hab_saraivada:     { vol: .45, max: 2, int: .15 },
+  hab_baforada:      { vol: .50, max: 2, int: .3 },
+  hab_onda:          { vol: .55, max: 1, int: .3 },
+  hab_pronta:        { vol: .30, max: 2, int: .3 },
   // acertos e explosões
   acerto:            { vol: .20, var: 2, max: 4, int: .03 },
   acerto_chefao:     { vol: .22, var: 1.5, max: 2, int: .08 },

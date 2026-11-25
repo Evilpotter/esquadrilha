@@ -23,8 +23,9 @@ function killEnemy(e, p, src) {
   if (e.type === 'rock' && e.big) for (const s of [-1, 1]) addRock(e.x + s * 10, e.y, 13, false, s * rnd(60, 100));
   S.kills++; if (p) p.kills++;
   boom(e.x, e.y, e.r * 1.6, '#ffb040');
-  if (xp >= 5) { for (let k = 0; k < 3; k++) S.gems.push({ x: e.x + rnd(-15, 15), y: e.y + rnd(-15, 15), v: 2 }); }
-  else S.gems.push({ x: e.x, y: e.y, v: xp });
+  const m = xpMult(); // Saraivada da Âncora Negra: XP em dobro
+  if (xp >= 5) { for (let k = 0; k < 3; k++) S.gems.push({ x: e.x + rnd(-15, 15), y: e.y + rnd(-15, 15), v: 2 * m }); }
+  else S.gems.push({ x: e.x, y: e.y, v: xp * m });
 }
 function explode(x, y, rad, dmg, p) {
   S.fx.push({ type: 'ring', x, y, r: rad, t: 0, life: .3, color: '#ffcf60' });

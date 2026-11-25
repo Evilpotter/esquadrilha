@@ -113,6 +113,7 @@ function drawShipSelect() {
     cx.font = '400 12.5px system-ui,sans-serif'; cx.fillStyle = '#d6e2ee'; cx.textAlign = 'left';
     if (card.h >= 280 && card.w >= 140) wrap(card.w < 200 ? sh.short : sh.desc, px, y + 10, mw, 16);
     txt(String(card.j + 1), card.x + card.w - 10, card.y + 18, 12, '#7f93a8', 'right', 600);
+    if (card.h >= 200) txt('★ ' + HAB[sh.id].nome, cxm, card.y + card.h - (chosen ? 32 : 14), Math.min(12, card.w / 9), '#ffd36b', 'center', 700);
     if (chosen) txt('Escolhida', cxm, card.y + card.h - 12, 14, '#7dff8a', 'center', 700);
     cx.globalAlpha = 1;
   }

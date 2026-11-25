@@ -48,9 +48,10 @@ function drawGame() {
   drawQueimas(); // inimigos pegando fogo (js/visual/fenix.js)
   drawFenixChao(); // chamas do rastro e sombras dos meteoros, embaixo das naves
   drawHipnose();   // marcas, inimigos tontos, ímãs e aliados hipnotizados (js/visual/hypnos.js)
+  for (const p of S.players) if (p.alive) drawHabAntes(p); // fúria do Falcão e Baforada da Fênix (js/visual/habilidades.js)
   S.players.forEach(p => {
     if (!p.alive) return;
-    if (p.inv > 0 && Math.floor(p.inv * 12) % 2) return;
+    if (p.inv > 0 && !(p.dashT > 0) && Math.floor(p.inv * 12) % 2) return;
     const c = PCOL[p.i];
     for (const w of p.weapons) if (w.type === 'drone') for (let k = 0; k < w.shots; k++) {
       const dp = dronePos(p, k);
@@ -67,6 +68,7 @@ function drawGame() {
     if (p.ovoT > 0) { drawOvo(p); return; } // ovo da Fênix
     if (p.dragonT > 0) drawDragao(p, p.x, p.y, 0, p.skin, p.rastro, S.phaseT); // Dragão de água
     else drawShip(p.ship, p.x, p.y, 1, c.body, c.dark, p.tilt, false, p.skin);
+    drawHabDepois(p); // lâminas do Ciclone (js/visual/habilidades.js)
     if (p.sh > 0) {
       cx.strokeStyle = 'rgba(120,230,255,' + (.25 + .5 * p.sh / Math.max(1, p.maxSh)) + ')'; cx.lineWidth = 2;
       cx.beginPath(); cx.arc(p.x, p.y, 28, 0, 7); cx.stroke();
@@ -76,6 +78,7 @@ function drawGame() {
     if (drawPirataBala(b)) continue; // âncora e armas piratas (js/visual/pirata.js)
     if (drawFenixBala(b)) continue;  // penas, meteoros e sol (js/visual/fenix.js)
     if (drawHypnosBala(b)) continue; // espirais, grito e tiros dos aliados (js/visual/hypnos.js)
+    if (drawHabBala(b)) continue;    // mísseis do Bombardeio, balas da Saraivada, Onda psíquica (js/visual/habilidades.js)
     if (b.type === 'boomerang') {
       if (!(b.sk && drawSkinBoomerang(b.sk, b.x, b.y, b.rot, !!b.explo))) drawBoomerang(b.x, b.y, b.rot, b.color, !!b.explo);
     } else if (b.type === 'barrage') {
@@ -121,6 +124,7 @@ function drawGame() {
     else { cx.fillStyle = f.color; cx.fillRect(f.x - 2, f.y - 2, 4, 4); }
     cx.globalAlpha = 1;
   }
+  drawHabFx(); // rastro do Mergulho, miras, nome da habilidade, XP em dobro
   drawClouds();
   cx.restore();
   drawHud();
@@ -171,7 +175,9 @@ function drawHud() {
     bar(x, y + 2, 170, 9, p.ovoT > 0 ? 1 - p.ovoT / p.ovoMax : p.hp / p.maxHp, p.ovoT > 0 ? '#ffb347' : p.dragonT > 0 ? '#6fd6ff' : '#4cd964');
     if (p.maxSh > 0) bar(x, y + 13, 170, 4, p.sh / p.maxSh, '#78e6ff');
     linhas.forEach((l, k) => txt(l, x, y + 32 + k * 13, 11, '#cfe3f5', 'left', 500));
+    drawHabIcone(p, i === 0 ? x + 194 : x - 24, y + 4); // habilidade ativa: recarga e tecla
   });
+  drawHabBotao(); // botão ★ do celular
   drawSkinToast();
   if (S.banner) {
     cx.globalAlpha = clamp(S.banner.t, 0, 1);
@@ -249,12 +255,12 @@ function drawTitle() {
   const lines = [
     'Naves: Falcão, Bumerangue, Artilheiro, Âncora Negra, Fênix e Hypnos.',
     'Tiro automático. Desvie e colete os cristais verdes (XP).',
-    'Jogador 1: W A S D        Jogador 2: setas',
+    'Jogador 1: W A S D + Espaço    Jogador 2: setas + Enter',
     'Cada nível: escolha 1 de 3 melhorias.',
     'Fim da fase: chefão. Derrotando, escolha nova arma',
     'ou uma melhoria forte de arma.',
     padQtd ? 'Controle: analógico move · A confirma · Start pausa · Select som' : 'P ou Esc: pausa    F: tela cheia    M: som',
-    'Celular: arraste para mover',
+    'Espaço/Enter/A: habilidade ★ · Celular: arraste e toque ★',
   ];
   lines.forEach((l, k) => txt(l, W / 2, 618 + k * 29, 14, k === 0 ? '#ffd36b' : '#e8eef5', 'center', 500));
   const ps = padStatus(); if (ps) txt(ps, W / 2, 572, 12, '#9fe3b0', 'center', 600);

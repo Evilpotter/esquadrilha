@@ -4,7 +4,7 @@ function firePlayer(p, dt) {
     const d = WEAPONS[w.type];
     if (w.type === 'saw' || w.type === 'parrot' || w.type === 'chick') continue; // serra, papagaio e filhote são atualizados à parte
     if (w.type === 'anchor' && p.dragonT > 0) continue;    // dragão de água: o jato substitui a âncora
-    w.t -= dt * p.rate;
+    w.t -= dt * p.rate * habCadencia(p); // fúria do Falcão
     if (w.t > 0) continue;
     w.t += d.cd * w.cdM;
     if (w.t < 0) w.t = 0;

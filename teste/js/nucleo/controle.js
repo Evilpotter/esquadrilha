@@ -2,7 +2,7 @@
 // Cada controle vira de um jogador quando aperta um botão pela primeira vez (esse aperto só conecta):
 // o primeiro que apertar é o Jogador 1, o segundo é o Jogador 2. Com 1 jogador, os dois movem a nave.
 // Analógico esquerdo ou direcional: move a nave e navega nos menus.
-// A/✕ confirma · B/○ volta · Start pausa · Select liga/desliga o som · na tela inicial: A = 1 jogador, Y/△ = 2 jogadores.
+// A/✕ confirma (no jogo: habilidade ativa) · B/○ volta · Start pausa · Select liga/desliga o som · na tela inicial: A = 1 jogador, Y/△ = 2 jogadores.
 // Nos menus, cada controle "aperta" as mesmas teclas do jogador dele (W A S D/Espaço ou setas/Enter).
 // Por que não usar a ordem da lista do navegador: o Windows/Steam às vezes mostra o mesmo controle duas
 // vezes (controle virtual) ou um aparelho que não é controle; aí o "segundo da lista" não era o controle 2.
@@ -115,6 +115,6 @@ function padAperta(n, k) {
   }
   if (k === 'start') { onKey(modo === 'play' || modo === 'paused' ? 'Escape' : t.ok); return; }
   if (k === 'volta') { if (modo !== 'play') onKey('Escape'); return; }
-  if (modo === 'play') return;
+  if (modo === 'play') { if (k === 'ok') usarHab(S.np === 2 ? n : 0); return; } // A = habilidade ativa
   if (t[k]) onKey(t[k]);
 }

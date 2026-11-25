@@ -10,6 +10,7 @@ Comandos:
   fenix       Fênix: joga com todas as armas de fogo, testa o Renascer e fotografa armas, skins e ovo -> dist/fenix-*.png
   hypnos      Hypnos: joga com todas as armas da mente, confere aliados/tontura e fotografa -> dist/hypnos-*.png
   piratas     Mar dos Piratas: joga 150 s nas fases 1, 3 e 5 (1 e 2 jogadores) e fotografa -> dist/piratas-*.png
+  habilidades cada nave usa a habilidade ativa sempre que pronta (ondas, chefão, 2 jogadores); confere e fotografa -> dist/habilidades.png
   chefoes     luta 40 s com cada chefão (1 e 2 jogadores) e grava o resumo -> dist/chefoes.json
               (mesmo arquivo antes/depois = comportamento igual)
   todos       tudo acima
@@ -376,9 +377,75 @@ def chefoes(p):
     print('chefões: ok')
 
 
+def habilidades(p):
+    """Habilidades ativas: cada nave usa a sua sempre que fica pronta (ondas e chefão, 1 e 2 jogadores); confere os efeitos e fotografa."""
+    from PIL import Image
+    b, pg = abrir(p)
+    res = pg.evaluate("""() => {
+      const g = window.__g, out = {};
+      const roda = (ships, sc, ph, seg, chefao) => {
+        g.newGame(ships.length, ships); g.S.scene = sc; g.S.phase = ph; g.S.banner = null;
+        if (chefao) { g.S.spawnT = 1e9; g.spawnBoss(); }
+        for (const pl of g.S.players) pl.inv = 1e9;
+        const r = { usos: 0, dash: 0, furia: 0, ciclone: 0, missil: 0, bala: 0, xp2: 0, baf: 0, chamas3: 0, aliadosMax: 0, onda: 0 };
+        for (let i = 0; i < 60 * seg; i++) {
+          for (let k = 0; k < g.S.players.length; k++) if (g.usarHab(k)) r.usos++;
+          g.step(1 / 60);
+          const S = g.S;
+          if (S.mode === 'levelup' || S.mode === 'reward') { for (let k = 0; k < S.players.length; k++) try { g.choose(k, 0); } catch (e) {} }
+          for (const q of S.players) { if (q.dashT > 0) r.dash++; if (q.furiaT > 0) r.furia++; if (q.cicloneT > 0) r.ciclone++; if (q.bafT > 0) r.baf++; }
+          if (S.bullets.some(x => x.type === 'hab_missil')) r.missil++;
+          if (S.bullets.some(x => x.type === 'hab_bala')) r.bala++;
+          if (S.bullets.some(x => x.type === 'hab_onda')) r.onda++;
+          if (S.xpDobroT > 0) r.xp2++;
+          if (S.enemies.some(e => e.burnN === 3) || S.bosses.some(e => e.burnN === 3)) r.chamas3++;
+          r.aliadosMax = Math.max(r.aliadosMax, (S.aliados || []).filter(a => !a.rei).length);
+          if (i % 900 === 0) g.draw();
+        }
+        r.modo = g.S.mode; r.abates = g.S.kills;
+        if (chefao) r.chefao = g.S.bosses.length ? Math.round(g.S.bosses.reduce((s, c) => s + Math.max(0, c.hp), 0)) : 'derrotado';
+        return r;
+      };
+      for (let n = 0; n < 6; n++) {
+        for (const sc of ['sea', 'desert', 'space', 'piratas']) out[n + '-' + sc] = roda([n], sc, sc === 'piratas' ? 3 : 1, 60);
+        out[n + '-chefao3'] = roda([n], 'space', 3, 40, true);
+      }
+      out['0+5-2J'] = roda([0, 5], 'sea', 2, 60);
+      out['4+3-2J'] = roda([4, 3], 'piratas', 2, 60);
+      return out; }""")
+    reg = {0: ('dash', 'furia'), 1: ('ciclone',), 2: ('missil',), 3: ('bala', 'xp2'), 4: ('baf', 'chamas3'), 5: ('onda',)}
+    for k, v in res.items():
+        print('hab', k, v)
+        if v['usos'] == 0: erros.append('habilidade não foi usada: ' + k)
+        if k[0].isdigit() and '+' not in k:
+            for c in reg[int(k[0])]:
+                if not v[c]: erros.append(f'habilidade {k}: {c} não aconteceu')
+    if max(v['aliadosMax'] for k, v in res.items() if k.startswith('5') or '+5' in k) <= 4: erros.append('Onda psíquica não passou do limite de 4 aliados')
+    # fotos: cada habilidade em ação (fase 2 no Oceano, 8 s de ondas antes)
+    tempos = [.12, 1.0, .55, .4, 1.0, .35]
+    shots = []
+    for n in range(6):
+        pg.evaluate(f"""() => {{ const g = window.__g; g.newGame(1, [{n}], ['classic']); g.S.scene = 'sea'; g.S.banner = null; g.S.phase = 2;
+          const p = g.S.players[0]; p.inv = 1e9;
+          for (let i = 0; i < 60 * 8; i++) {{ if (g.S.mode !== 'play') try {{ g.choose(0, 0); }} catch (e) {{}} g.step(1/60); }}
+          p.dirX = 0; p.dirY = -1; g.usarHab(0);
+          for (let i = 0; i < Math.round(60 * {tempos[n]}); i++) g.step(1/60);
+          p.inv = 0; g.draw(); }}""")
+        f = dist / f'_hab{n}.png'
+        pg.screenshot(path=str(f)); shots.append(f)
+    ims = [Image.open(f) for f in shots]
+    w, h = ims[0].width // 2, ims[0].height // 2
+    out = Image.new('RGB', (w * 3, h * 2))
+    for k, i in enumerate(ims): out.paste(i.resize((w, h)), ((k % 3) * w, (k // 3) * h))
+    out.save(str(dist / 'habilidades.png'))
+    for f in shots: f.unlink()
+    b.close()
+    print('habilidades: ok')
+
+
 from playwright.sync_api import sync_playwright
 CMDS = {'fumaca': [fumaca], 'fotos': [fotos], 'bumerangues': [bumerangues], 'bestiario': [bestiario], 'chefoes': [chefoes],
-        'pirata': [pirata], 'fenix': [fenix], 'hypnos': [hypnos], 'piratas': [piratas], 'todos': [fumaca, fotos, bumerangues, bestiario]}
+        'pirata': [pirata], 'fenix': [fenix], 'hypnos': [hypnos], 'piratas': [piratas], 'habilidades': [habilidades], 'todos': [fumaca, fotos, bumerangues, bestiario]}
 with sync_playwright() as p:
     for fn in CMDS[a.cmd]:
         fn(p)
