@@ -123,6 +123,66 @@ const ETIRO_DESENHO = {
     cx.fillStyle = e.c || '#9a4ab0'; cx.globalAlpha = .6; cx.beginPath(); cx.ellipse(r * .2, -r * .25, r * .45, r * .3, 0, 0, TAU); cx.fill();
     cx.globalAlpha = 1; cx.restore();
   },
+  // ---------- Reino Encantado ----------
+  estrela(e, a, t) {
+    // estrela dourada girando com brilho e rastro de faíscas
+    const r = e.r, c = e.c || '#FFD84A', hx = Math.cos(a), hy = Math.sin(a);
+    cx.fillStyle = c; for (let k = 1; k <= 3; k++) { cx.globalAlpha = .45 - k * .12; cx.beginPath(); cx.arc(e.x - hx * r * k * 1.1, e.y - hy * r * k * 1.1, r * (.5 - k * .1), 0, TAU); cx.fill(); }
+    cx.globalAlpha = .3; cx.beginPath(); cx.arc(e.x, e.y, r * 1.8, 0, TAU); cx.fill(); cx.globalAlpha = 1;
+    cx.save(); cx.translate(e.x, e.y); cx.rotate(t * 6 + e.y * .02);
+    cx.beginPath(); for (let k = 0; k < 10; k++) { const aa = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * .5 : r * 1.25; k ? cx.lineTo(Math.cos(aa) * rr, Math.sin(aa) * rr) : cx.moveTo(Math.cos(aa) * rr, Math.sin(aa) * rr); }
+    cx.closePath(); cx.fillStyle = c; cx.fill(); cx.strokeStyle = SKIN_OUT; cx.lineWidth = 1.6; cx.stroke();
+    cx.fillStyle = '#fff8d0'; cx.beginPath(); cx.arc(0, 0, r * .3, 0, TAU); cx.fill();
+    cx.restore();
+  },
+  bolaFogo(e, a, t) {
+    // bola de fogo: brilho, chama para trás e miolo claro
+    // fogo mágico na cor do inimigo (verde/azul), para não confundir com o fogo da Fênix
+    const r = e.r, c = e.c || '#7CF04A';
+    cx.globalAlpha = .3; cx.fillStyle = c; cx.beginPath(); cx.arc(e.x, e.y, r * 1.9, 0, TAU); cx.fill(); cx.globalAlpha = 1;
+    chamaForma(e.x, e.y, r * .95, r * 3.2, a - Math.PI / 2, c, '#f4fff0', t, e.x * .03);
+    cx.fillStyle = c; cx.strokeStyle = SKIN_OUT; cx.lineWidth = 1.5; cx.beginPath(); cx.arc(e.x, e.y, r * .8, 0, TAU); cx.fill(); cx.stroke();
+    cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(e.x - r * .25, e.y - r * .25, r * .28, 0, TAU); cx.fill();
+  },
+  sopro(e, a, t) {
+    // sopro do dragão ancião: chama grande e tremida
+    const r = e.r * (1 + .12 * Math.sin(t * 22 + e.x * .05));
+    cx.globalAlpha = .35; cx.fillStyle = '#2a7ae0'; cx.beginPath(); cx.arc(e.x, e.y, r * 2, 0, TAU); cx.fill(); cx.globalAlpha = 1;
+    chamaForma(e.x, e.y, r * 1.1, r * 3.6, a - Math.PI / 2, '#2a7ae0', '#9fe6ff', t, e.y * .03);
+    cx.fillStyle = '#9fe6ff'; cx.beginPath(); cx.arc(e.x, e.y, r * .85, 0, TAU); cx.fill();
+    cx.fillStyle = '#f0fbff'; cx.beginPath(); cx.arc(e.x, e.y, r * .4, 0, TAU); cx.fill();
+  },
+  pocao(e, a, t) {
+    // frasco de poção girando (pisca mais rápido perto de estourar)
+    const r = e.r, c = e.c || '#8CF04A';
+    cx.save(); cx.translate(e.x, e.y); cx.rotate(t * 6 + e.x * .01);
+    cx.strokeStyle = SKIN_OUT; cx.lineWidth = 2;
+    cx.fillStyle = '#e8f8ff'; cx.beginPath(); cx.arc(0, r * .2, r * .95, 0, TAU); cx.fill(); cx.stroke();
+    cx.fillStyle = c; cx.beginPath(); cx.arc(0, r * .2, r * .95, .15, Math.PI - .15); cx.closePath(); cx.fill();
+    cx.fillStyle = '#e8f8ff'; cx.fillRect(-r * .3, -r * 1.2, r * .6, r * .6); cx.strokeRect(-r * .3, -r * 1.2, r * .6, r * .6);
+    cx.fillStyle = '#9B6A3C'; cx.fillRect(-r * .35, -r * 1.45, r * .7, r * .3);
+    const pisca = (e.burst || 0) < .4 ? 30 : 10;
+    if (Math.sin(t * pisca) > 0) { cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(-r * .3, 0, r * .22, 0, TAU); cx.fill(); }
+    cx.restore();
+  },
+  gota(e, a, t) {
+    // gota da poção (verde, brilhante)
+    const r = e.r, c = e.c || '#8CF04A';
+    cx.save(); cx.translate(e.x, e.y); cx.rotate(a + Math.PI / 2);
+    cx.fillStyle = c; cx.strokeStyle = SKIN_OUT; cx.lineWidth = 1.5;
+    cx.beginPath(); cx.moveTo(0, r * 1.6); cx.quadraticCurveTo(r * 1.1, 0, 0, -r); cx.quadraticCurveTo(-r * 1.1, 0, 0, r * 1.6); cx.fill(); cx.stroke();
+    cx.fillStyle = 'rgba(255,255,255,.7)'; cx.beginPath(); cx.arc(-r * .25, -r * .1, r * .28, 0, TAU); cx.fill();
+    cx.restore();
+  },
+  pedra(e, a, t) {
+    // lasca de pedra girando
+    const r = e.r * 1.1;
+    cx.save(); cx.translate(e.x, e.y); cx.rotate(t * 8 + e.x * .02);
+    cx.fillStyle = '#8A8F96'; cx.strokeStyle = SKIN_OUT; cx.lineWidth = 1.8;
+    cx.beginPath(); cx.moveTo(0, -r * 1.2); cx.lineTo(r * .9, -r * .2); cx.lineTo(r * .5, r); cx.lineTo(-r * .7, r * .6); cx.lineTo(-r, -r * .4); cx.closePath(); cx.fill(); cx.stroke();
+    cx.fillStyle = '#C9CDD2'; cx.beginPath(); cx.moveTo(0, -r * .9); cx.lineTo(r * .5, -r * .2); cx.lineTo(-r * .3, -r * .1); cx.closePath(); cx.fill();
+    cx.restore();
+  },
   chamaFantasma(e, a, t) {
     // chama verde do navio fantasma: brilho + língua de fogo apontando para trás
     const c = e.c || '#7af0c0', r = e.r, pul = 1 + .18 * Math.sin(t * 16 + e.x * .05);

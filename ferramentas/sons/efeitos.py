@@ -710,6 +710,78 @@ def hab_pronta():
     """Habilidade pronta: dois sininhos subindo."""
     return reverb(mix((sino(1319, .35, queda=8) * .35, 0, 1), (sino(1976, .45, queda=7) * .35, .08, 1)), .2, .8)
 
+
+# ---------- Reino Encantado (desde 1.2.0) ----------
+
+def grifo_grito():
+    """Grito do grifo: guincho de águia descendo + bater de asas."""
+    d = 0.7
+    gr = wobble(curva(2600, 1500, d), d, 22, .025) * adsr(d, .02, .1, .6, .4) * .3
+    gr2 = wobble(curva(3900, 2200, d), d, 22, .02) * adsr(d, .03, .1, .4, .4) * .1
+    asas = mix(*[(sopro(.18, 300, 1200, 1.5) * env(.18, .03, curva_=3) * .7, k * .2, 1) for k in range(3)])
+    return reverb(mix((filtro(gr + gr2[:len(gr)], 'pa', 900), 0, 1), (asas, .1, 1)), .25, 1.2)
+
+
+def bruxa_risada():
+    """Risada da bruxa: 5 "rê" nasais descendo, com vibrato."""
+    partes = []
+    for k in range(5):
+        f0 = 720 - k * 55
+        d = .16
+        v = wobble(curva(f0 * 1.1, f0 * .9, d), d, 18, .04)
+        serra = 2 * ((np.cumsum(f0 * (1 + .04 * osc(18, d)) / SR)) % 1) - 1   # voz rouca (dente de serra com vibrato)
+        voz_ = filtro(serra, 'pf', 1400, 3)                                     # nasal
+        partes.append((voz_ * adsr(d, .01, .04, .6, .08) * .45 + v * adsr(d, .01, .04, .6, .08) * .15, k * .17, 1))
+    return reverb(mix(*partes), .3, 1.4)
+
+
+def gargula_acorda():
+    """Gárgula acorda: pedra rachando + rosnado grave."""
+    racha = mix(*[(estalo(.02, 900 + k * 300, .8) * .8, k * .05, 1) for k in range(5)])
+    pedras = faiscas(.6, 60, 1200, 3, 51) * 1.2
+    rosna = filtro(osc(curva(70, 90, .8), forma='serra') * (0.6 + 0.4 * osc(28, .8)), 'pb', 600) * adsr(.8, .05, .1, .7, .4) * .5
+    return reverb(mix((racha, 0, 1), (pedras, .05, 1), (rosna, .1, 1), (grave(80, 40, .3), 0, .6)), .2, .9)
+
+
+def anciao_rugido():
+    """Rugido do dragão ancião: ruído grave rasgado + tom de serra descendo."""
+    d = 1.6
+    ru = filtro(ruido(d, 'rosa'), 'pb', curva(1400, 400, d), ordem=2) * (0.7 + 0.3 * osc(22, d)) * adsr(d, .15, .2, .7, .6) * 2.2
+    tom = filtro(osc(curva(140, 70, d), forma='serra'), 'pb', 900) * adsr(d, .1, .2, .6, .6) * .45
+    return limitador(reverb(mix((ru, 0, 1), (tom, 0, 1)), .3, 1.8), -1)
+
+
+def anciao_sopro():
+    """Sopro de fogo azul: rajada de fogo + chiado mágico."""
+    d = 1.0
+    fx = fogo(d, 2600, 52) * 1.4
+    vento = sopro(d, 400, 3000, 1.5) * adsr(d, .03, .1, .7, .4)
+    brilho = sino(1760, .6, queda=6) * .1
+    return limitador(reverb(mix((fx, 0, 1), (vento, 0, 1), (brilho, .05, 1)), .2, 1.0), -1)
+
+
+def inimigo_estrela():
+    """Estrela mágica: plim agudo + brilho."""
+    return reverb(mix((sino(1976, .3, queda=10) * .35, 0, 1), (sino(2960, .25, queda=12) * .2, .03, 1), (sopro(.15, 4000, 8000, 3) * env(.15, .01) * .3, 0, 1)), .2, .6)
+
+
+def inimigo_bolafogo():
+    """Bola de fogo mágico: fuuu curto."""
+    d = .35
+    return reverb(mix((sopro(d, 600, 2400, 1.6) * env(d, .01, curva_=3) * 1.1, 0, 1), (fogo(.25, 2200, 53) * .6, 0, 1)), .1, .5)
+
+
+def inimigo_pocao():
+    """Poção arremessada: vidro tilintando + borbulhas."""
+    vidro = sino(2400, .25, ((1, 1), (2.7, .4), (5.1, .2)), 12) * .3
+    bolhas = mix(*[(osc(curva(400 + k * 90, 900 + k * 120, .05)) * env(.05, .003, curva_=4) * .25, .05 + k * .06, 1) for k in range(4)])
+    return reverb(mix((vidro, 0, 1), (bolhas, 0, 1)), .15, .6)
+
+
+def inimigo_pedra():
+    """Lascas de pedra: estalo seco + pedrinhas."""
+    return reverb(mix((estalo(.02, 1200, .9), 0, .9), (faiscas(.25, 120, 1800, 4, 54) * .8, 0, 1), (grave(160, 90, .1), 0, .4)), .1, .4)
+
 TODOS = {
     'tiro_metralhadora': (tiro_metralhadora, False), 'tiro_leque': (tiro_leque, False), 'tiro_missil': (tiro_missil, False),
     'tiro_plasma': (tiro_plasma, True), 'tiro_drone': (tiro_drone, False), 'tiro_ricochete': (tiro_ricochete, False),
@@ -739,6 +811,9 @@ TODOS = {
     'ima_mental': (ima_mental, True), 'rei_lacaios': (rei_lacaios, True),
     'hab_mergulho': (hab_mergulho, True), 'hab_ciclone': (hab_ciclone, True), 'hab_bombardeio': (hab_bombardeio, True),
     'hab_saraivada': (hab_saraivada, True), 'hab_baforada': (hab_baforada, True), 'hab_onda': (hab_onda, True), 'hab_pronta': (hab_pronta, False),
+    'grifo_grito': (grifo_grito, True), 'bruxa_risada': (bruxa_risada, True), 'gargula_acorda': (gargula_acorda, True), 'anciao_rugido': (anciao_rugido, True),
+    'anciao_sopro': (anciao_sopro, True), 'inimigo_estrela': (inimigo_estrela, False), 'inimigo_bolafogo': (inimigo_bolafogo, False),
+    'inimigo_pocao': (inimigo_pocao, False), 'inimigo_pedra': (inimigo_pedra, False),
 }
 
 if __name__ == '__main__':

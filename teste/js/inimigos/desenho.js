@@ -11,7 +11,7 @@ function drawEnemy(e) {
     cx.fillStyle = '#ff6a6a'; cx.beginPath(); cx.arc(e.x, e.y, 3, 0, TAU); cx.fill();
     return;
   }
-  if (t.scene === 'desert' || t.scene === 'space' || t.scene === 'piratas') {
+  if (t.scene === 'desert' || t.scene === 'space' || t.scene === 'piratas' || t.scene === 'reino') {
     drawSceneEnemy(e);
   } else if (e.type === 'spinner') {
     cx.save(); cx.translate(e.x, e.y); cx.rotate(e.t * 2.2);

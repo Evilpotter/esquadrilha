@@ -23,7 +23,7 @@ function spawnSceneWave(type, x0) {
     case 'beamer': addEnemy('beamer', rnd(60, W - 60), -30, { stopY: rnd(80, 170) }); return true;
     case 'blinker': addEnemy('blinker', rnd(60, W - 60), 120, { mode: 'in', mt: .3, alpha: 0, invuln: true }); return true;
   }
-  return spawnPirataWave(type, x0); // Mar dos Piratas (js/inimigos/piratas.js)
+  return spawnPirataWave(type, x0) || spawnReinoWave(type, x0); // Mar dos Piratas (piratas.js) e Reino Encantado (reino.js)
 }
 function aimAt(e, p) { return p ? Math.atan2(p.y - e.y, p.x - e.x) : Math.PI / 2; }
 function turnTo(cur, target, max) { let d = target - cur; while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU; return cur + clamp(d, -max, max); }
@@ -110,7 +110,7 @@ function updateSceneEnemy(e, t, p, dt, sp, rate, bs) {
         if (e.jumps > 5) e.dead = true; else { e.mode = 'out'; e.mt = .3; }
       }
       break;
-    default: updatePirataEnemy(e, t, p, dt, sp, rate, bs); break; // Mar dos Piratas
+    default: if (t.scene === 'reino') updateReinoEnemy(e, t, p, dt, sp, rate, bs); else updatePirataEnemy(e, t, p, dt, sp, rate, bs); break; // Reino Encantado / Mar dos Piratas
   }
 }
 function drawSceneEnemy(e) {
@@ -177,7 +177,7 @@ function drawSceneEnemy(e) {
       cx.fillStyle = d; cx.beginPath(); cx.arc(0, 0, 6, 0, TAU); cx.fill();
       cx.globalAlpha = 1;
       break;
-    default: // Mar dos Piratas: silhueta simples enquanto o desenho carrega
+    default: // Mar dos Piratas e Reino Encantado: silhueta simples enquanto o desenho carrega
       cx.globalAlpha = e.alpha === undefined ? 1 : e.alpha;
       cx.fillStyle = d; cx.beginPath(); cx.arc(0, 0, e.r, 0, TAU); cx.fill();
       cx.fillStyle = c; cx.beginPath(); cx.arc(0, 0, e.r * .7, 0, TAU); cx.fill();

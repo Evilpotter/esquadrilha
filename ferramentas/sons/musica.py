@@ -1,5 +1,5 @@
 """Compõe e renderiza as músicas da Esquadrilha (orquestra de fantasia) em <raiz>/som/musica/*.ogg.
-Uso: python3 ferramentas/sons/musica.py [pasta_do_jogo] [nomes...]   (padrão: teste, todas; piratas = fase no Mar dos Piratas)
+Uso: python3 ferramentas/sons/musica.py [pasta_do_jogo] [nomes...]   (padrão: teste, todas; piratas = fase no Mar dos Piratas; reino = fase no Reino Encantado)
 As músicas em laço (menu, fase, chefao) são renderizadas duas vezes seguidas e cortadas na
 segunda de três voltas: as caudas das notas e do reverb da volta anterior entram no começo, e o laço fica sem emenda."""
 import sys, pathlib, tempfile, subprocess, os
@@ -496,7 +496,73 @@ def piratas():
     return m
 
 
-PECAS = {'menu': menu, 'fase': fase, 'chefao': chefao, 'vitoria': vitoria, 'derrota': derrota, 'piratas': piratas}
+# =============================================================
+# REINO ENCANTADO – fase no cenário de fantasia (combina com a Fênix):
+# harpa em arpejos, flauta com o tema, celesta brilhando, cordas e trompas, coro na parte B
+# =============================================================
+def reino():
+    m = Peca(96, 24)
+    m.parte('harpa', 46, pan=44, vol=100)
+    m.parte('flauta', 73, pan=58, vol=104)
+    m.parte('celesta', 8, pan=84, vol=84)
+    m.parte('cordas', 48, pan=36, vol=86)
+    m.parte('violinos', 40, pan=72, vol=96)
+    m.parte('pizz', 45, pan=90, vol=96)
+    m.parte('trompas', 60, pan=60, vol=94)
+    m.parte('coro', 52, pan=64, vol=82)
+    m.parte('timpano', 47, pan=70, vol=100)
+    m.parte('perc', 0, pan=64, vol=80, canal=9)
+    TRIANGULO = 81
+    prog = (['D', 'Gmaj7', 'D', 'A'] + ['D', 'Bm', 'G', 'A', 'D', 'Bm', 'Em', 'A'] + ['G', 'A', 'F#m', 'Bm', 'G', 'A', 'D', 'D']
+            + ['Bm', 'G', 'E', 'A'])
+    for c, ac in enumerate(prog):
+        b = c * 4
+        intro, parteB, ponte = c < 4, 12 <= c < 20, c >= 20
+        # harpa: arpejo subindo e descendo em colcheias
+        arp = voz(ac, 'D3', 'A5')[:6]
+        arp = arp + arp[-2:0:-1]
+        for k in range(8):
+            m.n('harpa', b + k * .5, .9, arp[k % len(arp)], 70 if k % 4 else 82)
+        # pizzicato no 1 e no 3
+        if not intro or c >= 2:
+            m.n('pizz', b, .4, baixo(ac, 2), 86); m.n('pizz', b + 2, .4, baixo(ac, 2) + 7 if baixo(ac, 2) + 7 < 52 else baixo(ac, 2) - 5, 74)
+        if not intro:
+            m.n('cordas', b, 3.9, voz(ac, 'F#3', 'F#4'), 56 if not parteB else 66)
+        # celesta: brilho no tempo 4
+        alto = voz(ac, 'A5', 'A6')
+        m.n('celesta', b + 3, .5, alto[c % len(alto)], 60)
+        m.n('celesta', b + 3.5, .5, alto[(c + 2) % len(alto)], 54)
+        if c % 2 == 0 and not intro:
+            m.n('perc', b, 1, TRIANGULO, 56)
+        if parteB:
+            m.n('coro', b, 3.8, voz(ac, 'D4', 'D5'), 58)
+            m.n('timpano', b, .6, baixo(ac, 2) + (12 if acorde(ac)[0] < 5 else 0), 80)
+            m.n('trompas', b, 1.8, voz(ac, 'F#3', 'E4'), 76); m.n('trompas', b + 2, 1.8, voz(ac, 'F#3', 'E4'), 68)
+    # tema A (flauta), repetido uma oitava abaixo pelos violinos na segunda vez
+    ta = ('F#5:1 A5:1 D6:2 | C#6:1 B5:1 A5:2 | B5:1 G5:1 E5:1 G5:1 | A5:3 r:1 | '
+          'F#5:1 A5:1 D6:1.5 E6:.5 | F#6:2 D6:2 | E6:1 D6:1 B5:1 G5:1 | A5:4')
+    m.melodia('flauta', 16, ta, 96)
+    m.melodia('violinos', 16, ta, 60, transp=-12)
+    # tema B (violinos), flauta faz respostas
+    tb = ('D6:2 B5:1 G5:1 | E6:2 C#6:1 A5:1 | F#6:1 E6:1 C#6:1 A5:1 | B5:3 r:1 | '
+          'G5:1 B5:1 D6:1 G6:1 | F#6:1.5 E6:.5 C#6:2 | D6:2 A5:2 | D6:3 r:1')
+    m.melodia('violinos', 48, tb, 100)
+    m.rampa('violinos', 48, 50, 80, 120)
+    for b0, frase in ((59, 'A6:.5 F#6:.5'), (75, 'A6:.5 G6:.25 F#6:.25')):
+        m.melodia('flauta', b0, frase, 84)
+    # introdução: flauta chamando, ecoada pela celesta
+    m.melodia('flauta', 4, 'A5:1 D6:1 E6:1 F#6:1 | E6:2 C#6:2', 84)
+    m.melodia('celesta', 12, 'A6:1 D7:1 E7:1 F#7:1', 62)
+    # ponte: cordas sobem, trompas chamam, rufo para voltar ao começo
+    m.melodia('trompas', 80, 'B4:4 | D5:4 | G#4:2 B4:2 | C#5:4', 92)
+    m.melodia('violinos', 80, 'F#5:2 B5:2 | G5:2 D6:2 | E6:1 G#6:1 B6:2 | A6:4', 92)
+    m.rampa('cordas', 80, 96, 80, 120)
+    rufo_timpano(m, 'timpano', 92, 4, nota('A2'), 50, 110, 1 / 6)
+    m.n('perc', 95.5, .5, 81, 90)
+    return m
+
+
+PECAS = {'menu': menu, 'fase': fase, 'chefao': chefao, 'vitoria': vitoria, 'derrota': derrota, 'piratas': piratas, 'reino': reino}
 
 if __name__ == '__main__':
     raiz = pathlib.Path(__file__).resolve().parents[2] / (sys.argv[1] if len(sys.argv) > 1 else 'teste')

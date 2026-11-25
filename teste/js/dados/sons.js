@@ -77,6 +77,16 @@ const SONS = {
   gaivota:              { vol: .26, var: 1.5, max: 2, int: .4 },
   kraken_sobe:          { vol: .40, var: 1, max: 2, int: .3 },
   navio_fantasma:       { vol: .32, max: 2, int: .5 },
+  // Reino Encantado
+  inimigo_estrela:      { vol: .16, var: 1.5, max: 3, int: .06 },
+  inimigo_bolafogo:     { vol: .18, var: 1.5, max: 3, int: .08 },
+  inimigo_pocao:        { vol: .22, var: 1, max: 2, int: .15 },
+  inimigo_pedra:        { vol: .18, var: 1.5, max: 3, int: .08 },
+  grifo_grito:          { vol: .26, var: 1.5, max: 2, int: .4 },
+  bruxa_risada:         { vol: .32, var: 1, max: 1, int: .6 },
+  gargula_acorda:       { vol: .32, var: 1, max: 2, int: .3 },
+  anciao_rugido:        { vol: .42, max: 1, int: .5 },
+  anciao_sopro:         { vol: .36, max: 2, int: .3 },
   // jogador
   dano_jogador:      { vol: .55, var: .5, max: 2, int: .1 },
   jogador_abatido:   { vol: .80, max: 1 },
@@ -115,6 +125,8 @@ const SOM_TIRO_INIMIGO = {
   plasma: ['inimigo_plasma', 0, 1], granada: ['inimigo_granada', 0, 1], missil: ['inimigo_missil', 0, 1], chefao: ['chefao_tiro', 0, 1],
   mosquete: ['inimigo_mosquete', 0, 1], balaCanhao: ['inimigo_canhao', 0, 1], barril: ['inimigo_barril', 0, 1],
   tinta: ['inimigo_tinta', 0, 1], chamaFantasma: ['inimigo_chama', 0, 1],
+  estrela: ['inimigo_estrela', 0, 1], bolaFogo: ['inimigo_bolafogo', 0, 1], pocao: ['inimigo_pocao', 0, 1], gota: ['inimigo_tinta', 4, .6],
+  pedra: ['inimigo_pedra', 0, 1], sopro: ['inimigo_bolafogo', -4, .5],
 };
 
 // músicas: vol relativo · laco: repete sem parar
@@ -122,6 +134,7 @@ const MUSICAS = {
   menu:    { vol: .55, laco: true },
   fase:    { vol: .50, laco: true },
   piratas: { vol: .50, laco: true }, // fase no Mar dos Piratas
+  reino:   { vol: .50, laco: true }, // fase no Reino Encantado
   chefao:  { vol: .55, laco: true },
   vitoria: { vol: .70, laco: false },
   derrota: { vol: .60, laco: false },

@@ -179,7 +179,7 @@ function somQuadro() {
     else if (S.rewardT > 0 || m === 'reward') mus = 'vitoria';
     else if (S.bosses.some(b => !b.dead)) mus = 'chefao';
     else if (S.bossSpawned) mus = null; // corneta do chefão chegando
-    else mus = S.scene === 'piratas' ? 'piratas' : 'fase';
+    else mus = S.scene === 'piratas' ? 'piratas' : S.scene === 'reino' ? 'reino' : 'fase';
   }
   if (mus === 'vitoria' || mus === 'derrota') { if (!(somMus && somMus.nome === mus)) { if (A.jingle !== mus) somTocarMusica(mus); } }
   else somTocarMusica(mus);

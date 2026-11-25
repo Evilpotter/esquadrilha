@@ -10,6 +10,7 @@ Comandos:
   fenix       Fênix: joga com todas as armas de fogo, testa o Renascer e fotografa armas, skins e ovo -> dist/fenix-*.png
   hypnos      Hypnos: joga com todas as armas da mente, confere aliados/tontura e fotografa -> dist/hypnos-*.png
   piratas     Mar dos Piratas: joga 150 s nas fases 1, 3 e 5 (1 e 2 jogadores) e fotografa -> dist/piratas-*.png
+  reino       Reino Encantado: joga 150 s nas fases 1, 3 e 5 (1 e 2 jogadores) e fotografa -> dist/reino-*.png
   habilidades cada nave usa a habilidade ativa sempre que pronta (ondas, chefão, 2 jogadores); confere e fotografa -> dist/habilidades.png
   chefoes     luta 40 s com cada chefão (1 e 2 jogadores) e grava o resumo -> dist/chefoes.json
               (mesmo arquivo antes/depois = comportamento igual)
@@ -87,7 +88,7 @@ def fotos(p):
     pg.evaluate("() => { const g = window.__g; for (const s of g.SKINS) g.unlockSkin(s.id); }")
     pg.evaluate("() => { const g = window.__g; g.openShipSelect(2); g.S.ss.skin = ['dragao', 'espectro']; g.S.ss.cur = [0, 1]; for (let i = 0; i < 30; i++) g.step(1/60); g.draw(); }")
     pg.screenshot(path=str(dist / f'foto-hangar-{vw}.png'))
-    for sc, ships, skins in [('sea', [0, 1], ['dragao', 'lamina']), ('desert', [2, 0], ['garra', 'vazio']), ('space', [1, 2], ['geada', 'bosque'])] + ([('piratas', [3, 4], ['espectro', 'geada'])] if (raiz / 'js/inimigos/piratas.js').exists() else []):
+    for sc, ships, skins in [('sea', [0, 1], ['dragao', 'lamina']), ('desert', [2, 0], ['garra', 'vazio']), ('space', [1, 2], ['geada', 'bosque'])] + ([('piratas', [3, 4], ['espectro', 'geada'])] if (raiz / 'js/inimigos/piratas.js').exists() else []) + ([('reino', [4, 5], ['lamina', 'bosque'])] if (raiz / 'js/inimigos/reino.js').exists() else []):
         pg.evaluate(f"""() => {{ const g = window.__g; g.newGame(2, {ships}, {skins}); g.S.scene = '{sc}'; g.S.banner = null;
           for (const pl of g.S.players) pl.inv = 1e9;
           for (let i = 0; i < 60 * 9; i++) {{ g.step(1/60); }} for (const pl of g.S.players) pl.inv = 0; g.draw(); }}""")
@@ -119,12 +120,13 @@ def bestiario(p):
     b, pg = abrir(p)
     for sc, tipos in ([('sea', ['scout', 'zig', 'swooper', 'gunner', 'kamikaze', 'heavy', 'splitter', 'mini', 'spinner', 'sniper', 'miner', 'mine', 'hunter']),
                       ('desert', ['jeep', 'heli', 'tank', 'flak', 'base']), ('space', ['swarm', 'ufo', 'rock', 'beamer', 'blinker'])]
-                      + ([('piratas', ['bote', 'gaivota', 'escuna', 'balao', 'kraken', 'fantasma'])] if (raiz / 'js/inimigos/piratas.js').exists() else [])):
+                      + ([('piratas', ['bote', 'gaivota', 'escuna', 'balao', 'kraken', 'fantasma'])] if (raiz / 'js/inimigos/piratas.js').exists() else [])
+                      + ([('reino', ['mago', 'grifo', 'draco', 'bruxa', 'gargula', 'anciao'])] if (raiz / 'js/inimigos/reino.js').exists() else [])):
         pg.evaluate(f"""() => {{ const g = window.__g; g.newGame(1, [0], ['dragao']); g.S.scene = '{sc}'; g.S.banner = null; g.S.spawnT = 1e9;
           g.step(1/60); g.S.enemies = []; g.S.ebullets = []; g.S.bullets = [];
           const tipos = {tipos}, n = tipos.length, W = g.S.players[0].x * 2;
           tipos.forEach((t, i) => {{ const x = W * (i + 1) / (n + 1), y = 200 + (i % 2) * 170;
-            if (t === 'rock') g.addRock(x, y, 26, true, 0); else g.addEnemy(t, x, y, {{ aim: Math.PI / 2 + .6, stopY: y, x0: x, mode: t === 'blinker' ? 'show' : t === 'kraken' ? 'fica' : t === 'fantasma' ? 'aqui' : undefined, mt: 9, sub: 0, cool: 9, alpha: 1 }}); }});
+            if (t === 'rock') g.addRock(x, y, 26, true, 0); else g.addEnemy(t, x, y, {{ aim: Math.PI / 2 + .6, stopY: y, x0: x, mode: t === 'blinker' ? 'show' : t === 'kraken' ? 'fica' : t === 'fantasma' ? 'aqui' : t === 'gargula' ? 'acorda' : t === 'anciao' ? 'fica' : undefined, mt: 9, sub: 0, cool: 9, alpha: 1, pedra: 0, delay: 9, side: 1, aviso: 0 }}); }});
           for (const e of g.S.enemies) {{ e.vx = 0; e.vy = 0; e.hp = e.maxHp * .6; e.t = 1; }}
           g.S.players[0].inv = 1e9; g.draw(); }}""")
         pg.screenshot(path=str(dist / f'bestiario-{sc}.png'))
@@ -352,6 +354,43 @@ def piratas(p):
     b.close()
 
 
+def reino(p):
+    """Reino Encantado: 150 s nas fases 1, 3 e 5 (1 e 2 jogadores), sem chefão; falha se algum inimigo ou tiro do mapa não aparecer."""
+    b, pg = abrir(p)
+    res = pg.evaluate("""() => {
+      const g = window.__g, out = {}, vistos = {}, tiros = {}, pedra = { sim: 0, nao: 0 };
+      for (const ships of [[4], [0, 5]]) for (const ph of [1, 3, 5]) {
+        g.newGame(ships.length, ships); g.S.scene = 'reino'; g.S.banner = null; g.S.phase = ph;
+        for (const pl of g.S.players) pl.inv = 1e9;
+        for (let i = 0; i < 60 * 150; i++) {
+          if (g.S.mode === 'levelup' || g.S.mode === 'reward') { try { for (let k = 0; k < g.S.players.length; k++) g.choose(k, 0); } catch (e) {} }
+          g.S.scene = 'reino'; g.S.phaseT = Math.min(g.S.phaseT, 50); // fica nas ondas do mapa (sem chefão)
+          g.step(1 / 60); if (i % 30 === 0) g.draw();
+          for (const e of g.S.enemies) { vistos[e.type] = 1; if (e.type === 'gargula') pedra[e.invuln ? 'sim' : 'nao']++; }
+          for (const t of g.S.ebullets) tiros[t.k] = 1;
+        }
+        out[ships.join('+') + '-f' + ph] = { modo: g.S.mode, abates: g.S.kills };
+      }
+      // a poção estoura em gotas (no jogo quase sempre acerta a nave parada antes de estourar)
+      g.newGame(1, [4]); g.S.spawnT = 1e9; g.S.players[0].inv = 1e9;
+      g.S.ebullets.push({ x: 300, y: 100, vx: 0, vy: 60, r: 8, d: 10, burst: .1, nEst: 6, kEst: 'gota', shell: true, k: 'pocao', c: '#8CF04A' });
+      for (let i = 0; i < 20; i++) { g.step(1 / 60); for (const t of g.S.ebullets) tiros[t.k] = 1; }
+      out.inimigos = Object.keys(vistos).sort().join(' '); out.tiros = Object.keys(tiros).sort().join(' '); out.gargulaPedra = pedra;
+      return out;
+    }""")
+    print('reino:', res)
+    falta = [t for t in ['mago', 'grifo', 'draco', 'bruxa', 'gargula', 'anciao'] if t not in res['inimigos'].split()]
+    falta += [t for t in ['estrela', 'bolaFogo', 'pocao', 'gota', 'pedra', 'sopro'] if t not in res['tiros'].split()]
+    if falta: erros.append('Reino Encantado: não apareceu ' + ', '.join(falta))
+    if not (res['gargulaPedra']['sim'] and res['gargulaPedra']['nao']): erros.append('Reino Encantado: a gárgula não alternou pedra/acordada')
+    pg.evaluate("""() => { const g = window.__g; g.newGame(2, [4, 0], ['classic', 'lamina']); g.S.scene = 'reino'; g.S.banner = null; g.S.phase = 4;
+      for (const pl of g.S.players) pl.inv = 1e9;
+      for (let i = 0; i < 60 * 14; i++) { if (g.S.mode !== 'play') for (let k = 0; k < 2; k++) try { g.choose(k, 0); } catch (e) {} g.step(1 / 60); }
+      g.S.banner = null; g.draw(); }""")
+    pg.screenshot(path=str(dist / f'reino-jogo-{vw}.png'))
+    b.close()
+
+
 def chefoes(p):
     import json, hashlib
     b, pg = abrir(p)
@@ -445,7 +484,7 @@ def habilidades(p):
 
 from playwright.sync_api import sync_playwright
 CMDS = {'fumaca': [fumaca], 'fotos': [fotos], 'bumerangues': [bumerangues], 'bestiario': [bestiario], 'chefoes': [chefoes],
-        'pirata': [pirata], 'fenix': [fenix], 'hypnos': [hypnos], 'piratas': [piratas], 'habilidades': [habilidades], 'todos': [fumaca, fotos, bumerangues, bestiario]}
+        'pirata': [pirata], 'fenix': [fenix], 'hypnos': [hypnos], 'piratas': [piratas], 'habilidades': [habilidades], 'reino': [reino], 'todos': [fumaca, fotos, bumerangues, bestiario]}
 with sync_playwright() as p:
     for fn in CMDS[a.cmd]:
         fn(p)

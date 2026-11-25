@@ -87,6 +87,26 @@ function drawEnemyArt(e) {
       return bestDraw(key, e.x, e.y + sub * e.r * .8, Math.sin(e.t * 2.3) * .22, k * (1 - sub * .7) * cosp, f, 1 - sub * .6);
     }
     case 'fantasma': return bestDraw(key, e.x, e.y, Math.sin(e.t * .9) * .05, k, f, e.alpha === undefined ? 1 : e.alpha);
+    // Reino Encantado
+    case 'mago': return bestDraw(key, e.x, e.y, Math.cos(e.t * 1.6 + (e.ph0 || 0)) * .18, k, f);
+    case 'grifo': return bestDraw(key, e.x, e.y, e.mergulho ? Math.atan2(e.vy, e.vx) - Math.PI / 2 : (e.side || 1) * Math.PI / 2 * .55, k * (1 + .1 * Math.sin(e.t * 13)), f);
+    case 'draco': return bestDraw(key, e.x, e.y, Math.cos(e.t * 1.3 + (e.ph0 || 0)) * .25, k * (1 + .08 * Math.sin(e.t * 10)) * (e.cospe > 0 ? 1.08 : 1), f);
+    case 'bruxa': return bestDraw(key, e.x, e.y, Math.sin(e.t * 1.8) * .12, k, f);
+    case 'gargula': {
+      // pedra ↔ acordada: as duas versões se misturam; acordada bate as asas
+      const pd = e.pedra === undefined ? 0 : e.pedra, rot = Math.sin(e.t * 1.2) * .05;
+      if (pd < 1) bestDraw(key, e.x, e.y, rot, k * (1 + .06 * Math.sin(e.t * 12) * (1 - pd)), f, 1);
+      if (pd > 0) bestDraw('e:gargula_pedra', e.x, e.y, rot, k, f, pd);
+      return true;
+    }
+    case 'anciao': {
+      if (e.aviso > 0) { // aviso do sopro: brilho na boca crescendo
+        const u = 1 - e.aviso / REINO_INI.anciao.aviso;
+        cx.save(); cx.globalAlpha = .35 + .4 * u; cx.fillStyle = '#4AB4FF';
+        cx.beginPath(); cx.arc(e.x, e.y + e.r * 1.1, 10 + u * 22, 0, TAU); cx.fill(); cx.restore();
+      }
+      return bestDraw(key, e.x, e.y, Math.sin(e.t * .6) * .06, k * (1 + .05 * Math.sin(e.t * 5)), f);
+    }
     default: return bestDraw(key, e.x, e.y, 0, k, f);
   }
 }

@@ -7,7 +7,8 @@ const ENEMY_ART = {}, BOSS_ART = {}, SHOT_ART = {}, BOOM_ART = {};
 
 const ARTE_INIMIGOS = ['scout', 'zig', 'swooper', 'gunner', 'kamikaze', 'heavy', 'splitter', 'mini', 'spinner', 'sniper', 'miner', 'mine', 'hunter',
   'jeep', 'heli', 'tank', 'flak', 'base', 'swarm', 'ufo', 'rock', 'beamer', 'blinker', 'tank_top', 'heli_top', 'flak_top',
-  'bote', 'gaivota', 'escuna', 'escuna_top', 'balao', 'kraken', 'fantasma'];
+  'bote', 'gaivota', 'escuna', 'escuna_top', 'balao', 'kraken', 'fantasma',
+  'mago', 'grifo', 'draco', 'bruxa', 'gargula', 'gargula_pedra', 'anciao'];
 const ARTE_CHEFOES = ['fortress', 'carrier', 'laser', 'vortex', 'ram', 'twins', 'twins2', 'sower', 'ghost', 'guardian', 'storm'];
 
 function lerSVG(txt) {

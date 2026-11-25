@@ -19,7 +19,7 @@ const PHASE_LEN = 120;   // segundos de ondas de inimigos por fase (antes 60; Ra
 const BOSS_ESPERA = 5;   // segundos entre o fim das ondas e a chegada do chefão (antes 3)
 
 // ---------- Cenários ----------
-const SCENES = { sea: { name: 'Oceano' }, desert: { name: 'Deserto' }, space: { name: 'Espaço' }, piratas: { name: 'Mar dos Piratas' } };
+const SCENES = { sea: { name: 'Oceano' }, desert: { name: 'Deserto' }, space: { name: 'Espaço' }, piratas: { name: 'Mar dos Piratas' }, reino: { name: 'Reino Encantado' } };
 const SCENE_KEYS = Object.keys(SCENES);
 for (const k in ETYPES) if (!ETYPES[k].scene && ETYPES[k].from < 99) ETYPES[k].scene = 'sea';
 Object.assign(ETYPES, {
@@ -40,6 +40,13 @@ Object.assign(ETYPES, {
   balao:    { name: 'Balão pirata',        hp: 45,  r: 20, xp: 2, color: '#c2362b', dark: '#6a1a12', from: 2, w: 2, scene: 'piratas' },
   kraken:   { name: 'Tentáculo do Kraken', hp: 70,  r: 20, xp: 4, color: '#9a4ab0', dark: '#4a1a5a', from: 2, w: 1, scene: 'piratas', ground: true },
   fantasma: { name: 'Navio fantasma',      hp: 220, r: 34, xp: 8, color: '#7af0c0', dark: '#1a6a50', from: 3, w: 1, scene: 'piratas', ground: true },
+  // Reino Encantado (combina com a Fênix; comportamento em js/inimigos/reino.js; números em REINO_INI, abaixo)
+  mago:     { name: 'Mago aprendiz',       hp: 26,  r: 14, xp: 1, color: '#FFD84A', dark: '#3a2a8a', from: 1, w: 3, scene: 'reino' },
+  grifo:    { name: 'Grifo',               hp: 14,  r: 13, xp: 1, color: '#E8B83A', dark: '#8A5A2E', from: 1, w: 3, scene: 'reino' },
+  draco:    { name: 'Dragãozinho',         hp: 40,  r: 16, xp: 2, color: '#E05AFF', dark: '#3E8A3A', from: 1, w: 2, scene: 'reino' },
+  bruxa:    { name: 'Bruxa',               hp: 50,  r: 18, xp: 2, color: '#8CF04A', dark: '#3a1a5c', from: 2, w: 2, scene: 'reino' },
+  gargula:  { name: 'Gárgula',             hp: 75,  r: 20, xp: 4, color: '#ff5a3a', dark: '#4a4f56', from: 2, w: 1, scene: 'reino' },
+  anciao:   { name: 'Dragão ancião',       hp: 240, r: 34, xp: 8, color: '#4AB4FF', dark: '#6a1430', from: 3, w: 1, scene: 'reino' },
 });
 
 // ---------- Tiros dos inimigos ----------
@@ -61,6 +68,13 @@ const ETIROS = {
   barril:       { nome: 'Barril de pólvora', dano: 14 }, // balão pirata (estoura em estilhaços)
   tinta:        { nome: 'Tinta do Kraken', dano: 12 },  // tentáculo do Kraken
   chamaFantasma:{ nome: 'Chama fantasma',  dano: 14 },  // navio fantasma
+  // Reino Encantado
+  estrela:      { nome: 'Estrela mágica',  dano: 12 },  // mago aprendiz
+  bolaFogo:     { nome: 'Bola de fogo mágico', dano: 12 }, // dragãozinho (rosa) e asas do dragão ancião (azul) – cores diferentes do fogo da Fênix
+  pocao:        { nome: 'Poção',           dano: 14 },  // bruxa (o frasco estoura em gotas)
+  gota:         { nome: 'Gota de poção',   dano: 12 },  // gotas da poção da bruxa
+  pedra:        { nome: 'Lasca de pedra',  dano: 14 },  // gárgula
+  sopro:        { nome: 'Sopro de dragão', dano: 16 },  // dragão ancião (fogo azul)
 };
 // Inimigos do Mar dos Piratas: tempos em segundos, vel = multiplica a velocidade dos tiros da fase
 const PIRATAS_INI = {
@@ -70,6 +84,15 @@ const PIRATAS_INI = {
   balao:    { desce: 70, paraMin: 90, paraMax: 200, deriva: 55, fica: 8, barril: 2.8, vel: .55, estilhacos: 7 },
   kraken:   { sobe: .6, fica: 6, afunda: .6, tinta: 1.8, tiros: 3, abre: .28, vel: .75 },
   fantasma: { desce: 18, some: 2.2, aparece: 3.2, fade: .5, anel: 10, velAnel: .45, mira: 3, velMira: .8, recarga: 1.6 },
+};
+// Inimigos do Reino Encantado: tempos em segundos, vel = multiplica a velocidade dos tiros da fase
+const REINO_INI = {
+  mago:    { grupo: 2, desce: 110, paraMin: 110, paraMax: 260, fica: 4.5, estrela: 1.8, vel: .8, zigue: 40 },  // para no alto, atira estrelas miradas, depois vai embora
+  grifo:   { grupo: 3, vem: 260, curva: 1.1, mergulho: 360 },        // entra pelo lado em curva e mergulha na nave (não atira)
+  draco:   { desce: 60, onda: 70, cospe: 2.4, tiros: 3, abre: .3, vel: .75 },  // voa em zigue-zague e cospe 3 bolas de fogo
+  bruxa:   { desce: 75, paraMin: 90, paraMax: 190, deriva: 60, fica: 8, pocao: 2.6, vel: .55, gotas: 6 },   // joga poção que estoura em gotas
+  gargula: { desce: 40, pedra: 2.2, acorda: 3.5, mira: 1.1, anel: 8, velAnel: .55, vel: .8, tiros: 3, abre: .22 }, // pedra (não leva dano) ↔ acordada (atira)
+  anciao:  { desce: 45, paraY: 150, fica: 14, aviso: .8, sopro: 7, abre: .8, velSopro: .7, asas: 10, velAsas: .5, recarga: 2.4 }, // sopro em leque mirado (com aviso) ↔ anel de bolas de fogo
 };
 // Jipe: vem em grupo de 3; cada um atira de tempo em tempo (o intervalo varia um pouco
 // para os 3 não atirarem juntos). tiros = 1 tiro só; 2 = tiro duplo (aberto por "abertura").

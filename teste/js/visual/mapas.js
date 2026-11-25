@@ -1,4 +1,4 @@
-// ---------- Mapas pintados (Oceano, Deserto, Espaço; Mar dos Piratas em mapa-piratas.js) ----------
+// ---------- Mapas pintados (Oceano, Deserto, Espaço; Mar dos Piratas em mapa-piratas.js; Reino Encantado em mapa-reino.js) ----------
 // Cada cenário vira uma "faixa" pré-desenhada (MAP_TH de altura) que se repete sem emenda.
 // Camadas: fundo (faixa), meio (planetas / sombras de nuvem) e frente (nuvens / poeira).
 const MAP_TH = 1200;
@@ -295,7 +295,7 @@ function genMapLayers() {
 function mapTile(sc) {
   if (!mapCache[sc]) {
     const L = newLayer(W, MAP_TH);
-    if (sc === 'desert') paintDesert(L.g); else if (sc === 'space') paintSpace(L.g); else if (sc === 'piratas') paintPiratas(L.g); else paintSea(L.g);
+    if (sc === 'desert') paintDesert(L.g); else if (sc === 'space') paintSpace(L.g); else if (sc === 'piratas') paintPiratas(L.g); else if (sc === 'reino') paintReino(L.g); else paintSea(L.g);
     mapCache[sc] = L.c;
   }
   return mapCache[sc];
@@ -337,6 +337,7 @@ function drawMapFront(sc) {
     for (const d of mapLayers.dust) { const y = (d.y + bgScroll * 1.7) % mapLayers.span - 300; cx.drawImage(d.spr, d.x - 160, y - 70, 320, 140); }
     cx.globalAlpha = 1;
   } else if (sc === 'piratas') drawNeblina(); // js/visual/mapa-piratas.js
+  else if (sc === 'reino') drawPoMagico(); // js/visual/mapa-reino.js
 }
 
 // ---------- Fundo ----------
