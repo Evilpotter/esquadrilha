@@ -32,46 +32,151 @@ function florzinhas(g, x, y, n) {
     g.fillStyle = '#F2B233'; g.beginPath(); g.arc(fx, fy, 1.4, 0, TAU); g.fill();
   }
 }
-function torre(g, x, y, r, teto, bandeira) {
-  g.fillStyle = 'rgba(0,0,0,.22)'; g.beginPath(); g.arc(x + 6, y + 8, r + 2, 0, TAU); g.fill();
-  g.fillStyle = '#C9C2B2'; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); g.lineWidth = 3; g.strokeStyle = MAP_OUT; g.stroke();
-  // telhado em cone visto de cima (fatias claras e escuras)
-  for (let k = 0; k < 8; k++) {
-    const a0 = k * TAU / 8, a1 = (k + 1) * TAU / 8;
-    g.fillStyle = k % 2 ? teto[0] : teto[1]; g.beginPath(); g.moveTo(x, y); g.arc(x, y, r * .82, a0, a1); g.closePath(); g.fill();
+// ---------- Castelo (visto de cima e de frente, 3/4, no estilo cartoon) ----------
+const PEDRA = { face: '#9AA0A8', topo: '#C9CDD2', escura: '#7E848C', junta: 'rgba(36,22,12,.35)' };
+// parede de pedras: retângulo com fileiras de pedras desencontradas
+function pedras(g, x, y, w, h, cor, alt) {
+  g.fillStyle = cor || PEDRA.face; g.fillRect(x, y, w, h);
+  g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip();
+  g.strokeStyle = PEDRA.junta; g.lineWidth = 1.3;
+  const ph = alt || 7;
+  for (let row = 0, yy = y; yy < y + h; row++, yy += ph) {
+    g.beginPath(); g.moveTo(x, yy); g.lineTo(x + w, yy); g.stroke();
+    for (let xx = x + (row % 2 ? 6 : 0); xx < x + w; xx += 13) { g.beginPath(); g.moveTo(xx, yy); g.lineTo(xx, yy + ph); g.stroke(); }
+    // algumas pedras mais claras/escuras
+    for (let xx = x + (row % 2 ? 6 : 0) + 2; xx < x + w - 4; xx += 39) { g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(xx, yy + 1.5, 9, ph - 3); }
   }
-  g.beginPath(); g.arc(x, y, r * .82, 0, TAU); g.lineWidth = 2.2; g.stroke();
-  g.fillStyle = '#FFD84A'; g.beginPath(); g.arc(x, y, 2.6, 0, TAU); g.fill(); g.lineWidth = 1.4; g.stroke();
-  if (bandeira) {
-    g.fillStyle = bandeira; g.beginPath(); g.moveTo(x, y); g.lineTo(x + r * .9, y - r * .55); g.lineTo(x + r * .75, y - r * .05); g.closePath(); g.fill(); g.lineWidth = 1.6; g.stroke();
+  g.restore();
+  g.lineWidth = 2.6; g.strokeStyle = MAP_OUT; g.strokeRect(x, y, w, h);
+}
+// ameias (dentes da muralha) ao longo de uma borda horizontal
+function ameias(g, x, y, w, alt) {
+  for (let xx = x + 2; xx < x + w - 6; xx += 14) {
+    g.fillStyle = PEDRA.topo; g.fillRect(xx, y - (alt || 8), 8, alt || 8);
+    g.lineWidth = 2; g.strokeStyle = MAP_OUT; g.strokeRect(xx, y - (alt || 8), 8, alt || 8);
+  }
+}
+function janela(g, x, y, w, h, luz) {
+  g.fillStyle = luz ? '#FFD84A' : '#2a2030';
+  g.beginPath(); g.moveTo(x - w / 2, y + h); g.lineTo(x - w / 2, y + w / 2); g.arc(x, y + w / 2, w / 2, Math.PI, 0); g.lineTo(x + w / 2, y + h); g.closePath(); g.fill();
+  g.lineWidth = 1.6; g.strokeStyle = MAP_OUT; g.stroke();
+}
+function bandeira(g, x, y, cor) {
+  g.strokeStyle = MAP_OUT; g.lineWidth = 2; g.beginPath(); g.moveTo(x, y); g.lineTo(x, y - 22); g.stroke();
+  g.fillStyle = cor; g.beginPath(); g.moveTo(x, y - 22); g.quadraticCurveTo(x + 10, y - 24, x + 18, y - 18); g.quadraticCurveTo(x + 10, y - 16, x, y - 13); g.closePath(); g.fill();
+  g.lineWidth = 1.6; g.stroke();
+}
+// torre redonda: corpo de pedra (cilindro), ameias ou telhado em cone, janela e bandeira
+function torreRedonda(g, cx0, base, r, h, teto, cor) {
+  g.fillStyle = 'rgba(0,0,0,.22)'; g.beginPath(); g.ellipse(cx0 + 10, base + 4, r * 1.2, r * .42, 0, 0, TAU); g.fill();
+  // corpo
+  g.save(); g.beginPath(); g.rect(cx0 - r, base - h, r * 2, h); g.ellipse(cx0, base, r, r * .38, 0, 0, Math.PI); g.clip();
+  pedras(g, cx0 - r, base - h, r * 2, h + r * .4, PEDRA.face);
+  // sombra lateral do cilindro
+  const gr = g.createLinearGradient(cx0 - r, 0, cx0 + r, 0); gr.addColorStop(0, 'rgba(255,255,255,.18)'); gr.addColorStop(.45, 'rgba(255,255,255,0)'); gr.addColorStop(1, 'rgba(0,0,0,.28)');
+  g.fillStyle = gr; g.fillRect(cx0 - r, base - h, r * 2, h + r);
+  g.restore();
+  g.lineWidth = 2.6; g.strokeStyle = MAP_OUT;
+  g.beginPath(); g.moveTo(cx0 - r, base - h); g.lineTo(cx0 - r, base); g.ellipse(cx0, base, r, r * .38, 0, Math.PI, 0, true); g.lineTo(cx0 + r, base - h); g.stroke();
+  janela(g, cx0, base - h * .62, r * .45, r * .6, false);
+  if (teto) {
+    // telhado em cone com beiral
+    const top = base - h, alt = r * 2.4;
+    g.fillStyle = teto[0]; g.beginPath(); g.moveTo(cx0 - r - 5, top); g.lineTo(cx0, top - alt); g.lineTo(cx0 + r + 5, top); g.ellipse(cx0, top, r + 5, (r + 5) * .38, 0, 0, Math.PI); g.closePath(); g.fill();
+    g.fillStyle = teto[1]; g.beginPath(); g.moveTo(cx0, top - alt); g.lineTo(cx0 + r + 5, top); g.ellipse(cx0, top, r + 5, (r + 5) * .38, 0, 0, Math.PI / 2); g.lineTo(cx0 + r * .2, top + (r + 5) * .38); g.closePath(); g.fill();
+    g.lineWidth = 2.6; g.strokeStyle = MAP_OUT;
+    g.beginPath(); g.moveTo(cx0 - r - 5, top); g.lineTo(cx0, top - alt); g.lineTo(cx0 + r + 5, top); g.ellipse(cx0, top, r + 5, (r + 5) * .38, 0, 0, Math.PI); g.closePath(); g.stroke();
+    g.strokeStyle = 'rgba(36,22,12,.3)'; g.lineWidth = 1.4;
+    for (const f of [-.5, 0, .5]) { g.beginPath(); g.moveTo(cx0, top - alt); g.lineTo(cx0 + f * (r + 5), top + (r + 5) * .38 * Math.sqrt(1 - f * f)); g.stroke(); }
+    bandeira(g, cx0, top - alt + 2, cor || '#C2362B');
+  } else {
+    // topo plano com ameias em volta
+    const top = base - h;
+    g.fillStyle = PEDRA.topo; g.beginPath(); g.ellipse(cx0, top, r, r * .38, 0, 0, TAU); g.fill(); g.lineWidth = 2.4; g.strokeStyle = MAP_OUT; g.stroke();
+    g.fillStyle = PEDRA.escura; g.beginPath(); g.ellipse(cx0, top + 1, r * .7, r * .25, 0, 0, TAU); g.fill();
+    for (let k = 0; k < 7; k++) { const a = Math.PI + k / 6 * Math.PI, mx = cx0 + Math.cos(a) * r * .92, my = top + Math.sin(a) * r * .35;
+      g.fillStyle = PEDRA.topo; g.fillRect(mx - 3.5, my - 7, 7, 7); g.lineWidth = 1.6; g.strokeRect(mx - 3.5, my - 7, 7, 7); }
+    for (let k = 0; k < 5; k++) { const a = (k + .5) / 5 * Math.PI, mx = cx0 + Math.cos(a) * r * .92, my = top + Math.sin(a) * r * .35;
+      g.fillStyle = PEDRA.topo; g.fillRect(mx - 3.5, my - 7, 7, 7); g.lineWidth = 1.6; g.strokeRect(mx - 3.5, my - 7, 7, 7); }
+    bandeira(g, cx0, top - 2, cor || '#FFD84A');
+  }
+}
+// muralha "de frente": topo (passarela) + face de pedra + ameias
+function muralhaFrente(g, x, y, w, h) {
+  g.fillStyle = PEDRA.topo; g.fillRect(x, y - 10, w, 10); g.lineWidth = 2.4; g.strokeStyle = MAP_OUT; g.strokeRect(x, y - 10, w, 10);
+  ameias(g, x, y - 10, w, 8);
+  pedras(g, x, y, w, h);
+}
+// muralha lateral: vista de cima e um pouco de lado (passarela de pedra, parede de dentro e ameias para fora)
+function muralhaLado(g, x, y0, y1, lado) {
+  const fora = lado < 0 ? x - 9 : x + 9;
+  pedras(g, x - 9, y0, 18, y1 - y0, PEDRA.face, 9);
+  g.fillStyle = PEDRA.topo; g.fillRect(x - 9 + (lado < 0 ? 6 : 0), y0, 12, y1 - y0);
+  g.lineWidth = 2.4; g.strokeStyle = MAP_OUT; g.strokeRect(x - 9, y0, 18, y1 - y0);
+  g.strokeStyle = 'rgba(36,22,12,.3)'; g.lineWidth = 1.2;
+  for (let yy = y0 + 9; yy < y1; yy += 9) { g.beginPath(); g.moveTo(x - 9, yy); g.lineTo(x + 9, yy); g.stroke(); }
+  for (let yy = y0 + 4; yy < y1 - 8; yy += 15) {
+    const mx = lado < 0 ? fora - 2 : fora - 6;
+    g.fillStyle = PEDRA.topo; g.fillRect(mx, yy, 8, 9); g.lineWidth = 1.8; g.strokeStyle = MAP_OUT; g.strokeRect(mx, yy, 8, 9);
   }
 }
 function castelo(g, x, y, s) {
   g.save(); g.translate(x, y); g.scale(s, s);
-  const L = 70, teto = ['#3B6FC8', '#5A8FE0'];
-  // fosso
-  g.fillStyle = '#4BA3D8'; g.beginPath(); g.roundRect ? g.roundRect(-L - 26, -L - 26, (L + 26) * 2, (L + 26) * 2, 30) : g.rect(-L - 26, -L - 26, (L + 26) * 2, (L + 26) * 2); g.fill();
-  g.lineWidth = 3; g.strokeStyle = MAP_OUT; g.stroke();
-  g.fillStyle = '#6DB84A'; g.fillRect(-L - 12, -L - 12, (L + 12) * 2, (L + 12) * 2);
-  // ponte levadiça
-  g.fillStyle = '#9B6A3C'; g.fillRect(-9, L, 18, 30); g.lineWidth = 2.4; g.strokeRect(-9, L, 18, 30);
-  g.strokeStyle = '#6a4424'; g.lineWidth = 1.4; for (let k = 1; k < 5; k++) { g.beginPath(); g.moveTo(-9, L + k * 6); g.lineTo(9, L + k * 6); g.stroke(); }
-  // muralha com ameias
-  g.fillStyle = '#B5AE9E'; g.fillRect(-L, -L, L * 2, L * 2); g.lineWidth = 3; g.strokeStyle = MAP_OUT; g.strokeRect(-L, -L, L * 2, L * 2);
-  g.fillStyle = '#7FC85A'; g.fillRect(-L + 12, -L + 12, L * 2 - 24, L * 2 - 24); g.lineWidth = 2.4; g.strokeRect(-L + 12, -L + 12, L * 2 - 24, L * 2 - 24);
-  g.fillStyle = '#D9D2C2'; for (let k = -L + 6; k < L - 4; k += 12) for (const [ax, ay] of [[k, -L + 2], [k, L - 8], [-L + 2, k], [L - 8, k]]) g.fillRect(ax, ay, 6, 6);
-  // pátio: caminho e jardim
-  g.fillStyle = '#C9A87A'; g.fillRect(-7, 20, 14, L - 32);
-  florzinhas(g, -34, 34, 6); florzinhas(g, 34, 34, 6);
-  // castelo central (torre de menagem) e 4 torres
-  g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(-26, -34, 58, 60);
-  g.fillStyle = '#D9D2C2'; g.fillRect(-30, -40, 60, 60); g.lineWidth = 3; g.strokeStyle = MAP_OUT; g.strokeRect(-30, -40, 60, 60);
-  g.fillStyle = teto[0]; g.beginPath(); g.moveTo(-30, -40); g.lineTo(0, -10); g.lineTo(-30, 20); g.closePath(); g.fill();
-  g.fillStyle = teto[1]; g.beginPath(); g.moveTo(30, -40); g.lineTo(0, -10); g.lineTo(30, 20); g.closePath(); g.fill();
-  g.fillStyle = '#2F5FA8'; g.beginPath(); g.moveTo(-30, 20); g.lineTo(0, -10); g.lineTo(30, 20); g.closePath(); g.fill();
-  g.lineWidth = 2; g.beginPath(); g.moveTo(-30, -40); g.lineTo(30, 20); g.moveTo(30, -40); g.lineTo(-30, 20); g.stroke();
-  torre(g, 0, -10, 13, ['#C2362B', '#E0574A'], '#FFD84A');
-  for (const [tx, ty] of [[-L, -L], [L, -L], [-L, L], [L, L]]) torre(g, tx, ty, 19, teto, tx < 0 ? '#C2362B' : '#FFD84A');
+  const AZUL = ['#3B6FC8', '#2A55A0'], VERM = ['#C2362B', '#962a20'];
+  // fosso (água em volta) com margem de terra
+  const fosso = blobPts(0, 10, 172, 128, 14, .04);
+  blobDraw(g, fosso, 1.06, '#C9A87A', 3);
+  blobDraw(g, fosso, 1, '#3F9AD0', 3);
+  blobDraw(g, fosso, .86, '#5FA845', 3);
+  g.strokeStyle = 'rgba(255,255,255,.45)'; g.lineWidth = 2; g.setLineDash([12, 14]); blobPath(g, fosso, .93); g.stroke(); g.setLineDash([]);
+  // sombra do castelo
+  g.fillStyle = 'rgba(0,0,0,.2)'; g.fillRect(-112, -62, 240, 168);
+  // pátio
+  g.fillStyle = '#C9B48A'; g.fillRect(-110, -72, 220, 150);
+  g.fillStyle = '#7FC85A'; g.fillRect(-92, 20, 60, 44); g.fillRect(32, 20, 60, 44);
+  g.lineWidth = 2; g.strokeStyle = MAP_OUT; g.strokeRect(-92, 20, 60, 44); g.strokeRect(32, 20, 60, 44);
+  florzinhas(g, -62, 42, 5); florzinhas(g, 62, 42, 5);
+  g.fillStyle = '#B5976A'; g.fillRect(-12, 12, 24, 72);
+  // muralha de trás (vemos a face de dentro)
+  muralhaFrente(g, -110, -70, 220, 24);
+  // torres de trás
+  torreRedonda(g, -110, -52, 22, 52, AZUL, '#FFD84A');
+  torreRedonda(g, 110, -52, 22, 52, AZUL, '#FFD84A');
+  // muralhas dos lados
+  muralhaLado(g, -110, -56, 86, -1);
+  muralhaLado(g, 110, -56, 86, 1);
+  // fortaleza do meio (torre de menagem) com duas torrinhas pontudas
+  g.fillStyle = 'rgba(0,0,0,.22)'; g.fillRect(-40, 4, 96, 14);
+  pedras(g, -46, -40, 92, 50, '#B5BAC0');
+  janela(g, -26, -28, 10, 16, true); janela(g, 0, -30, 12, 20, true); janela(g, 26, -28, 10, 16, true);
+  // porta da fortaleza
+  g.fillStyle = '#6a4424'; g.beginPath(); g.moveTo(-9, 10); g.lineTo(-9, -6); g.arc(0, -6, 9, Math.PI, 0); g.lineTo(9, 10); g.closePath(); g.fill(); g.lineWidth = 2; g.strokeStyle = MAP_OUT; g.stroke();
+  // telhado da fortaleza
+  g.fillStyle = VERM[0]; g.beginPath(); g.moveTo(-52, -40); g.lineTo(-30, -78); g.lineTo(30, -78); g.lineTo(52, -40); g.closePath(); g.fill();
+  g.fillStyle = VERM[1]; g.beginPath(); g.moveTo(30, -78); g.lineTo(52, -40); g.lineTo(20, -40); g.closePath(); g.fill();
+  g.lineWidth = 2.6; g.strokeStyle = MAP_OUT; g.beginPath(); g.moveTo(-52, -40); g.lineTo(-30, -78); g.lineTo(30, -78); g.lineTo(52, -40); g.closePath(); g.stroke();
+  g.strokeStyle = 'rgba(36,22,12,.3)'; g.lineWidth = 1.4; for (let k = -40; k <= 40; k += 10) { g.beginPath(); g.moveTo(k * .55, -78); g.lineTo(k, -40); g.stroke(); }
+  torreRedonda(g, -40, -36, 13, 58, VERM, '#5FA8FF');
+  torreRedonda(g, 40, -36, 13, 58, VERM, '#5FA8FF');
+  torreRedonda(g, 0, -52, 15, 74, AZUL, '#FFD84A');
+  // muralha da frente com o portão
+  muralhaFrente(g, -110, 78, 84, 26);
+  muralhaFrente(g, 26, 78, 84, 26);
+  // portão: duas torrinhas, arco com grade e ponte levadiça
+  g.fillStyle = '#9B6A3C'; g.fillRect(-14, 104, 28, 40); g.lineWidth = 2.4; g.strokeStyle = MAP_OUT; g.strokeRect(-14, 104, 28, 40);
+  g.strokeStyle = '#6a4424'; g.lineWidth = 1.6; for (let yy = 110; yy < 144; yy += 6) { g.beginPath(); g.moveTo(-14, yy); g.lineTo(14, yy); g.stroke(); }
+  g.strokeStyle = '#3a3a3a'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(-14, 106); g.lineTo(-22, 84); g.moveTo(14, 106); g.lineTo(22, 84); g.stroke();
+  pedras(g, -26, 70, 52, 36, '#B5BAC0');
+  g.fillStyle = '#1e1a22'; g.beginPath(); g.moveTo(-14, 106); g.lineTo(-14, 86); g.arc(0, 86, 14, Math.PI, 0); g.lineTo(14, 106); g.closePath(); g.fill();
+  g.strokeStyle = '#8A8F96'; g.lineWidth = 2; for (let xx = -10; xx <= 10; xx += 5) { g.beginPath(); g.moveTo(xx, 76); g.lineTo(xx, 98); g.stroke(); }
+  for (const yy of [82, 90]) { g.beginPath(); g.moveTo(-13, yy); g.lineTo(13, yy); g.stroke(); }
+  g.lineWidth = 2.4; g.strokeStyle = MAP_OUT; g.beginPath(); g.moveTo(-14, 106); g.lineTo(-14, 86); g.arc(0, 86, 14, Math.PI, 0); g.lineTo(14, 106); g.stroke();
+  g.fillStyle = PEDRA.topo; g.fillRect(-26, 62, 52, 8); g.lineWidth = 2.2; g.strokeRect(-26, 62, 52, 8); ameias(g, -26, 62, 52, 7);
+  torreRedonda(g, -26, 106, 13, 44, null, '#C2362B');
+  torreRedonda(g, 26, 106, 13, 44, null, '#C2362B');
+  // torres da frente (cantos)
+  torreRedonda(g, -110, 106, 24, 56, AZUL, '#C2362B');
+  torreRedonda(g, 110, 106, 24, 56, AZUL, '#C2362B');
   g.restore();
 }
 function ponte(g, x, y) {
@@ -118,8 +223,8 @@ function paintReino(g) {
   const grandes = [];
   const longe = (p, d) => !grandes.some(q => { const dy = Math.min(Math.abs(q.y - p.y), MAP_TH - Math.abs(q.y - p.y)); return (q.x - p.x) ** 2 + dy * dy < (d + (q.d || 0)) ** 2; });
   // castelo (um por faixa, longe do rio)
-  const cas = scatter(1, 0, p => foraRio(p, 170) && p.x > 120 && p.x < W - 120)[0];
-  if (cas) { const s = W < 700 ? .8 : 1; cas.d = 110 * s; grandes.push(cas); wrapDraw(cas.y, 120 * s, dy => castelo(g, cas.x, cas.y + dy, s)); }
+  const cas = scatter(1, 0, p => foraRio(p, 230) && p.x > 180 && p.x < W - 180)[0];
+  if (cas) { const s = W < 700 ? .75 : 1; cas.d = 170 * s; grandes.push(cas); wrapDraw(cas.y, 200 * s, dy => castelo(g, cas.x, cas.y + dy, s)); }
   // floresta encantada (bosques de árvores, algumas mágicas, com cogumelos)
   for (const p of scatter(Math.max(2, Math.round(2.6 * k)), 160, p => foraRio(p, 110) && longe(p, 90))) {
     p.d = 70; grandes.push(p);
