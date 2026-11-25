@@ -1,80 +1,9 @@
 // ---------- Âncora Negra: desenho (nave, âncora, armas piratas e dragão de água) ----------
-// A nave "Original" é montada aqui com as cores do jogador (pirataSVG). As skins ficam em
-// arte/naves/pirata/<skin>.svg (geradas por ferramentas/arte/pirata.js a partir desta mesma função).
+// A nave é desenhada no canvas (Original nas cores do jogador; skins com PIRATA_SKIN).
 // O dragão é desenhado no canvas porque o corpo ondula e segue a nave.
 const PIRATA_OUT = '#24160c';
 
-// ---------- Nave (SVG) ----------
-// pal: casco, convés, vela, asa, enfeite, emblema · deco: emblema e pontas das asas de cada skin
-function pirataSVG(pal, deco) {
-  deco = deco || {};
-  const O = PIRATA_OUT, st = `stroke="${O}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"`;
-  const casco = 'M100 14 C126 34 140 74 139 126 C138 166 128 192 114 198 L86 198 C72 192 62 166 61 126 C60 74 74 34 100 14 Z';
-  const asaE = 'M64 110 L16 138 L10 162 L30 160 L66 148 Z', asaD = 'M136 110 L184 138 L190 162 L170 160 L134 148 Z';
-  let g = '';
-  // gurupés (ponta da frente)
-  g += `<path d="M100 18 L100 -2" stroke="${O}" stroke-width="9" stroke-linecap="round"/><path d="M100 18 L100 -2" stroke="${pal.enfeite}" stroke-width="4" stroke-linecap="round"/>`;
-  // asas
-  g += `<path d="${asaE}" fill="${pal.asa}" ${st}/><path d="${asaD}" fill="${pal.asa}" ${st}/>`;
-  g += `<path d="M58 126 L22 148 M142 126 L178 148" stroke="#fff" stroke-opacity=".3" stroke-width="4" fill="none" stroke-linecap="round"/>`;
-  g += pontasAsas(deco.pontas, pal);
-  // canhões
-  for (const [x, y] of [[46, 118], [48, 146], [138, 118], [136, 146]])
-    g += `<rect x="${x}" y="${y}" width="16" height="10" rx="3" fill="#3a3a3a" stroke="${O}" stroke-width="3.5"/>`;
-  // casco, convés e tábuas
-  g += `<path d="${casco}" fill="${pal.casco}" ${st}/>`;
-  g += `<path d="${casco}" fill="${pal.conves}" transform="translate(100 118) scale(.76 .8) translate(-100 -118)"/>`;
-  g += `<path d="M90 50 L90 186 M110 50 L110 186 M100 40 L100 190" stroke="${O}" stroke-opacity=".28" stroke-width="2.5" fill="none"/>`;
-  if (deco.rebites) for (const [x, y] of [[70, 80], [130, 80], [66, 120], [134, 120], [70, 170], [130, 170]]) g += `<circle cx="${x}" cy="${y}" r="3.2" fill="${pal.enfeite}" stroke="${O}" stroke-width="1.5"/>`;
-  if (deco.costelas) g += `<path d="M72 70 Q100 82 128 70 M66 132 Q100 146 134 132 M68 160 Q100 174 132 160" stroke="${pal.enfeite}" stroke-width="6" fill="none" stroke-linecap="round"/>`;
-  // bandeira na popa
-  g += `<path d="M100 180 Q114 188 130 184 Q120 198 100 196 Z" fill="#1c1c1c" ${st.replace('5', '3.5')}/><circle cx="115" cy="189" r="3" fill="#fff"/>`;
-  // velas
-  const rasgo = deco.rasgada ? ' L150 118 L144 110 L138 119 L120 112 L112 118' : '';
-  g += `<path d="M60 56 Q100 40 140 56 L136 74 Q100 62 64 74 Z" fill="${pal.vela}" ${st}/>`;
-  g += `<path d="M34 94 Q100 70 166 94 L160 122${rasgo} Q100 102 40 122 Z" fill="${pal.vela}" ${st}/>`;
-  g += `<path d="M42 116 Q100 98 158 116" stroke="${O}" stroke-opacity=".25" stroke-width="4" fill="none"/>`;
-  if (deco.remendo) g += `<rect x="50" y="98" width="18" height="13" fill="${pal.enfeite}" stroke="${O}" stroke-width="2.5" transform="rotate(-8 59 104)"/><path d="M52 100 l3 3 M60 98 l3 3" stroke="${O}" stroke-width="1.5"/>`;
-  g += `<circle cx="100" cy="64" r="5" fill="${pal.enfeite}" stroke="${O}" stroke-width="3"/>`;
-  g += emblema(deco.emblema || 'caveira', 100, 100, pal);
-  return { vb: [0, -6, 200, 210], pv: [100, 110], g };
-}
-function pontasAsas(tipo, pal) {
-  const O = PIRATA_OUT, st = `stroke="${O}" stroke-width="3" stroke-linejoin="round"`;
-  const par = s => s + s.replace(/(-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g, (m, x, y) => (200 - x) + ' ' + y);
-  if (tipo === 'espinhos') return par(`<path d="M16 138 L2 128 L18 146 Z M12 150 L-2 150 L12 158 Z" fill="${pal.enfeite}" ${st}/>`);
-  if (tipo === 'folhas') return par(`<path d="M14 150 Q-6 138 4 124 Q20 132 14 150 Z" fill="${pal.enfeite}" ${st}/>`);
-  if (tipo === 'gelo') return par(`<path d="M14 140 L0 120 L22 136 Z M12 156 L-4 162 L14 162 Z" fill="#ffffff" ${st}/>`);
-  if (tipo === 'lamina') return par(`<path d="M12 160 L-2 172 L30 160 Z" fill="${pal.enfeite}" ${st}/>`);
-  if (tipo === 'chamas') return par(`<path d="M12 160 Q2 146 10 136 Q14 150 22 150 Q20 140 28 134 Q32 152 24 160 Z" fill="${pal.enfeite}" ${st}/>`);
-  if (tipo === 'ossos') return par(`<path d="M30 152 L18 140 M44 146 L34 132 M56 140 L50 126" stroke="${pal.enfeite}" stroke-width="5" stroke-linecap="round"/>`);
-  if (tipo === 'morcego') return par(`<path d="M64 112 L22 128 M66 130 L16 150 M66 146 L30 160" stroke="${O}" stroke-width="3" fill="none"/>`);
-  return '';
-}
-function emblema(tipo, x, y, pal) {
-  const O = PIRATA_OUT, c = pal.emblema;
-  if (tipo === 'engrenagem') {
-    let d = '';
-    for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; d += `<rect x="${x - 3}" y="${y - 15}" width="6" height="8" fill="${c}" stroke="${O}" stroke-width="2" transform="rotate(${a * 180 / Math.PI} ${x} ${y})"/>`; }
-    return d + `<circle cx="${x}" cy="${y}" r="10" fill="${c}" stroke="${O}" stroke-width="3"/><circle cx="${x}" cy="${y}" r="3.5" fill="${O}"/>`;
-  }
-  if (tipo === 'folha') return `<path d="M${x} ${y - 13} Q${x + 13} ${y} ${x} ${y + 13} Q${x - 13} ${y} ${x} ${y - 13} Z" fill="${c}" stroke="${O}" stroke-width="3"/><path d="M${x} ${y - 10} L${x} ${y + 10}" stroke="${O}" stroke-width="2"/>`;
-  if (tipo === 'garra') return `<path d="M${x - 9} ${y + 9} Q${x - 12} ${y - 6} ${x - 4} ${y - 13} Q${x - 4} ${y} ${x - 2} ${y + 9} Z M${x - 1} ${y + 9} Q${x - 2} ${y - 8} ${x + 5} ${y - 14} Q${x + 3} ${y} ${x + 6} ${y + 9} Z M${x + 6} ${y + 9} Q${x + 8} ${y - 4} ${x + 13} ${y - 8} Q${x + 11} ${y + 2} ${x + 12} ${y + 9} Z" fill="${c}" stroke="${O}" stroke-width="2.5"/>`;
-  if (tipo === 'floco') return `<path d="M${x} ${y - 13} L${x} ${y + 13} M${x - 11} ${y - 6} L${x + 11} ${y + 6} M${x - 11} ${y + 6} L${x + 11} ${y - 6}" stroke="${O}" stroke-width="7" stroke-linecap="round"/><path d="M${x} ${y - 13} L${x} ${y + 13} M${x - 11} ${y - 6} L${x + 11} ${y + 6} M${x - 11} ${y + 6} L${x + 11} ${y - 6}" stroke="${c}" stroke-width="3.5" stroke-linecap="round"/>`;
-  if (tipo === 'sol') {
-    let d = '';
-    for (let k = 0; k < 8; k++) d += `<path d="M${x} ${y - 16} L${x + 3} ${y - 9} L${x - 3} ${y - 9} Z" fill="${c}" stroke="${O}" stroke-width="1.5" transform="rotate(${k * 45} ${x} ${y})"/>`;
-    return d + `<circle cx="${x}" cy="${y}" r="8" fill="${c}" stroke="${O}" stroke-width="3"/>`;
-  }
-  if (tipo === 'chama') return `<path d="M${x} ${y - 15} Q${x + 12} ${y - 2} ${x + 7} ${y + 10} Q${x} ${y + 15} ${x - 7} ${y + 10} Q${x - 12} ${y - 2} ${x - 3} ${y - 8} Q${x - 1} ${y} ${x + 2} ${y - 2} Q${x + 4} ${y - 9} ${x} ${y - 15} Z" fill="${c}" stroke="${O}" stroke-width="3"/>`;
-  if (tipo === 'dragao') return `<path d="M${x - 12} ${y + 8} Q${x - 14} ${y - 6} ${x - 6} ${y - 10} L${x - 10} ${y - 18} L${x - 1} ${y - 11} L${x + 1} ${y - 11} L${x + 10} ${y - 18} L${x + 6} ${y - 10} Q${x + 14} ${y - 6} ${x + 12} ${y + 8} Q${x} ${y + 14} ${x - 12} ${y + 8} Z" fill="${c}" stroke="${O}" stroke-width="3"/><circle cx="${x - 5}" cy="${y - 2}" r="2.4" fill="${O}"/><circle cx="${x + 5}" cy="${y - 2}" r="2.4" fill="${O}"/>`;
-  // caveira (padrão); olhos coloridos se a skin pedir
-  const olho = pal.olhos || O, ossos = `M${x - 15} ${y + 13} L${x + 15} ${y - 11} M${x - 15} ${y - 11} L${x + 15} ${y + 13}`;
-  return `<path d="${ossos}" stroke="${O}" stroke-width="8" stroke-linecap="round"/><path d="${ossos}" stroke="${c}" stroke-width="4" stroke-linecap="round"/>` +
-    `<circle cx="${x}" cy="${y - 2}" r="10" fill="${c}" stroke="${O}" stroke-width="3"/><rect x="${x - 5.5}" y="${y + 5}" width="11" height="7" rx="2" fill="${c}" stroke="${O}" stroke-width="2.5"/>` +
-    `<circle cx="${x - 4}" cy="${y - 2}" r="3" fill="${olho}"/><circle cx="${x + 4}" cy="${y - 2}" r="3" fill="${olho}"/>`;
-}
-// paleta e enfeites de cada skin (as skins ficam prontas em arte/naves/pirata/)
+// paleta e enfeites de cada skin
 const PIRATA_SKIN = {
   sucata:   { pal: { casco: '#E08A2E', conves: '#C9B27A', vela: '#8A8F96', asa: '#5a5f68', enfeite: '#C9B27A', emblema: '#d0d4d8' }, deco: { emblema: 'engrenagem', rebites: true, remendo: true, pontas: 'espinhos' } },
   bosque:   { pal: { casco: '#9B6A3C', conves: '#c49a62', vela: '#5DAE4A', asa: '#3E8A3A', enfeite: '#7CCB5C', emblema: '#F4C542' }, deco: { emblema: 'folha', pontas: 'folhas' } },
@@ -86,35 +15,88 @@ const PIRATA_SKIN = {
   dragao:   { pal: { casco: '#7a1610', conves: '#B8231A', vela: '#B8231A', asa: '#7a1610', enfeite: '#FFC23D', emblema: '#FFC23D' }, deco: { emblema: 'dragao', pontas: 'morcego' } },
 };
 
-// nave "Original": desenho simples nas cores do jogador, no mesmo padrão das outras naves
-// (formas chapadas, sem contorno; cabine azul-clara; detalhes brancos e vermelhos)
+// ---------- Nave: galeão voador com carranca, velas que enchem de vento e bandeira tremulando ----------
+// Desenhada no canvas (desde 1.2.0), no mesmo padrão da Fênix e da Hypnos (peças em js/visual/naves-base.js).
+// Original = cores do jogador; skins = PIRATA_SKIN (paleta e enfeites).
 const PIRATA_TITULO = ['#c0563a', '#6e2a1c']; // tela inicial: casco vermelho-ferrugem
-function drawPirataShip(x, y, s, c1, c2, tilt, flash) {
+function pirataCor(skin, c1, c2) {
+  const C = naveCor(skin, c1, c2), ps = PIRATA_SKIN[skin];
+  if (!ps) return Object.assign(C, { casco: c1, conves: c2, vela: '#f2ead8', asa: c2, enfeite: '#ffd23a', emblema: '#f2ead8', olhos: '#24160c', deco: {} });
+  const P = ps.pal;
+  return Object.assign(C, { casco: P.casco, conves: P.conves, vela: P.vela, asa: P.asa, enfeite: P.enfeite, emblema: P.emblema, olhos: P.olhos || SKIN_OUT, deco: ps.deco });
+}
+function caveira(x, y, e, cor, olho, F, st) {
+  cx.save(); cx.translate(x, y); cx.scale(e, e);
+  cx.strokeStyle = F(SKIN_OUT); cx.lineWidth = 3.2; cx.lineCap = 'round';
+  cx.beginPath(); cx.moveTo(-6, 5); cx.lineTo(6, -4); cx.moveTo(-6, -4); cx.lineTo(6, 5); cx.stroke();
+  cx.strokeStyle = F(cor); cx.lineWidth = 1.6; cx.stroke();
+  cx.fillStyle = F(cor); cx.beginPath(); cx.arc(0, -1, 4, 0, TAU); cx.fill(); st(1.2);
+  cx.beginPath(); cx.rect(-2.2, 2, 4.4, 2.8); cx.fill(); st(1);
+  cx.fillStyle = F(olho); cx.beginPath(); cx.arc(-1.6, -1, 1.2, 0, TAU); cx.arc(1.6, -1, 1.2, 0, TAU); cx.fill();
+  cx.restore();
+}
+function drawPirataShip(x, y, s, c1, c2, tilt, flash, skin) {
+  const C = pirataCor(skin, c1, c2), D = C.deco, t = performance.now() / 1000, { F, st } = naveKit(C, flash);
   cx.save(); cx.translate(x, y); cx.scale(s * (1 - Math.abs(tilt || 0) * .12), s);
-  const body = flash ? '#fff' : c1, dk = flash ? '#fff' : c2, cl = (a, b) => flash ? '#fff' : (b || a);
-  const fl = 5 + Math.sin(performance.now() / 40) * 2;
-  // chama do motor na popa
-  cx.fillStyle = '#ffb347'; cx.beginPath(); cx.moveTo(-4, 22); cx.lineTo(4, 22); cx.lineTo(0, 23 + fl * 1.6); cx.closePath(); cx.fill();
-  // gurupés (ponta da frente)
-  cx.fillStyle = dk; cx.fillRect(-1.5, -33, 3, 10);
-  // asas
-  cx.fillStyle = dk;
-  cx.beginPath(); cx.moveTo(-9, 2); cx.lineTo(-27, 13); cx.lineTo(-25, 19); cx.lineTo(-9, 14); cx.closePath(); cx.fill();
-  cx.beginPath(); cx.moveTo(9, 2); cx.lineTo(27, 13); cx.lineTo(25, 19); cx.lineTo(9, 14); cx.closePath(); cx.fill();
-  // canhões dos lados
-  cx.fillStyle = cl('#e8e8e8');
-  for (const [sx, sy] of [[-16, -2], [-16, 7], [12, -2], [12, 7]]) cx.fillRect(sx, sy, 4, 4);
-  // casco
-  cx.fillStyle = body;
-  cx.beginPath(); cx.moveTo(0, -26); cx.quadraticCurveTo(13, -16, 13, 4); cx.quadraticCurveTo(13, 18, 6, 22); cx.lineTo(-6, 22); cx.quadraticCurveTo(-13, 18, -13, 4); cx.quadraticCurveTo(-13, -16, 0, -26); cx.closePath(); cx.fill();
-  // convés
-  cx.fillStyle = dk; cx.beginPath(); cx.ellipse(0, 6, 6, 13, 0, 0, TAU); cx.fill();
-  // vela (barra) com o emblema
-  cx.fillStyle = cl('#f2ead8');
-  cx.beginPath(); cx.moveTo(-21, -6); cx.quadraticCurveTo(0, -12, 21, -6); cx.lineTo(19, 1); cx.quadraticCurveTo(0, -5, -19, 1); cx.closePath(); cx.fill();
-  cx.fillStyle = cl('#e74c3c'); cx.beginPath(); cx.arc(0, -4.5, 2.6, 0, TAU); cx.fill();
-  // cabine
-  cx.fillStyle = cl('#bfe6ff'); cx.beginPath(); cx.ellipse(0, -15, 3, 5, 0, 0, TAU); cx.fill();
+  naveAura(C, flash, t, 33, 0);
+  naveMotor(C, flash, 0, 25, 4.5, 10, t, 4);
+  // bandeira tremulando na popa
+  const bw = Math.sin(t * 7);
+  cx.fillStyle = F('#1c1c1c');
+  cx.beginPath(); cx.moveTo(1, 20); cx.quadraticCurveTo(7, 22 + bw * 2, 13, 21 + bw * 3); cx.lineTo(12, 27 + bw * 2); cx.quadraticCurveTo(7, 27 - bw, 1, 25); cx.closePath(); cx.fill(); st(1.2);
+  if (!flash) { cx.fillStyle = '#fff'; cx.beginPath(); cx.arc(7.5, 23.5 + bw, 1.3, 0, TAU); cx.fill(); }
+  // velas laterais (asas) com varetas, batendo devagar
+  const ab = .88 + .12 * Math.sin(t * 3.2);
+  for (const sd of [-1, 1]) {
+    const X = v => sd * v * ab;
+    cx.fillStyle = F(C.asa);
+    cx.beginPath(); cx.moveTo(sd * 9, -4); cx.lineTo(X(33), 6); cx.quadraticCurveTo(X(29), 10, X(31), 15); cx.quadraticCurveTo(X(24), 12, X(22), 17); cx.quadraticCurveTo(X(16), 12, sd * 10, 14); cx.closePath(); cx.fill(); st(1.8);
+    if (!flash) {
+      cx.strokeStyle = C.contorno ? SKIN_OUT : 'rgba(0,0,0,.3)'; cx.lineWidth = 1.1;
+      cx.beginPath(); cx.moveTo(sd * 10, 0); cx.lineTo(X(31), 14); cx.moveTo(sd * 10, 4); cx.lineTo(X(22), 16); cx.stroke();
+      naveListra(C, [[sd * 11, -2], [X(31), 7]], t);
+      naveEnfeite(C, X(33), 6, sd * 1.3, 1, t);
+    }
+    // canhões saindo do casco
+    for (const cy of [-10, -2, 6]) {
+      cx.fillStyle = F('#3a3a3a'); cx.beginPath(); cx.rect(sd * 11.5 + (sd < 0 ? -6 : 0), cy - 1.6, 6, 3.2); cx.fill(); st(1);
+    }
+  }
+  // casco com carranca na proa
+  cx.fillStyle = F(C.casco);
+  cx.beginPath(); cx.moveTo(0, -28); cx.quadraticCurveTo(14, -18, 13.5, 2); cx.quadraticCurveTo(13, 17, 7, 22); cx.lineTo(-7, 22); cx.quadraticCurveTo(-13, 17, -13.5, 2); cx.quadraticCurveTo(-14, -18, 0, -28); cx.closePath(); cx.fill(); st(2);
+  // convés com tábuas
+  cx.fillStyle = F(C.conves);
+  cx.beginPath(); cx.moveTo(0, -22); cx.quadraticCurveTo(10, -14, 10, 2); cx.quadraticCurveTo(10, 14, 5, 18); cx.lineTo(-5, 18); cx.quadraticCurveTo(-10, 14, -10, 2); cx.quadraticCurveTo(-10, -14, 0, -22); cx.closePath(); cx.fill();
+  if (!flash) {
+    cx.strokeStyle = 'rgba(36,22,12,.3)'; cx.lineWidth = 1; cx.beginPath();
+    for (const px of [-5, 0, 5]) { cx.moveTo(px, -16 + Math.abs(px)); cx.lineTo(px, 17); } cx.stroke();
+    if (D.costelas) naveListra(Object.assign({}, C, { estilo: 'espectro' }), [[0, -14], [0, 16]], t);
+    if (D.rebites) for (const [rx, ry] of [[-9, -6], [9, -6], [-10, 8], [10, 8]]) naveEnfeite(Object.assign({}, C, { estilo: 'sucata' }), rx, ry, 0, .55, t);
+  }
+  // lanterna da popa
+  if (!flash) { cx.globalAlpha = .4 + .2 * Math.sin(t * 5); cx.fillStyle = C.brilho; cx.beginPath(); cx.arc(0, 17, 4.5, 0, TAU); cx.fill(); cx.globalAlpha = 1; }
+  cx.fillStyle = F('#ffe08a'); cx.beginPath(); cx.arc(0, 17, 1.8, 0, TAU); cx.fill(); st(1);
+  // carranca (cabeça entalhada na ponta)
+  caveira(0, -27, .55, C.enfeite, C.olhos, F, st);
+  // velas que enchem de vento
+  const enche = 2.5 + 1.5 * Math.sin(t * 2.4);
+  const vela = (y0, w, h, rasgo) => {
+    cx.fillStyle = F(C.vela);
+    cx.beginPath(); cx.moveTo(-w, y0); cx.quadraticCurveTo(0, y0 - enche - 2, w, y0); cx.lineTo(w * .92, y0 + h);
+    if (rasgo && !flash) { cx.lineTo(w * .6, y0 + h - 3); cx.lineTo(w * .45, y0 + h + 1); }
+    cx.quadraticCurveTo(0, y0 + h - enche, -w * .92, y0 + h); cx.closePath(); cx.fill(); st(1.6);
+    if (!flash) { cx.strokeStyle = 'rgba(36,22,12,.25)'; cx.lineWidth = 1.2; cx.beginPath(); cx.moveTo(-w * .85, y0 + h * .55); cx.quadraticCurveTo(0, y0 + h * .55 - enche, w * .85, y0 + h * .55); cx.stroke(); }
+  };
+  vela(-17, 11, 6, false);
+  vela(-5, 19, 10, D.rasgada);
+  if (D.remendo && !flash) { cx.fillStyle = C.enfeite; cx.save(); cx.translate(-12, 0); cx.rotate(-.15); cx.fillRect(-2.5, -2, 5, 4); cx.strokeStyle = SKIN_OUT; cx.lineWidth = .8; cx.strokeRect(-2.5, -2, 5, 4); cx.restore(); }
+  // emblema na vela grande
+  const em = D.emblema || 'caveira';
+  if (em === 'caveira' || em === 'chama' || !C.estilo) caveira(0, 0, .75, C.emblema, C.olhos, F, st);
+  else if (!flash) naveEnfeite(C, 0, 1.5, 0, 1.4, t);
+  // cesto da gávea
+  cx.fillStyle = F(C.conves); cx.beginPath(); cx.arc(0, -11, 2.4, 0, TAU); cx.fill(); st(1.2);
   cx.restore();
 }
 

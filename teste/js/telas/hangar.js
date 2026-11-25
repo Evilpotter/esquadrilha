@@ -96,7 +96,7 @@ function drawShipSelect() {
     // prévia da nave com tiro animado
     const py = card.y + 62;
     drawShipPreview(card.j, cxm, py, card.w);
-    drawShip(card.j, cxm, py, 1.5, c.body, c.dark, sel ? Math.sin(titleT * 3) * .3 : 0, false, ss.skin[card.pi]);
+    drawShip(card.j, cxm, py, Math.min(1.5, (card.w - 6) / 74), c.body, c.dark, sel ? Math.sin(titleT * 3) * .3 : 0, false, ss.skin[card.pi]);
     let y = card.y + 120;
     txt(sh.name, cxm, y, Math.min(19, card.w / 7.2), '#fff', 'center', 800);
     txt(sh.tag, cxm, y + 18, 12, '#ffd36b', 'center', 600);

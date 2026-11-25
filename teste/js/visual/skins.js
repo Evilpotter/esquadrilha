@@ -1,38 +1,6 @@
 // ---------- Skins: desenho das naves, rastros, tiros e bumerangues ----------
-// Os desenhos ficam em arte/naves, arte/tiros e arte/bumerangues (carregados por visual/arte.js).
-const SHIP_ART_KEY = ['falcon', 'boomer', 'arty', 'pirate', 'phoenix', 'hypnos']; // a Fênix e a Hypnos são desenhadas no canvas (js/visual/fenix.js, js/visual/hypnos.js)
-function skinArt(shipIdx, skinId) { return (ARTE.naves[SHIP_ART_KEY[shipIdx]] || {})[skinId] || null; }
-// ---------- Imagens prontas (o SVG vira imagem uma vez só) ----------
-const SKIN_U = .3;          // pixels por unidade do desenho (escala 1 do jogo)
-const SKIN_RES = 4;         // resolução extra para telas grandes e para o hangar
-const skinImg = {};
-function buildSkinImages() {
-  for (let s = 0; s < SHIPS.length; s++) for (const sk of SKINS) {
-    if (sk.id === 'classic') continue;
-    const key = s + ':' + sk.id, a = skinArt(s, sk.id);
-    if (!a) continue;
-    const [vx, vy, vw, vh] = a.vb;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vx} ${vy} ${vw} ${vh}" width="${vw * SKIN_U * SKIN_RES}" height="${vh * SKIN_U * SKIN_RES}">${a.g}</svg>`;
-    const rec = skinImg[key] = { ready: false, a };
-    const img = new Image();
-    img.onload = () => {
-      const c = document.createElement('canvas');
-      c.width = Math.round(vw * SKIN_U * SKIN_RES); c.height = Math.round(vh * SKIN_U * SKIN_RES);
-      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      rec.cv = c; rec.ready = true;
-    };
-    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-  }
-}
-function drawSkinShip(shipIdx, skinId, x, y, s, tilt) {
-  const rec = skinImg[(shipIdx || 0) + ':' + skinId];
-  if (!rec || !rec.ready) return false;
-  const [vx, vy, vw, vh] = rec.a.vb, [px, py] = rec.a.pv, u = SKIN_U * s;
-  cx.save(); cx.translate(x, y); cx.scale(1 - Math.abs(tilt || 0) * .12, 1);
-  cx.drawImage(rec.cv, (vx - px) * u, (vy - py) * u, vw * u, vh * u);
-  cx.restore();
-  return true;
-}
+// As naves são desenhadas no canvas (js/visual/naves-base.js); tiros e bumerangues das skins ficam em arte/tiros e arte/bumerangues.
+const SKIN_RES = 4;         // resolução extra dos tiros e bumerangues das skins (telas grandes e hangar)
 // marca colorida embaixo do avião para saber quem é J1 e J2
 function drawPlayerMark(p) {
   const c = PCOL[p.i];
@@ -43,7 +11,7 @@ function drawPlayerMark(p) {
 }
 
 // ---------- Rastro de cada skin ----------
-const SHIP_EXHAUST = [[[0, 26]], [[0, 22]], [[-10, 28], [10, 28]], [[0, 30]], [[0, 34]], [[-7, 30], [7, 30]]];
+const SHIP_EXHAUST = [[[0, 28]], [[0, 26]], [[-12, 32], [12, 32]], [[0, 33]], [[0, 34]], [[-7, 30], [7, 30]]];
 function skinTrail(p, dt) {
   if (!p.alive || p.ovoT > 0 || !p.skin || p.skin === 'classic') return;
   const sk = skinById(p.skin); if (!sk.trail) return;

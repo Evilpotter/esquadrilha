@@ -1,11 +1,10 @@
 // ---------- Carregador de desenhos (pasta arte/) ----------
 // Cada desenho é um arquivo .svg próprio. O viewBox do arquivo define o tamanho do desenho;
-// nas naves, data-pivo="x y" marca o centro da nave.
+// As naves são desenhadas no canvas (js/visual/naves-base.js, pirata.js, fenix.js, hypnos.js).
 // Na versão offline (dist/esquadrilha.html) os SVG vêm embutidos em window.ARTE_EMBUTIDA.
-const ARTE = { naves: {}, inimigos: {}, chefoes: {}, tiros: {}, bumerangues: {} };
+const ARTE = { inimigos: {}, chefoes: {}, tiros: {}, bumerangues: {} };
 const ENEMY_ART = {}, BOSS_ART = {}, SHOT_ART = {}, BOOM_ART = {};
 
-const ARTE_NAVES = { falcon: 'falcao', boomer: 'bumerangue', arty: 'artilheiro', pirate: 'pirata' };
 const ARTE_INIMIGOS = ['scout', 'zig', 'swooper', 'gunner', 'kamikaze', 'heavy', 'splitter', 'mini', 'spinner', 'sniper', 'miner', 'mine', 'hunter',
   'jeep', 'heli', 'tank', 'flak', 'base', 'swarm', 'ufo', 'rock', 'beamer', 'blinker', 'tank_top', 'heli_top', 'flak_top',
   'bote', 'gaivota', 'escuna', 'escuna_top', 'balao', 'kraken', 'fantasma'];
@@ -29,10 +28,6 @@ function carregarArte() {
   const pegar = (caminho, guardar) => tarefas.push(lerArquivo(caminho).then(lerSVG).then(a => { if (a) guardar(a); })
     .catch(e => console.warn('Desenho não carregou:', caminho, e.message)));
   const skins = SKINS.filter(s => s.id !== 'classic').map(s => s.id);
-  for (const nave in ARTE_NAVES) {
-    ARTE.naves[nave] = {};
-    for (const id of skins) pegar(`arte/naves/${ARTE_NAVES[nave]}/${id}.svg`, a => { ARTE.naves[nave][id] = a; });
-  }
   for (const id of skins) {
     pegar(`arte/tiros/${id}.svg`, a => { ARTE.tiros[id] = a; SHOT_ART[id] = a.g; });
     pegar(`arte/bumerangues/${id}.svg`, a => { ARTE.bumerangues[id] = a; BOOM_ART[id] = a.g; });

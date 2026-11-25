@@ -229,12 +229,12 @@ function roundRect(x, y, w, h, r) {
 function drawTitle() {
   drawBg();
   const tx = Math.min(110, (W - 90) / 5), ts = Math.min(1, tx / 100); // 6 naves: menores em tela estreita
-  drawShip(1, W / 2 - 2.5 * tx, 352 + Math.sin(titleT * 2 + 2) * 8, 1.55 * ts, '#5fbf9f', '#2a6b55', 0);
-  drawShip(0, W / 2 - 1.5 * tx, 336 + Math.sin(titleT * 2) * 8, 1.7 * ts, PCOL[0].body, PCOL[0].dark, 0);
-  drawShip(4, W / 2 - .5 * tx, 326 + Math.sin(titleT * 2 + 4) * 8, 1.85 * ts, FENIX_TITULO[0], FENIX_TITULO[1], 0);
-  drawShip(5, W / 2 + .5 * tx, 326 + Math.sin(titleT * 2 + 5) * 8, 1.85 * ts, HYPNOS_TITULO[0], HYPNOS_TITULO[1], 0);
-  drawShip(3, W / 2 + 1.5 * tx, 336 + Math.sin(titleT * 2 + 3) * 8, 1.7 * ts, PIRATA_TITULO[0], PIRATA_TITULO[1], 0);
-  drawShip(2, W / 2 + 2.5 * tx, 352 + Math.sin(titleT * 2 + 1) * 8, 1.55 * ts, PCOL[1].body, PCOL[1].dark, 0);
+  drawShip(1, W / 2 - 2.5 * tx, 340 + Math.sin(titleT * 2 + 2) * 8, 1.7 * ts, '#5fbf9f', '#2a6b55', 0);
+  drawShip(0, W / 2 - 1.5 * tx, 334 + Math.sin(titleT * 2) * 8, 1.7 * ts, PCOL[0].body, PCOL[0].dark, 0);
+  drawShip(4, W / 2 - .5 * tx, 328 + Math.sin(titleT * 2 + 4) * 8, 1.7 * ts, FENIX_TITULO[0], FENIX_TITULO[1], 0);
+  drawShip(5, W / 2 + .5 * tx, 328 + Math.sin(titleT * 2 + 5) * 8, 1.7 * ts, HYPNOS_TITULO[0], HYPNOS_TITULO[1], 0);
+  drawShip(3, W / 2 + 1.5 * tx, 334 + Math.sin(titleT * 2 + 3) * 8, 1.7 * ts, PIRATA_TITULO[0], PIRATA_TITULO[1], 0);
+  drawShip(2, W / 2 + 2.5 * tx, 340 + Math.sin(titleT * 2 + 1) * 8, 1.7 * ts, PCOL[1].body, PCOL[1].dark, 0);
   drawClouds();
   cx.fillStyle = 'rgba(5,12,22,.8)'; cx.fillRect(0, 130, W, 120);
   txt('Esquadrilha', W / 2, 200, 52, '#fff', 'center', 800);
