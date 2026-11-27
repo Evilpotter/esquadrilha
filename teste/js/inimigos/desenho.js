@@ -34,7 +34,7 @@ function drawEnemyExtras(e) {
     cx.beginPath(); cx.moveTo(e.x, e.y); cx.lineTo(e.x + (e.ax - e.x) * 4, e.y + (e.ay - e.y) * 4); cx.stroke();
   }
   const escondido = ETYPES[e.type].scene === 'piratas' && (e.alpha < .5 || e.sub > .5); // navio fantasma sumido, kraken embaixo d'água
-  if (e.hp < e.maxHp && e.maxHp > 40 && !escondido) {
+  if (e.hp < e.maxHp && e.maxHp > 40 && !escondido && !e.elite) { // o elite tem barra própria no topo
     cx.fillStyle = 'rgba(0,0,0,.4)'; cx.fillRect(e.x - 18, e.y - e.r - 10, 36, 4);
     cx.fillStyle = '#ff5a4a'; cx.fillRect(e.x - 18, e.y - e.r - 10, 36 * e.hp / e.maxHp, 4);
   }

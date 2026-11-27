@@ -99,3 +99,24 @@ const REINO_INI = {
 const JIPE_TIRO = { intervalo: 2, variacao: .25, tiros: 1, abertura: .2, vel: .9 };
 // Tanque: rajada da metralhadora entre um míssil e outro
 const TANQUE_METRALHA = { intervalo: 1.6, tiros: 3, espaco: .1, vel: 1.15 };
+
+// ---------- Elite (mini-chefe) no meio das ondas (desde 1.2.0; Rafael, 26/11/2026) ----------
+// Usa o desenho de um inimigo do cenário, maior e dourado. Comportamento em js/inimigos/elite.js, desenho em js/visual/elite.js.
+const ELITE = {
+  quando: .5,        // aparece nesta fração de PHASE_LEN (metade dos 2 min)
+  vidaChefao: .25,   // vida = 25% da vida do chefão da fase (mesma fórmula de BOSS_HP, sem o peso do chefão)
+  raio: 40,          // tamanho (px) – o desenho do inimigo base cresce até esse raio
+  cristais: 8,       // cristais grandes (3 de XP cada) ao ser derrotado
+  fica: 45,          // segundos até fugir se não for derrotado (também foge quando o chefão vem)
+  ondas: .5,         // as ondas normais vêm na metade do ritmo enquanto o elite está na tela
+  altura: 165, desce: 90, patrulha: .35, patrulhaMax: 380, // onde para, velocidade de descida e quanto anda para os lados
+  ataques: { espera: 1.6, furia: 1.35, leque: 5, abre: .2, anel: 12, anelFuria: 16, rajada: 3 },
+  bau: { cai: 32, ima: 1.5 }, // baú: velocidade de queda e alcance do ímã (× ímã de XP do jogador)
+  cenas: {
+    sea:     { tipo: 'heavy', nome: 'Bombardeiro de Ouro', tiro: 'missil',     tiro2: 'laser' },
+    desert:  { tipo: 'heli',  nome: 'Helicóptero de Ouro', tiro: 'missil',     tiro2: 'metralhadora' },
+    space:   { tipo: 'ufo',   nome: 'Disco de Ouro',       tiro: 'plasma',     tiro2: 'laser' },
+    piratas: { tipo: 'balao', nome: 'Balão de Ouro',       tiro: 'balaCanhao', tiro2: 'mosquete' },
+    reino:   { tipo: 'draco', nome: 'Dragãozinho de Ouro', tiro: 'bolaFogo',   tiro2: 'estrela' },
+  },
+};

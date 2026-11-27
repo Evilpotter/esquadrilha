@@ -22,7 +22,8 @@ function step(dt) {
   S.phaseT += dt;
   if (!S.bossSpawned) {
     if (S.phaseT < PHASE_LEN) {
-      S.spawnT -= dt;
+      if (!S.eliteFeito && S.phaseT >= PHASE_LEN * ELITE.quando) spawnElite(); // mini-chefe no meio da fase
+      S.spawnT -= dt * (eliteVivo() ? ELITE.ondas : 1);
       if (S.spawnT <= 0) { spawnWave(); S.spawnT = Math.max(1.05, 2.9 - .15 * S.phase) * rnd(.8, 1.2) * (S.np === 2 ? .9 : 1) / Math.pow(W / 540, .6); }
     } else {
       S.bossSpawned = true; S.bossTimer = BOSS_ESPERA; S.banner = { t: 2.5, text: 'Chefão chegando!' };
@@ -190,10 +191,11 @@ function step(dt) {
     if (g.y > H + 20) g.dead = true;
   }
   S.gems = S.gems.filter(g => !g.dead);
+  updateBaus(dt); // baú do elite (js/inimigos/elite.js)
 
   // efeitos
   for (const f of S.fx) { f.t += dt; if (f.vx !== undefined) { f.x += f.vx * dt; f.y += f.vy * dt; } }
   S.fx = S.fx.filter(f => f.t < f.life);
 
-  if (S.pendingLv > 0 && S.mode === 'play' && S.overT <= 0) openLevelUp();
+  if ((S.pendingLv > 0 || S.bauPend > 0) && S.mode === 'play' && S.overT <= 0) openLevelUp();
 }

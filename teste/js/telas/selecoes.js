@@ -1,9 +1,10 @@
 // ---------- Seleções ----------
 function openLevelUp() {
-  S.pendingLv--;
+  const bau = S.bauPend > 0; // baú do elite: melhoria em dobro, sem subir de nível
+  if (bau) S.bauPend--; else S.pendingLv--;
   S.mode = 'levelup';
   S.sel = {
-    kind: 'lv', lock: .45, cur: [0, 0],
+    kind: 'lv', bau, lock: .45, cur: [0, 0],
     opts: S.players.map(p => p.alive ? pick(SUPS, 3) : null),
     done: S.players.map(p => !p.alive),
   };
@@ -34,7 +35,7 @@ function choose(pi, j) {
   if (!s || s.done[pi] || s.lock > 0 || !s.opts[pi] || j >= s.opts[pi].length) return;
   const p = S.players[pi], o = s.opts[pi][j];
   s.cur[pi] = j;
-  if (s.kind === 'lv') o.apply(p);
+  if (s.kind === 'lv') { o.apply(p); if (s.bau) o.apply(p); } // baú: em dobro
   else if (o.kind === 'new') p.weapons.push(newWeapon(o.type));
   else { o.u.apply(o.w); o.w.lvl++; }
   s.done[pi] = true;
@@ -44,11 +45,11 @@ function choose(pi, j) {
   }
 }
 function closeSel() {
-  const kind = S.sel.kind;
+  const kind = S.sel.kind, bau = S.sel.bau;
   S.sel = null; S.mode = 'play';
-  if (kind === 'lv') impNivel(); // faixa "NÍVEL X!" (js/visual/impacto.js)
+  if (kind === 'lv' && !bau) impNivel(); // faixa "NÍVEL X!" (js/visual/impacto.js)
   if (kind === 'boss') {
-    S.phase++; skinOnPhase(S.phase); S.phaseT = 0; S.bossSpawned = false; S.spawnT = 1.5;
+    S.phase++; skinOnPhase(S.phase); S.phaseT = 0; S.bossSpawned = false; S.spawnT = 1.5; S.eliteFeito = false; S.elite = null; S.baus = [];
     nextScene(); S.enemies = []; S.ebullets = []; S.hazards = [];
     S.banner = { t: 2.5, text: 'Fase ' + S.phase + ' · ' + SCENES[S.scene].name };
     impEntrada(); // naves descem do céu

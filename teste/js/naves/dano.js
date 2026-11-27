@@ -28,6 +28,7 @@ function killEnemy(e, p, src) {
   boom(e.x, e.y, e.r * 1.6, '#ffb040');
   impMorte(e); // avião cai, cratera, barco afunda, pausa de impacto (só visual)
   const m = xpMult(); // Saraivada da Âncora Negra: XP em dobro
+  if (e.elite) { eliteMorre(e, m); return; } // cristais grandes + baú (js/inimigos/elite.js)
   if (xp >= 5) { for (let k = 0; k < 3; k++) S.gems.push({ x: e.x + rnd(-15, 15), y: e.y + rnd(-15, 15), v: 2 * m }); }
   else S.gems.push({ x: e.x, y: e.y, v: xp * m });
 }

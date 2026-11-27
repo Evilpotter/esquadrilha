@@ -5,7 +5,7 @@
 
 // ---------- Hipnose (marcas) ----------
 function podeConverter(t, rei) {
-  if (!t || t.dead || t.boss || t.invuln || t.y < 0) return false;
+  if (!t || t.dead || t.boss || t.elite || t.invuln || t.y < 0) return false; // elite (mini-chefe) não vira aliado
   if (rei) return t.type !== 'mine' && t.type !== 'rock';
   return !HYPNOS.naoConverte.includes(t.type) && t.r <= HYPNOS.hipnose.raioMax;
 }

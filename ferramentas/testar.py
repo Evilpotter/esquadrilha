@@ -11,6 +11,7 @@ Comandos:
   hypnos      Hypnos: joga com todas as armas da mente, confere aliados/tontura e fotografa -> dist/hypnos-*.png
   piratas     Mar dos Piratas: joga 150 s nas fases 1, 3 e 5 (1 e 2 jogadores) e fotografa -> dist/piratas-*.png
   reino       Reino Encantado: joga 150 s nas fases 1, 3 e 5 (1 e 2 jogadores) e fotografa -> dist/reino-*.png
+  elite       mini-chefe no meio da fase: aparece, ataca, solta o baú, foge; não vira aliado -> dist/elite-jogo.png
   habilidades cada nave usa a habilidade ativa sempre que pronta (ondas, chefão, 2 jogadores); confere e fotografa -> dist/habilidades.png
   chefoes     luta 40 s com cada chefão (1 e 2 jogadores) e grava o resumo -> dist/chefoes.json
               (mesmo arquivo antes/depois = comportamento igual)
@@ -391,6 +392,57 @@ def reino(p):
     b.close()
 
 
+def elite(p):
+    """Elite (mini-chefe): em cada cenário aparece na metade das ondas, ataca, cai e solta o baú (melhoria em dobro); sem ser derrotado foge; não vira aliado da Hypnos."""
+    b, pg = abrir(p)
+    res = pg.evaluate("""() => {
+      const g = window.__g, out = {};
+      for (const sc of SCENE_KEYS) for (const ph of [1, 4]) {
+        const r = {};
+        g.newGame(2, [5, 0]); g.S.scene = sc; g.S.phase = ph; g.S.banner = null;
+        for (const pl of g.S.players) pl.inv = 1e9;
+        g.S.phaseT = PHASE_LEN * ELITE.quando - 1;
+        let tiros = 0;
+        for (let i = 0; i < 60 * 9; i++) {
+          if (g.S.mode !== 'play') { try { for (let k = 0; k < 2; k++) g.choose(k, 0); } catch (e) {} }
+          const n0 = g.S.ebullets.length; g.step(1 / 60); const e = eliteVivo();
+          if (e && e.chegou) tiros += Math.max(0, g.S.ebullets.length - n0);
+          if (e && podeConverter(e, true)) r.converte = true;
+        }
+        const e = eliteVivo(); r.apareceu = !!e; r.tiros = tiros; r.tipo = e && e.type;
+        if (e) {
+          const lv = g.S.level; dealDmg(e, 1e9, g.S.players[1]); r.bau = (g.S.baus || []).length;
+          const P = g.S.players[1]; let abriu = false, dobro = false;
+          for (let i = 0; i < 60 * 6 && !abriu; i++) { if (g.S.baus && g.S.baus[0]) { P.x = g.S.baus[0].x; P.y = g.S.baus[0].y; } g.step(1 / 60);
+            if (g.S.mode === 'levelup' && g.S.sel.bau) { abriu = true; const o = g.S.sel.opts[0][0]; dobro = o.name; } else if (g.S.mode !== 'play') { try { for (let k = 0; k < 2; k++) g.choose(k, 0); } catch (e) {} } }
+          r.abriu = abriu; r.nivelIgual = g.S.level === lv || g.S.pendingLv >= 0;
+        }
+        out[sc + '-f' + ph] = r;
+      }
+      // sem derrotar: foge depois de ELITE.fica s
+      g.newGame(1, [1]); g.S.scene = 'sea'; g.S.players[0].inv = 1e9; g.S.phaseT = PHASE_LEN * ELITE.quando;
+      g.S.players[0].weapons = []; let fugiu = false;
+      for (let i = 0; i < 60 * (ELITE.fica + 8); i++) { if (g.S.mode !== 'play') { try { g.choose(0, 0); } catch (e) {} } g.step(1 / 60); if (g.S.eliteFeito && !eliteVivo()) { fugiu = true; break; } }
+      out.fugiu = fugiu;
+      return out;
+    }""")
+    print('elite:', res)
+    for k, r in res.items():
+        if k == 'fugiu': continue
+        if not r.get('apareceu'): erros.append(f'Elite: não apareceu em {k}'); continue
+        if r['tiros'] < 5: erros.append(f'Elite: atirou pouco em {k} ({r["tiros"]})')
+        if r.get('converte'): erros.append(f'Elite: pode ser hipnotizado em {k}')
+        if r.get('bau') != 1: erros.append(f'Elite: não soltou o baú em {k}')
+        if not r.get('abriu'): erros.append(f'Elite: o baú não abriu a melhoria em dobro em {k}')
+    if not res['fugiu']: erros.append('Elite: não fugiu sem ser derrotado')
+    pg.evaluate("""() => { const g = window.__g; g.newGame(2, [4, 2], ['classic', 'dragao']); g.S.scene = 'sea'; g.S.banner = null; g.S.phase = 2;
+      for (const pl of g.S.players) pl.inv = 1e9; g.S.phaseT = PHASE_LEN * ELITE.quando - .5;
+      for (let i = 0; i < 60 * 7; i++) { if (g.S.mode !== 'play') for (let k = 0; k < 2; k++) try { g.choose(k, 0); } catch (e) {} g.step(1 / 60); }
+      for (const pl of g.S.players) pl.inv = 0; g.S.banner = null; g.draw(); }""")
+    pg.screenshot(path=str(dist / f'elite-jogo-{vw}.png'))
+    b.close()
+
+
 def chefoes(p):
     import json, hashlib
     b, pg = abrir(p)
@@ -484,7 +536,7 @@ def habilidades(p):
 
 from playwright.sync_api import sync_playwright
 CMDS = {'fumaca': [fumaca], 'fotos': [fotos], 'bumerangues': [bumerangues], 'bestiario': [bestiario], 'chefoes': [chefoes],
-        'pirata': [pirata], 'fenix': [fenix], 'hypnos': [hypnos], 'piratas': [piratas], 'habilidades': [habilidades], 'reino': [reino], 'todos': [fumaca, fotos, bumerangues, bestiario]}
+        'pirata': [pirata], 'fenix': [fenix], 'hypnos': [hypnos], 'piratas': [piratas], 'habilidades': [habilidades], 'reino': [reino], 'elite': [elite], 'todos': [fumaca, fotos, bumerangues, bestiario]}
 with sync_playwright() as p:
     for fn in CMDS[a.cmd]:
         fn(p)

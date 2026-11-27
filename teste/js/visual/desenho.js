@@ -45,8 +45,9 @@ function drawGame() {
   for (const e of S.enemies) if (ETYPES[e.type].ground) drawEnemy(e);
   impSombras(); // sombra das naves no chão
   impQueda();   // aviões caindo, barcos afundando
-  for (const e of S.enemies) if (!ETYPES[e.type].ground) drawEnemy(e);
+  for (const e of S.enemies) if (!ETYPES[e.type].ground) { if (e.elite) drawElite(e); else drawEnemy(e); } // elite: js/visual/elite.js
   for (const b of S.bosses) if (!b.dead && !drawBossArt(b)) BOSSES[b.kind].draw(b);
+  drawBaus(); // baú do elite (js/visual/elite.js), por cima dos inimigos
   drawLentos(); // inimigos lentos pela Onda (js/visual/pirata.js)
   drawQueimas(); // inimigos pegando fogo (js/visual/fenix.js)
   drawFenixChao(); // chamas do rastro e sombras dos meteoros, embaixo das naves
@@ -167,6 +168,7 @@ function drawHud() {
   } else if (!S.bossSpawned) {
     bar(14, 44, W - 28, 3, S.phaseT / PHASE_LEN, '#ffcf60', 'rgba(0,0,0,.25)');
   }
+  drawEliteHud(); // barra do elite e coroa na barra da fase (js/visual/elite.js)
   S.players.forEach((p, i) => {
     // lista de armas em linhas de até 170 px (a caixa cresce para cima)
     cx.font = '500 11px system-ui,-apple-system,"Segoe UI",sans-serif';
@@ -196,8 +198,9 @@ function drawSel() {
   cx.fillStyle = 'rgba(5,12,22,.78)'; cx.fillRect(0, 0, W, H);
   const s = S.sel, L = selLayout();
   const boss = s.kind === 'boss';
-  txt(boss ? 'Chefão derrotado!' : 'Nível ' + S.level + '!', W / 2, boss ? 66 : 72, 30, boss ? '#ffd36b' : '#7dff8a', 'center', 800);
+  txt(boss ? 'Chefão derrotado!' : s.bau ? 'Baú do tesouro!' : 'Nível ' + S.level + '!', W / 2, boss || s.bau ? 66 : 72, 30, boss || s.bau ? '#ffd36b' : '#7dff8a', 'center', 800);
   if (boss) txt('Escolha 1 recompensa: nova arma ou melhoria forte', W / 2, 94, 14, '#e8eef5', 'center', 500);
+  if (s.bau) txt('Melhoria em dobro: escolha 1', W / 2, 94, 14, '#e8eef5', 'center', 500);
   for (let pi = 0; pi < S.np; pi++) {
     const P = L.panels[pi], top = P.top, c = PCOL[pi];
     const hint = S.np === 1 ? '←/→ ou A/D e Enter/Espaço · ou 1, 2, 3' : (pi === 0 ? 'A/D + Espaço · ou 1, 2, 3' : '←/→ + Enter · ou Num 1, 2, 3');
@@ -219,7 +222,7 @@ function drawSel() {
     txt(String(card.j + 1), card.x + card.w - 14, y, 13, '#7f93a8', 'right', 600);
     if (!boss) {
       cx.font = '700 17px system-ui,sans-serif'; cx.fillStyle = '#fff'; cx.textAlign = 'left';
-      y = wrap(o.name, px, y + 14, mw, 21);
+      y = wrap((s.bau ? '2× ' : '') + o.name, px, y + 14, mw, 21);
       cx.font = '400 13px system-ui,sans-serif'; cx.fillStyle = '#b8c8d8';
       wrap(o.desc, px, y + 8, mw, 17);
     } else {

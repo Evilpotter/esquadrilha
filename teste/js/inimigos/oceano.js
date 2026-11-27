@@ -53,7 +53,8 @@ function updateEnemies(dt0) {
     const t = ETYPES[e.type];
     e.t += dt; if (e.flash > 0) e.flash -= dt;
     const p = nearestPlayer(e);
-    switch (e.type) {
+    if (e.elite) updateElite(e, dt, p, rate, bs); // mini-chefe (js/inimigos/elite.js)
+    else switch (e.type) {
       case 'scout': e.y += t.vy * sp * dt; break;
       case 'mini': e.y += t.vy * sp * dt; e.x += e.vx * dt; break;
       case 'zig': e.y += t.vy * sp * dt; e.x = e.x0 + Math.sin(e.t * 2.6 + (e.ph0 || 0)) * 70; break;
@@ -118,7 +119,7 @@ function updateEnemies(dt0) {
         else { e.stay += dt; if (p) e.x += clamp(p.x - e.x, -130 * sp * dt, 130 * sp * dt); }
         break;
     }
-    if (t.shoot && e.y > 20 && e.y < H - 200 && e.type !== 'spinner') {
+    if (!e.elite && t.shoot && e.y > 20 && e.y < H - 200 && e.type !== 'spinner') {
       e.shootT -= dt * rate;
       if (e.shootT <= 0) {
         e.shootT = t.shoot * rnd(.85, 1.15);
