@@ -20,6 +20,7 @@ function usarHab(i) {
   if (!HAB_USO[id](p, h)) return false;
   p.habT = p.habMax = h.recarga;
   habTexto(p, h.nome + '!');
+  impHab(p); // pose da nave, anel e tremor (js/visual/impacto.js)
   return true;
 }
 

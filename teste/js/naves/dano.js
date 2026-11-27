@@ -2,14 +2,17 @@
 // src = tipo do tiro que acertou (usado pelo Saque da Âncora Negra); 'burn' = fogo da Fênix (sem piscar nem som)
 function dealDmg(t, dmg, p, src) {
   if (t.dead || t.invuln) return;
-  if (p && Math.random() < p.crit) dmg *= 2;
+  const crit = p && Math.random() < p.crit;
+  if (crit) dmg *= 2;
   t.hp -= dmg;
+  impDano(t, Math.min(dmg, t.hp + dmg), crit, src); // número de dano (js/visual/impacto.js)
   if (src !== 'burn') t.flash = .07;
   if (t.hp > 0 && src !== 'burn') som(t.boss ? 'acerto_chefao' : 'acerto', t.x);
   if (t.hp <= 0) {
     t.dead = true;
     if (t.boss) {
       boom(t.x, t.y, 80, '#ffa030');
+      impChefaoCai(t); // chefão cai girando (só visual)
       if (S.bosses.every(b => b.dead)) bossDie(t);
       else S.bosses.forEach(b => { b.rage2 = true; });
     } else killEnemy(t, p, src);
@@ -23,6 +26,7 @@ function killEnemy(e, p, src) {
   if (e.type === 'rock' && e.big) for (const s of [-1, 1]) addRock(e.x + s * 10, e.y, 13, false, s * rnd(60, 100));
   S.kills++; if (p) p.kills++;
   boom(e.x, e.y, e.r * 1.6, '#ffb040');
+  impMorte(e); // avião cai, cratera, barco afunda, pausa de impacto (só visual)
   const m = xpMult(); // Saraivada da Âncora Negra: XP em dobro
   if (xp >= 5) { for (let k = 0; k < 3; k++) S.gems.push({ x: e.x + rnd(-15, 15), y: e.y + rnd(-15, 15), v: 2 * m }); }
   else S.gems.push({ x: e.x, y: e.y, v: xp * m });
@@ -35,6 +39,7 @@ function explode(x, y, rad, dmg, p) {
 function boom(x, y, r, color) {
   S.fx.push({ type: 'boom', x, y, r, t: 0, life: .45, color });
   somExplosao(x, r);
+  impBoom(x, y, r); // tremor da tela nas explosões grandes
   for (let k = 0; k < 6; k++) S.fx.push({ type: 'spark', x, y, vx: rnd(-160, 160), vy: rnd(-160, 160), t: 0, life: rnd(.3, .6), color });
 }
 function hurt(p, dmg) {
@@ -56,6 +61,7 @@ function bossDie(b) {
   S.ebullets = []; S.hazards = [];
   S.enemies.forEach(e => { if (e.type === 'mine') e.dead = true; });
   S.bosses = []; S.shake = .5;
+  impChefao(); // câmera lenta, clarão e looping de vitória (só visual)
   S.rewardT = 2.2;
   for (const g of S.gems) addXp(g.v);
   S.gems = [];

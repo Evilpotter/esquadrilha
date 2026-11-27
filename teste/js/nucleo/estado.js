@@ -20,6 +20,7 @@ function newGame(n, ships, skins) {
     banner: null, scene: 'sea', sel: null, kills: 0, touch: null, shake: 0,
   };
   startScene();
+  impEntrada(); // naves descem do céu (js/visual/impacto.js)
 }
 function startScene() { S.scene = pick(SCENE_KEYS, 1)[0]; S.banner = { t: 2.5, text: 'Fase 1 · ' + SCENES[S.scene].name }; }
 function xpFor(l) { return Math.round(5 + 3 * l + .2 * l * l); }

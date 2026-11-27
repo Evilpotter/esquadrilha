@@ -32,9 +32,10 @@ function drawBoss(b) {
   cx.restore();
 }
 function drawGame() {
-  const sh = S.shake > 0 ? S.shake * 14 : 0;
+  const sh = S.shake > 0 && IMP_CFG.tremor ? S.shake * IMPACTO.tremor.forca : 0; // tremor (pode desligar na pausa)
   cx.save(); cx.translate(rnd(-sh, sh), rnd(-sh, sh));
   drawBg();
+  impChao(); // crateras (js/visual/impacto.js)
   for (const g of S.gems) {
     cx.fillStyle = g.v >= 3 ? '#6fd3ff' : '#7dff8a';
     const s = g.v >= 3 ? 7 : 5;
@@ -42,6 +43,8 @@ function drawGame() {
   }
   drawHazards();
   for (const e of S.enemies) if (ETYPES[e.type].ground) drawEnemy(e);
+  impSombras(); // sombra das naves no chão
+  impQueda();   // aviões caindo, barcos afundando
   for (const e of S.enemies) if (!ETYPES[e.type].ground) drawEnemy(e);
   for (const b of S.bosses) if (!b.dead && !drawBossArt(b)) BOSSES[b.kind].draw(b);
   drawLentos(); // inimigos lentos pela Onda (js/visual/pirata.js)
@@ -66,8 +69,10 @@ function drawGame() {
     drawClones(p); // clones da Hypnos
     if (p.skin && p.skin !== 'classic') drawPlayerMark(p);
     if (p.ovoT > 0) { drawOvo(p); return; } // ovo da Fênix
+    impNaveAntes(p); // inclinação, entrada, looping e pose da habilidade (js/visual/impacto.js)
     if (p.dragonT > 0) drawDragao(p, p.x, p.y, 0, p.skin, p.rastro, S.phaseT); // Dragão de água
     else drawShip(p.ship, p.x, p.y, 1, c.body, c.dark, p.tilt, false, p.skin);
+    impNaveDepois();
     drawHabDepois(p); // lâminas do Ciclone (js/visual/habilidades.js)
     if (p.sh > 0) {
       cx.strokeStyle = 'rgba(120,230,255,' + (.25 + .5 * p.sh / Math.max(1, p.maxSh)) + ')'; cx.lineWidth = 2;
@@ -124,9 +129,11 @@ function drawGame() {
     else { cx.fillStyle = f.color; cx.fillRect(f.x - 2, f.y - 2, 4, 4); }
     cx.globalAlpha = 1;
   }
+  impFrente(); // vento, fumaça da vida baixa, anéis, números de dano, "NÍVEL X!"
   drawHabFx(); // rastro do Mergulho, miras, nome da habilidade, XP em dobro
   drawClouds();
   cx.restore();
+  impTela(); // borda vermelha (vida baixa) e clarão do chefão
   drawHud();
 }
 function txt(s, x, y, size, color, align, weight) {

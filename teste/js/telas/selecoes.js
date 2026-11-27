@@ -46,10 +46,12 @@ function choose(pi, j) {
 function closeSel() {
   const kind = S.sel.kind;
   S.sel = null; S.mode = 'play';
+  if (kind === 'lv') impNivel(); // faixa "NÍVEL X!" (js/visual/impacto.js)
   if (kind === 'boss') {
     S.phase++; skinOnPhase(S.phase); S.phaseT = 0; S.bossSpawned = false; S.spawnT = 1.5;
     nextScene(); S.enemies = []; S.ebullets = []; S.hazards = [];
     S.banner = { t: 2.5, text: 'Fase ' + S.phase + ' · ' + SCENES[S.scene].name };
+    impEntrada(); // naves descem do céu
   }
 }
 function selKey(code) {

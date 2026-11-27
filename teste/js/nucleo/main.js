@@ -4,8 +4,8 @@ genBg();
 
 let last = performance.now();
 function frame(now) {
-  const dt = Math.min(.033, (now - last) / 1000); last = now;
-  lerControles(); step(dt); somQuadro(); draw();
+  const dt = impTempo(Math.min(.033, (now - last) / 1000)); last = now; // pausa de impacto e câmera lenta (js/visual/impacto.js)
+  lerControles(); if (dt > 0) step(dt); somQuadro(); draw();
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

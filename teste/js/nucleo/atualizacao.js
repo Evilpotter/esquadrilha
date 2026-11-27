@@ -16,6 +16,7 @@ function step(dt) {
   if (S.skinMsg) { S.skinMsg.t -= dt; if (S.skinMsg.t <= 0) S.skinMsg = null; }
   if (S.players) for (const p of S.players) { skinTrail(p, dt); fenixBrasas(p, dt); }
   if (S.shake > 0) S.shake -= dt;
+  impPasso(dt); // efeitos só visuais (js/visual/impacto.js)
 
   // fase / chefão
   S.phaseT += dt;

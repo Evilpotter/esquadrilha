@@ -5,11 +5,13 @@ function menuItems() {
   const pct = q => somCfg.mudo ? 'sem som' : Math.round(somCfg[q] * 100) + '%';
   it.push({ id: 'musica', label: 'Música  ◀ ' + pct('musica') + ' ▶', vol: true });
   it.push({ id: 'efeitos', label: 'Efeitos  ◀ ' + pct('efeitos') + ' ▶', vol: true });
+  it.push({ id: 'tremor', label: 'Tremor da tela: ' + (IMP_CFG.tremor ? 'ligado' : 'desligado'), opc: true });
+  it.push({ id: 'numeros', label: 'Números de dano: ' + (IMP_CFG.numeros ? 'ligados' : 'desligados'), opc: true });
   it.push({ id: 'quit', label: 'Sair para o início' });
   return it;
 }
 function menuLayout() {
-  const items = menuItems(), w = Math.min(360, W - 60), h = 56, gap = 14;
+  const items = menuItems(), w = Math.min(360, W - 60), h = 50, gap = 10;
   const y0 = H / 2 - (items.length * (h + gap) - gap) / 2 + 20;
   return items.map((it, i) => Object.assign({}, it, { x: (W - w) / 2, y: y0 + i * (h + gap), w, h }));
 }
@@ -18,12 +20,14 @@ function menuDo(id) {
   if (id === 'cont') S.mode = 'play';
   else if (id === 'add') openShipAdd();
   else if (id === 'musica' || id === 'efeitos') somAjusta(id, somCfg[id] >= 1 ? -1 : .2); // Enter/toque: sobe e volta ao zero
+  else if (id === 'tremor' || id === 'numeros') impCfgTroca(id); // js/visual/impacto.js
   else if (id === 'quit') S = { mode: 'title' };
 }
 function addPlayer2(ship, skin) {
   const p = newPlayer(1, 2, ship || 0, skin);
   p.x = clamp(S.players[0].x + 120, 40, W - 40); p.inv = 2.5;
   S.players.push(p); S.np = 2; S.mode = 'play';
+  impEntrada(1);
   S.banner = { t: 2.5, text: 'Jogador 2 entrou: ' + SHIPS[p.ship].name + '!' };
 }
 function menuKey(code) {
@@ -33,6 +37,7 @@ function menuKey(code) {
   else if (code === 'ArrowUp' || code === 'KeyW') S.menuSel = (S.menuSel + items.length - 1) % items.length;
   else if (code === 'ArrowDown' || code === 'KeyS') S.menuSel = (S.menuSel + 1) % items.length;
   else if (code === 'Enter' || code === 'NumpadEnter' || code === 'Space') menuDo(items[S.menuSel].id);
+  else if (items[S.menuSel].opc && ['ArrowLeft', 'KeyA', 'ArrowRight', 'KeyD'].includes(code)) impCfgTroca(items[S.menuSel].id);
   else if (items[S.menuSel].vol && (code === 'ArrowLeft' || code === 'KeyA')) somAjusta(items[S.menuSel].id, -.1);
   else if (items[S.menuSel].vol && (code === 'ArrowRight' || code === 'KeyD')) somAjusta(items[S.menuSel].id, .1);
 }
@@ -44,7 +49,7 @@ function drawMenu() {
     const sel = i === S.menuSel;
     cx.fillStyle = sel ? '#1d4f86' : '#14263a'; roundRect(it.x, it.y, it.w, it.h, 12); cx.fill();
     cx.strokeStyle = sel ? '#7fc0ff' : '#3a5672'; cx.lineWidth = sel ? 2.5 : 1; roundRect(it.x, it.y, it.w, it.h, 12); cx.stroke();
-    txt(it.label, W / 2, it.y + 36, 19, '#fff', 'center', 700);
+    txt(it.label, W / 2, it.y + 32, it.opc ? 17 : 19, '#fff', 'center', 700);
   });
   const last = L[L.length - 1];
   txt('↑/↓ ou W/S para escolher · Enter ou Espaço para confirmar · Esc volta ao jogo', W / 2, last.y + last.h + 34, 13, '#9fb3c8', 'center', 500);
